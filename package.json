@@ -1,0 +1,31 @@
+{
+  "name": "dynaglue",
+  "version": "0.1.0-alpha.0",
+  "description": "dynaglue",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "compile": "tsc",
+    "test": "jest"
+  },
+  "author": "Chris Armstrong",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/lodash": "^4.14.146",
+    "@types/node": "^12.12.7",
+    "@types/verror": "^1.10.3",
+    "aws-sdk": "^2.570.0",
+    "jest": "^24.9.0",
+    "ts-node": "^8.5.2",
+    "typescript": "^3.7.2"
+  },
+  "peerDependencies": {
+    "aws-sdk": "^2.562.0"
+  },
+  "dependencies": {
+    "verror": "^1.10.0"
+  },
+  "repository": {
+    "url": "https://github.com/chris-armstrong/dynaglue.git"
+  }
+}
