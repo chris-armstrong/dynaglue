@@ -3,35 +3,94 @@
 An opinionated JavaScript library to make single-table designs in DynamoDB easier
 to query and update.
 
-## Installation
-
 ```sh
 npm install dynaglue
 ```
 
-## What is it for?
-
-Implementing single-table designs in DynamoDB (where you store multiple distinct
-data structures in the same table) is difficult with the DynamoDB API. dynaglue
-presents a Mongo-like abstraction over DynamoDB that makes it easier to query your
-data, but in a still optimised and best-practice way.
-
-See [Motivation](#Motivation) (below) for a more detailed explanation.
-
 ## Usage
 
-The best documentation at the moment is the examples in the `examples/` directory. They
-show the basic API.
+(see the [examples directory](https://github.com/chris-armstrong/dynaglue/tree/master/examples) for more)
 
-The API itself is also lightly documented.
+```typescript
+// Declare the layout of your table (its primary and secondary indexes and their key names)
+const layout = {
+  tableName: 'my-table',
+  primaryKey: { partitionKey: 'id', sortKey: 'collection' },
+  findKeys: [
+    // 2 GSIs => up to 2 extra access patterns per collection
+    { indexName: 'gs2', partitionKey: 'gs2p', sortKey: 'gs2s' },
+    { indexName: 'gs3', partitionKey: 'gs3p', sortKey: 'gs3s' },
+  ],
+};
 
-A more detailed guide is forthcoming.
+// Declare a collection for each data type (like a Mongo collection)
+const usersCollection = {
+  name: 'users',
+  layout,
+  // access patterns that are mapped to indexes in the table layout
+  accessPatterns: [
+    // 1. Find users by their email address on GSI2
+    { indexName: 'gs2', partitionKeys: [], sortKeys: [['email']] },
+    // 2. Find users by their team (and optionally, employee code)
+    { indexName: 'gs3', partitionKeys: [['team', 'id']], sortKeys: [['team', 'employeeCode']] },
+  ],
+};
+const ddb = new AWS.DynamoDB();
+const ctx = createContext(ddb, [usersCollection]);
+
+// Insert users into collection (auto-generated IDs)
+const user1 = await insert(ctx, 'users', {
+  name: 'Anayah Dyer',
+  email: 'anayahd@example.com',
+  team: { id: 'team-code-1', employeeCode: 'AC-1' },
+});
+const user2 = await insert(ctx, 'users', {
+  name: 'Ruairidh Hughes',
+  email: 'ruairidhh@example.com',
+  team: { id: 'team-code-1', employeeCode: 'AC-2' },
+});
+const user3 = await insert(ctx, 'users', {
+  name: 'Giles Major',
+  email: 'giles@example.com',
+  team: { id: 'team-code-2', employeeCode: 'GT-5' },
+});
+const user4 = await insert(ctx, 'users', {
+  name: 'Lance Alles',
+  email: 'lance@example.com',
+  team: { id: 'team-code-2', employeeCode: 'GT-6' },
+});
+
+// Find a user by ID (uses primary index)
+const foundUser = await findById(ctx, 'users', user2._id);
+// => { _id: '...', name: 'Ruairidh Hughes', ... }
+
+// Find a user by email (access pattern 1)
+const userByEmail = await find(ctx, 'users', { email: 'anayahd@example.com' });
+// => [{ _id: '...', name: 'Anayah Dyer', ... }]
+
+// Find all users in a team (access pattern 2)
+const usersInTeam2 = await find(ctx, 'users', { 'team.id': 'team-code-2' });
+// => [{ _id: '...', name: 'Giles Major', ... }, { _id: '...', name: 'Lance Alles', ... }]
+
+// Find user by teamId and employeeCode (access pattern 2)
+const specificUser = await find(ctx, 'users', { 'team.id': 'team-code-1', employeeCode: 'AC-2' });
+// => [{ _id: '...', name: 'Ruairidh Hughes', ... }]
+```
+
+## Rationale
+
+Implementing single-table designs in DynamoDB (where you store multiple distinct
+data structures in the same table) is difficult with the DynamoDB API. *dynaglue*
+presents a Mongo-like abstraction over DynamoDB that makes it easier to query your
+data, optimised for index-usage and performance.
+
+See [Motivation](#Motivation) (below) for a more detailed explanation.
 
 ## Prerequisites
 
 This library is intended for advanced use cases and at the very least, assumes
 strong knowledge of DynamoDB partition and sort keys, primary and secondary indexes,
-adjaceny list design, etc.
+single-table design etc.
 
 If you're unsure what any of this means, first learn how to build applications
 using DynamoDB:
@@ -39,10 +98,17 @@ using DynamoDB:
 * [DynamoDB Guide](https://www.dynamodbguide.com/)
 * [Getting Started with DynamoDB - AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html)
 
-Then for more advanced modelling in DynamoDB:
+more advanced DynamoDB modelling:
 
 * [Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan](https://www.youtube.com/watch?v=HaEPXoXVf2k)
 * [DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
+* [How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly](https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/)
+* [From relational DB to single DynamoDB table: a step-by-step exploration](https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/)
+
+and on the merits of single table vs multi table design (this library is agnostic):
+
+* [Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail](https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/)
+* [Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie](https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices)
 
 ## Status
 
@@ -77,12 +143,11 @@ great discipline and attention to detail.
 Most DynamoDB applications will attempt to avoid this by using separate tables
 for each type of data, using secondary indexes liberally and by naming their keys
 intuitively based on the data being modelled. This is actually fine: it makes working
-with the API less painful but it makes it harder to optimise for cost and performance
-in some cases.
+with the API less painful but it makes it harder to optimise for cost and performance.
 
 This library is an attempt at a compromise - it presents a Mongo-like
-API for looking up data, but relies on you to identify and declare your access patterns
-up front.
+API for looking up data, but still relies on you to identify and declare your access
+patterns up front.
 
 You can query your data as if your storage engine knows how to work out
 what index to use, but it will fail hard if it can't find that index, which is
@@ -98,13 +163,12 @@ shared an index or table).
 This is what I'm aware of - I'm sure there is much more:
 
 * *It is highly opinionated about how data is stored.* Using this for existing
-  applications is going to require a data migration (at least until we work out a way
-  to implement a more flexible storage mechanism)
-* *The current design makes the use projected attributes on GSIs impossible*
-  to control return value size. This could be achieved with a completely different
-  storage pattern, which I want to examine in more detail.
+  applications is going to require a data migration at the very least
+* *It is impossible to use projected attributes on GSIs with the current data layout*
+  *to control index storange and return value size.* This could be achieved with a
+  completely different storage pattern, which is probably going to happen
 * *No support for update expressions or filter expressions.* No reason AFAIK
-  that prevents these from being added. They just need a sensible API :-)
+  that prevents these from being added. They just need an API :-)
 * *Only string types for values used to build indexes.* Obviously numbers
   and dates are useful for sort key expressions, but they require more
   sophisticated handling

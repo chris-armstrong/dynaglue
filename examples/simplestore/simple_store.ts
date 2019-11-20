@@ -14,10 +14,12 @@ const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:800
  *    --table-name global \
  *    --attribute-definitions AttributeName=id,AttributeType=S AttributeName=collection,AttributeType=S \
  *      AttributeName=gs2p,AttributeType=S AttributeName=gs2s,AttributeType=S \
+ *      AttributeName=gs3p,AttributeType=S AttributeName=gs3s,AttributeType=S \
  *    --key-schema KeyType=HASH,AttributeName=id KeyType=SORT,AttributeName=collection \
  *    --billing-mode PAY_PER_REQUEST \
  *    --global-secondary-indexes 'IndexName=gs1,KeySchema=[{KeyType="HASH",AttributeName=collection},{KeyType=SORT,AttributeName=id}],Projection={ProjectionType=ALL}' \
- *      'IndexName=gs2,KeySchema=[{KeyType="HASH",AttributeName="gs2p"},{KeyType=SORT,AttributeName=gs2s}],Projection={ProjectionType=ALL}'
+ *      'IndexName=gs2,KeySchema=[{KeyType="HASH",AttributeName="gs2p"},{KeyType=SORT,AttributeName=gs2s}],Projection={ProjectionType=ALL}' \
+ *      'IndexName=gs3,KeySchema=[{KeyType="HASH",AttributeName="gs3p"},{KeyType=SORT,AttributeName=gs3s}],Projection={ProjectionType=ALL}'
  */
 
 const globalTableLayout = {
@@ -37,6 +39,11 @@ const globalTableLayout = {
       partitionKey: 'gs2p',
       sortKey: 'gs2s',
     },
+    {
+      indexName: 'gs3',
+      partitionKey: 'gs3p',
+      sortKey: 'gs3s',
+    },
   ],
 };
 
@@ -44,7 +51,8 @@ const usersCollection: Collection = {
   name: 'users',
   layout: globalTableLayout,
   accessPatterns: [
-    { indexName: 'gs2', partitionKeys: [], sortKeys: [['email']] }
+    { indexName: 'gs2', partitionKeys: [], sortKeys: [['email']] },
+    { indexName: 'gs3', partitionKeys: [['team', 'id']], sortKeys: [['team', 'employeeCode']] }
   ]
 };
 
@@ -67,17 +75,25 @@ async function main() {
   const user1 = await insert(ctx, 'users', {
     name: 'Anayah Dyer',
     email: 'anayahd@example.com',
+    team: { id: 'team-code-1', employeeCode: 'AC-1' },
   });
   const user2 = await insert(ctx, 'users', {
     name: 'Ruairidh Hughes',
     email: 'ruairidhh@example.com',
+    team: { id: 'team-code-1', employeeCode: 'AC-2' },
   });
   const user3 = await insert(ctx, 'users', {
     name: 'Giles Major',
-    email: 'gilesm@example.com',
+    email: 'giles@example.com',
+    team: { id: 'team-code-2', employeeCode: 'GT-5' },
+  });
+  const user4 = await insert(ctx, 'users', {
+    name: 'Lance Alles',
+    email: 'lance@example.com',
+    team: { id: 'team-code-2', employeeCode: 'GT-6' },
   });
 
-  console.log('inserted users', [user1, user2, user3]);
+  console.log('inserted users', [user1, user2, user3, user4]);
 
   const post1 = await insert(ctx, 'posts', {
     userId: user1._id,
@@ -116,6 +132,14 @@ async function main() {
 
   const emailSearch = await find(ctx, 'users', { email: 'anayah' });
   console.log('email search results', emailSearch);
+
+  // Find all users in a team (access pattern 2)
+  const usersInTeam2 = await find(ctx, 'users', { 'team.id': 'team-code-2' });
+  console.log('team 2 users', usersInTeam2);
+
+  // Find user by teamId and employeeCode (access pattern 2)
+  const userByEmployeeCode = await find(ctx, 'users', { 'team.id': 'team-code-1', 'team.employeeCode': 'AC-2' });
+  console.log('user by employee code', userByEmployeeCode);
 }
 
 main();
