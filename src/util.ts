@@ -1,9 +1,10 @@
 import get from 'lodash/get';
-import { Context, CollectionDefinition } from './context';
+import { Context } from './context';
 import { CollectionNotFoundException, InvalidIdException, PersistenceException } from './exceptions';
 import { DocumentWithId, WrappedDocument } from './common';
 import newId from './new_id';
 import { KeyPath, describeKeyPath, AccessPatternOptions } from './access_pattern';
+import { CollectionDefinition } from './collection_definition';
 
 export const SEPARATOR = '|-|';
 
@@ -51,7 +52,6 @@ export const constructKeyValue = (
 
   return assembleIndexedValue(type, collection.name, values);
 };
-
 
 export const toWrapped = (
   collection: CollectionDefinition,
