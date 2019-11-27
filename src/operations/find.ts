@@ -3,12 +3,13 @@ import { Key, QueryInput, Converter } from 'aws-sdk/clients/dynamodb';
 
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../common';
-import { getCollection, unwrap, assembleIndexedValue } from '../util';
+import { getCollection, unwrap, assembleIndexedValue, IndexValue } from '../util';
 import { Collection } from '../collection';
 import { InvalidQueryException, ConfigurationException } from '../exceptions';
 import { KeyPath, AccessPattern, AccessPatternOptions } from '../access_pattern';
+import { SecondaryIndexLayout } from '../layout';
 
-type QueryOperator = 'match';
+type QueryOperator = 'match' | 'equals';
 
 type FindQuery = { [matchKey: string]: string };
 
@@ -17,19 +18,17 @@ type FindResults = {
   nextToken?: Key;
 };
 
-export const isEqualKey = (lhs: string[] | string, rhs: string[] | string) => {
+export const isEqualKey = (lhs: string[] | string, rhs: string[] | string): boolean => {
   const normalisedLhs = typeof lhs === 'string' ? lhs.split('.') : lhs;
   const normalisedRhs = typeof rhs === 'string' ? rhs.split('.') : rhs;
   return isEqual(normalisedLhs, normalisedRhs);
 };
 
-export const findAccessPattern = (collection: Collection, query: FindQuery) => {
+export const findAccessPattern = (collection: Collection, query: FindQuery): AccessPattern | undefined => {
   return (collection.accessPatterns || []).find(ap => {
-    let unmatchedQueryKeys = [...Object.keys(query)];
+    const unmatchedQueryKeys = [...Object.keys(query)];
     for (const apKey of ap.partitionKeys) {
-      const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey =>
-        isEqualKey(apKey, queryKey)
-      );
+      const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey => isEqualKey(apKey, queryKey));
       if (matchingQueryKeyIndex >= 0) {
         unmatchedQueryKeys.splice(matchingQueryKeyIndex, 1);
       } else {
@@ -39,9 +38,7 @@ export const findAccessPattern = (collection: Collection, query: FindQuery) => {
 
     if (ap.sortKeys) {
       for (const apKey of ap.sortKeys) {
-        const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey =>
-          isEqualKey(apKey, queryKey)
-        );
+        const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey => isEqualKey(apKey, queryKey));
         if (matchingQueryKeyIndex >= 0) {
           unmatchedQueryKeys.splice(matchingQueryKeyIndex, 1);
         } else {
@@ -53,26 +50,38 @@ export const findAccessPattern = (collection: Collection, query: FindQuery) => {
   });
 };
 
-export const findAccessPatternLayout = (collection: Collection, ap: AccessPattern) =>
-  collection.layout.findKeys && collection.layout.findKeys!.find(fk => fk.indexName === ap.indexName);
+export const findAccessPatternLayout = (findKeys: SecondaryIndexLayout[], ap: AccessPattern): SecondaryIndexLayout | undefined =>
+  findKeys.find(fk => fk.indexName === ap.indexName);
 
-const assembleQueryValue = (type: 'partition' | 'sort', collection: Collection, query: FindQuery, options: AccessPatternOptions, paths?: KeyPath[]) => {
+const assembleQueryValue = (
+  type: 'partition' | 'sort',
+  collection: Collection,
+  query: FindQuery,
+  options: AccessPatternOptions,
+  paths?: KeyPath[]
+): IndexValue => {
   if (paths) {
-    let values: (string|undefined)[] = [];
+    const values: IndexValue[] = [];
     for (const path of paths) {
       const pathValue = query[path.join('.')];
       if (!pathValue) break;
-      const transformedValue = options.stringNormalizer ?
-        options.stringNormalizer(path, pathValue) : pathValue;
+      const transformedValue = options.stringNormalizer ? options.stringNormalizer(path, pathValue) : pathValue;
       values.push(transformedValue);
     }
     return assembleIndexedValue(type, collection.name, values);
   }
   return undefined;
-}
+};
 
 // FIXME: distinguish `=` and `begins_with` based on specified sort keys
-const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: QueryOperator) => `begins_with(${sortKeyName}, ${sortValueName})`;
+const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: QueryOperator): string => {
+  switch (qo) {
+  case 'match': return `begins_with(${sortKeyName}, ${sortValueName})`;
+  case 'equals': return `${sortKeyName} = ${sortValueName}`;
+  }
+  throw new Error('unreachable');
+}
+  ;
 
 /**
  * Find an item using one of its collection's access patterns
@@ -142,10 +151,12 @@ export async function find(
       query,
     });
   }
-  const layout = findAccessPatternLayout(collection, ap);
+  const layout = findAccessPatternLayout(collection.layout?.findKeys ?? [], ap);
   if (!layout) {
-    throw new ConfigurationException({ info: { collectionName, indexName: ap.indexName } },
-      `Unable to find layout for index specified in access pattern`);
+    throw new ConfigurationException(
+      { info: { collectionName, indexName: ap.indexName } },
+      `Unable to find layout for index specified in access pattern`
+    );
   }
 
   const partitionKeyValue = assembleQueryValue('partition', collection, query, ap.options || {}, ap.partitionKeys);

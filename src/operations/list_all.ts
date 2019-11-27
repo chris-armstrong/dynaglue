@@ -8,6 +8,11 @@ import { getCollection, unwrap } from '../util';
 import { IndexNotFoundException } from '../exceptions';
 import { WrappedDocument } from '../common';
 
+export type ListAllResult = {
+  items: any[];
+  nextToken?: Key;
+}
+
 /**
  * List all the items in a collection. Effectively a scan on the
  * items demarcated by the collection
@@ -20,7 +25,7 @@ export async function listAll(
   context: Context,
   collectionName: string,
   nextToken?: Key
-) {
+): Promise<ListAllResult> {
   const collection = getCollection(context, collectionName);
 
   if (!collection.layout.listAllKey) {

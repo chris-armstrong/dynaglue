@@ -18,7 +18,7 @@ export async function insert(
   context: Context,
   collectionName: string,
   value: object
-) {
+): Promise<any> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped(collection, value);
   const request: PutItemInput = {

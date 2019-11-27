@@ -6,7 +6,7 @@
  */
 export type KeyPath = string[];
 
-export const describeKeyPath = (keyPath: KeyPath) => keyPath.join('.');
+export const describeKeyPath = (keyPath: KeyPath): string => keyPath.join('.');
 
 /**
  * A function used to normalise a key value before it is packed into
@@ -25,6 +25,6 @@ export interface AccessPattern {
   options?: AccessPatternOptions;
 };
 
-export const describeAccessPattern = ({ indexName, partitionKeys, sortKeys }: AccessPattern) =>
+export const describeAccessPattern = ({ indexName, partitionKeys, sortKeys }: AccessPattern): string =>
   `[access pattern index=${indexName} partition=${partitionKeys.join(',')} ` +
   `${sortKeys ? `sort=${sortKeys.join(',')}` : ''}]`;

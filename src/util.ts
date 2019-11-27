@@ -8,13 +8,15 @@ import { CollectionDefinition } from './collection_definition';
 
 export const SEPARATOR = '|-|';
 
+export type IndexValue = string | undefined;
+
 // FIXME: distinguish correctly between:
 //  - sparse keys - a value is not always written to the all the key fields (from DynamoDB's persective, not optional sort
 //                  key values) which leverages DynamoDB's behaviour to not index the record in that GSI
 //  - empty key value - an access pattern mapped to a partition+sort defined GSI but that only has partition key values
 //                   needs a "dummy" value in the sort key slot so it gets indexed, and not treated like a sort key
 
-export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]) => {
+export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexValue => {
   if (values.length === 0) {
     // empty key value
     return collectionName;
@@ -25,7 +27,7 @@ export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName:
   return `${collectionName}${SEPARATOR}${values.map(x => typeof x === 'string' ? x : '').join(SEPARATOR)}`;
 };
 
-export const getCollection = (context: Context, collectionName: string) => {
+export const getCollection = (context: Context, collectionName: string): CollectionDefinition => {
   const c = context.definitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
@@ -37,7 +39,7 @@ export const constructKeyValue = (
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
   value: DocumentWithId
-) => {
+): string|undefined => {
   const values = valuePaths.map(valuePath => {
     const extractedValue = get(value, valuePath);
     if (typeof extractedValue !== 'undefined' && typeof extractedValue !== 'string') {
@@ -84,6 +86,6 @@ export const toWrapped = (
   return wrapped;
 };
 
-export const unwrap = (document: WrappedDocument) => {
+export const unwrap = (document: WrappedDocument): any => {
   return document.value;
 };

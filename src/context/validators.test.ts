@@ -1,5 +1,5 @@
-import { validateListAllKey, validateFindKeys } from "./validators";
-import { ConfigurationException, CollectionNotFoundException } from "../exceptions";
+import { validateListAllKey, validateFindKeys } from './validators';
+import { ConfigurationException } from '../exceptions';
 
 test('validateListAllKey checks partitionKey equals primary sort key', () => {
   const listAllKey = { indexName: 'gs1', partitionKey: 'not_value', sortKey: 'id' };

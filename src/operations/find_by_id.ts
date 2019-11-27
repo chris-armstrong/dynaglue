@@ -15,7 +15,7 @@ export async function findById(
   context: Context,
   collectionName: string,
   id: string
-) {
+): Promise<any> {
   const collection = getCollection(context, collectionName);
   const request: GetItemInput = {
     TableName: collection.layout.tableName,

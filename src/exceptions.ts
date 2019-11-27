@@ -29,7 +29,7 @@ export class ConfigurationException extends VError {
 export class PersistenceException extends VError {}
 
 export class InvalidQueryException extends VError {
-  constructor(message: string, { collection, query }: { collection: string, query: object }) {
+  constructor(message: string, { collection, query }: { collection: string; query: object }) {
     super({
       info: {
         collection,

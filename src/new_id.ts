@@ -5,9 +5,9 @@ import { randomBytes } from 'crypto';
 
 const PROCESS_UNIQUE = randomBytes(5);
 let IdIndex = ~~(Math.random() * 0xffffff);
-const getInc = () => (IdIndex = (IdIndex + 1) % 0xffffff);
+const getInc = (): number => (IdIndex = (IdIndex + 1) % 0xffffff);
 
-const newId = () => {
+const newId = (): string => {
   const time = ~~(Date.now() / 1000);
 
   const inc = getInc();

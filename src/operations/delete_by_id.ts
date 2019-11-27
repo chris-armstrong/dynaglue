@@ -11,7 +11,7 @@ import { WrappedDocument } from '../common';
  * @returns the deleted object (as stored in the database), or
  * undefined if not found
  */
-export async function deleteById(context: Context, collectionName: string, id: string) {
+export async function deleteById(context: Context, collectionName: string, id: string): Promise<any> {
   const collection = getCollection(context, collectionName);
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
