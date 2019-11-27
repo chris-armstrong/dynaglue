@@ -2,3 +2,5 @@ src/
 examples/
 tsconfig.*
 .prettierrc
+coverage/
+.vscode/

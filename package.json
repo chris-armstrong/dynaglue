@@ -6,15 +6,21 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "compile": "tsc",
+    "lint": "eslint 'src/**/*.ts'",
     "test": "jest"
   },
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/preset-typescript": "^7.7.4",
+    "@types/jest": "^24.0.23",
     "@types/lodash": "^4.14.146",
     "@types/node": "^12.12.7",
     "@types/verror": "^1.10.3",
     "aws-sdk": "^2.570.0",
+    "babel-jest": "^24.9.0",
     "jest": "^24.9.0",
     "ts-node": "^8.5.2",
     "typescript": "^3.7.2"
@@ -23,6 +29,9 @@
     "aws-sdk": "^2.562.0"
   },
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.9.0",
+    "@typescript-eslint/parser": "^2.9.0",
+    "eslint": "^6.7.1",
     "verror": "^1.10.0"
   },
   "repository": {
