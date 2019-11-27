@@ -3,7 +3,7 @@ import { Key, QueryInput, Converter } from 'aws-sdk/clients/dynamodb';
 
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../common';
-import { getCollection, unwrap, assembleIndexedValue, IndexValue } from '../util';
+import { getCollection, unwrap, assembleIndexedValue, IndexedValue } from '../util';
 import { Collection } from '../collection';
 import { InvalidQueryException, ConfigurationException } from '../exceptions';
 import { KeyPath, AccessPattern, AccessPatternOptions } from '../access_pattern';
@@ -59,9 +59,9 @@ const assembleQueryValue = (
   query: FindQuery,
   options: AccessPatternOptions,
   paths?: KeyPath[]
-): IndexValue => {
+): IndexedValue => {
   if (paths) {
-    const values: IndexValue[] = [];
+    const values: IndexedValue[] = [];
     for (const path of paths) {
       const pathValue = query[path.join('.')];
       if (!pathValue) break;

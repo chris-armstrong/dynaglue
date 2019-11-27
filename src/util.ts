@@ -8,7 +8,7 @@ import { CollectionDefinition } from './collection_definition';
 
 export const SEPARATOR = '|-|';
 
-export type IndexValue = string | undefined;
+export type IndexedValue = string | undefined;
 
 // FIXME: distinguish correctly between:
 //  - sparse keys - a value is not always written to the all the key fields (from DynamoDB's persective, not optional sort
@@ -16,7 +16,7 @@ export type IndexValue = string | undefined;
 //  - empty key value - an access pattern mapped to a partition+sort defined GSI but that only has partition key values
 //                   needs a "dummy" value in the sort key slot so it gets indexed, and not treated like a sort key
 
-export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexValue => {
+export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexedValue => {
   if (values.length === 0) {
     // empty key value
     return collectionName;
@@ -35,7 +35,7 @@ export const getCollection = (context: Context, collectionName: string): Collect
 
 export const constructKeyValue = (
   type: 'partition' | 'sort',
-  collection: CollectionDefinition,
+  collectionName: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
   value: DocumentWithId
@@ -44,7 +44,7 @@ export const constructKeyValue = (
     const extractedValue = get(value, valuePath);
     if (typeof extractedValue !== 'undefined' && typeof extractedValue !== 'string') {
       throw new PersistenceException(
-        `Indexed value at path ${describeKeyPath(valuePath)} was not a string for collection ${collection.name}`
+        `Indexed value at path ${describeKeyPath(valuePath)} was not a string for collection ${collectionName}`
       );
     }
     const transformedValue = options.stringNormalizer && extractedValue ?
@@ -52,7 +52,7 @@ export const constructKeyValue = (
     return transformedValue;
   });
 
-  return assembleIndexedValue(type, collection.name, values);
+  return assembleIndexedValue(type, collectionName, values);
 };
 
 export const toWrapped = (
@@ -60,7 +60,7 @@ export const toWrapped = (
   value: { [key: string]: any }
 ): WrappedDocument => {
   let updatedValue: DocumentWithId;
-  if (value._id) {
+  if (typeof value._id !== 'undefined') {
     if (typeof value._id !== 'string') {
       throw new InvalidIdException(value._id);
     }
@@ -71,7 +71,7 @@ export const toWrapped = (
 
   const extractedKeys = collection.wrapperExtractKeys
     .map(({ type, key, valuePaths, options }) => {
-      const keyValue = constructKeyValue(type, collection, valuePaths, options, updatedValue);
+      const keyValue = constructKeyValue(type, collection.name, valuePaths, options, updatedValue);
       if (typeof keyValue !== undefined) {
         return { [key]: keyValue };
       }
