@@ -1,7 +1,7 @@
 import { SecondaryIndexLayout, PrimaryIndexLayout } from '../layout';
 import { ConfigurationException } from '../exceptions';
 
-export function validateListAllKey(listAllKey: SecondaryIndexLayout, primaryKey: PrimaryIndexLayout) {
+export function validateListAllKey(listAllKey: SecondaryIndexLayout, primaryKey: PrimaryIndexLayout): void {
   if (listAllKey.partitionKey !== primaryKey.sortKey) {
     throw new ConfigurationException('listAll partition key must be same as primary index sort key');
   }
@@ -11,7 +11,7 @@ export function validateListAllKey(listAllKey: SecondaryIndexLayout, primaryKey:
   }
 }
 
-export function validateFindKeys(findKeys: SecondaryIndexLayout[]) {
+export function validateFindKeys(findKeys: SecondaryIndexLayout[]): void {
   const alreadyDefinedIndexes: string[] = [];
   findKeys.forEach((findKey, index) => {
     if (alreadyDefinedIndexes.includes(findKey.indexName)) {
