@@ -2,9 +2,8 @@ import { CollectionNotFoundException } from "../exceptions";
 import { deleteById } from "./delete_by_id";
 import { createContext } from "../context";
 import { DynamoDB } from "aws-sdk/clients/all";
-import { wrap } from "module";
-import { toWrapped } from "../util";
 import { Converter } from "aws-sdk/clients/dynamodb";
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 
 describe('deleteById', () => {
   const layout = {
@@ -46,13 +45,9 @@ describe('deleteById', () => {
       name: 'Test Name',
     };
 
-    const mock = {
-      deleteItem: jest.fn().mockReturnValue({
-        promise: jest.fn().mockResolvedValue({
-          Attributes: Converter.marshall({ value }),
-        }),
-      }),
-    };
+    const mock = createDynamoMock('deleteItem', {
+      Attributes: Converter.marshall({ value }),
+    });
     const context = createContext(mock as unknown as DynamoDB, [collection]);
     const result = await deleteById(context, 'test-collection', 'idvalue');
 
