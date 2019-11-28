@@ -4,3 +4,4 @@ tsconfig.*
 .prettierrc
 coverage/
 .vscode/
+*.test.js
