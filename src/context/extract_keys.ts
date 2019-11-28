@@ -43,7 +43,7 @@ export function buildAndValidateAccessPatterns(collection: Collection): ExtractK
       if (!layout.sortKey) {
         throw new ConfigurationException(`access pattern ${describeAccessPattern(accessPattern)} has sort keys but index ${indexName} does not`);
       }
-      wrapperExtractKeys.push(createSortExtractKey(layout.partitionKey, accessPattern.sortKeys, accessPattern.options));
+      wrapperExtractKeys.push(createSortExtractKey(layout.sortKey, accessPattern.sortKeys, accessPattern.options));
     } else if (!accessPattern.sortKeys && layout.sortKey) {
       throw new ConfigurationException(`access pattern ${describeAccessPattern(accessPattern)} does not ` +
         `have sort keys but index ${indexName} has one defined - values in this collection will not show up`);
