@@ -53,9 +53,9 @@ export const findAccessPattern = (collection: Collection, query: FindQuery): Acc
 export const findAccessPatternLayout = (findKeys: SecondaryIndexLayout[], ap: AccessPattern): SecondaryIndexLayout | undefined =>
   findKeys.find(fk => fk.indexName === ap.indexName);
 
-const assembleQueryValue = (
+export const assembleQueryValue = (
   type: 'partition' | 'sort',
-  collection: Collection,
+  collectionName: string,
   query: FindQuery,
   options: AccessPatternOptions,
   paths?: KeyPath[]
@@ -68,7 +68,7 @@ const assembleQueryValue = (
       const transformedValue = options.stringNormalizer ? options.stringNormalizer(path, pathValue) : pathValue;
       values.push(transformedValue);
     }
-    return assembleIndexedValue(type, collection.name, values);
+    return assembleIndexedValue(type, collectionName, values);
   }
   return undefined;
 };
@@ -76,8 +76,9 @@ const assembleQueryValue = (
 // FIXME: distinguish `=` and `begins_with` based on specified sort keys
 const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: QueryOperator): string => {
   switch (qo) {
-  case 'match': return `begins_with(${sortKeyName}, ${sortValueName})`;
   case 'equals': return `${sortKeyName} = ${sortValueName}`;
+  default:
+  case 'match': return `begins_with(${sortKeyName}, ${sortValueName})`;
   }
   throw new Error('unreachable');
 }
@@ -159,8 +160,8 @@ export async function find(
     );
   }
 
-  const partitionKeyValue = assembleQueryValue('partition', collection, query, ap.options || {}, ap.partitionKeys);
-  const sortKeyValue = assembleQueryValue('sort', collection, query, ap.options || {}, ap.sortKeys);
+  const partitionKeyValue = assembleQueryValue('partition', collection.name, query, ap.options || {}, ap.partitionKeys);
+  const sortKeyValue = assembleQueryValue('sort', collection.name, query, ap.options || {}, ap.sortKeys);
 
   const sortKeyOp = sortKeyValue && getQueryOperator('#indexSortKey', ':indexSortKey', options?.queryOperator);
   const queryRequest: QueryInput = {
