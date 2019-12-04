@@ -29,7 +29,7 @@ export async function listAll(
   const collection = getCollection(context, collectionName);
 
   if (!collection.layout.listAllKey) {
-    throw new IndexNotFoundException('list');
+    throw new IndexNotFoundException('listAll');
   }
 
   const request: QueryInput = {
