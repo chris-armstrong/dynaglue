@@ -3,7 +3,7 @@ import { AccessPattern, KeyPath } from '../access_pattern';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
-import { InvalidQueryException, ConfigurationException } from '../exceptions';
+import { InvalidQueryException } from '../exceptions';
 import { Converter } from 'aws-sdk/clients/dynamodb';
 
 describe('isEqualKey', () => {
