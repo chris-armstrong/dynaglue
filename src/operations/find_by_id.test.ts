@@ -24,8 +24,8 @@ describe('findById', () => {
     expect(ddb.getItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'test-id1' },
-        collection: { S: 'test-collection' },
+        id: { S: 'test-collection|-|test-id1' },
+        collection: { S: 'test-collection|-|test-id1' },
       },
     });
   });
@@ -51,8 +51,8 @@ describe('findById', () => {
     expect(ddb.getItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'test-id1' },
-        collection: { S: 'test-collection' },
+        id: { S: 'test-collection|-|test-id1' },
+        collection: { S: 'test-collection|-|test-id1' },
       },
     });
   });

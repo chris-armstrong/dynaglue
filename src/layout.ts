@@ -44,10 +44,6 @@ export interface CollectionLayout {
   tableName: string;
   /** Layout of the primary key */
   primaryKey: PrimaryIndexLayout;
-  /** Layout of the list-all key. This is an optional secondary index
-   * that, if defined, must be the inverse of the primary key.
-   */
-  listAllKey?: SecondaryIndexLayout;
   /**
    * Optional secondary find keys for additional lookups
    */

@@ -1,7 +1,8 @@
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, listAll, findById, find, deleteById } from '../../lib';
+import { Collection, createContext, insert, findById, find, deleteById } from '../../lib';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
+const REGION = process.env.REGION || 'fake';
 
 /**
  *  in order to use this layout, you will need to start up DynamoDB local
@@ -27,11 +28,6 @@ const globalTableLayout = {
   primaryKey: {
     partitionKey: 'id',
     sortKey: 'collection',
-  },
-  listAllKey: {
-    indexName: 'gs1',
-    partitionKey: 'collection',
-    sortKey: 'id',
   },
   findKeys: [
     {
@@ -65,7 +61,7 @@ const postsCollection: Collection = {
 }
 
 async function main() {
-  const ddb = new DynamoDB({ endpoint: DYNAMODB_ENDPOINT, region: 'us-east-1' });
+  const ddb = new DynamoDB({ endpoint: DYNAMODB_ENDPOINT, region: REGION });
   const ctx = createContext(ddb, [usersCollection, postsCollection]);
 
   console.log(`Connecting at endpoint ${ddb.endpoint.href}`);
@@ -112,12 +108,6 @@ async function main() {
 
   console.log('inserted posts', [post1, post2, post3]);
 
-  const { items: allUsers } = await listAll(ctx, 'users');
-  console.log('all users', allUsers);
-
-  const { items: allPosts } = await listAll(ctx, 'posts');
-  console.log('all posts', allPosts);
-
   const foundUser2 = await findById(ctx, 'users', user2._id);
   const notFoundUser4 = await findById(ctx, 'users', 'not-found-id');
 
@@ -142,4 +132,5 @@ async function main() {
   console.log('user by employee code', userByEmployeeCode);
 }
 
-main();
+main()
+  .catch(err => console.error('error during execution', err));

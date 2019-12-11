@@ -96,7 +96,7 @@ describe('toWrapped', () => {
     name: 'locations',
     layout: {
       tableName: 'table-1',
-      primaryKey: { partitionKey: 'id', sortKey: 'collectionname' },
+      primaryKey: { partitionKey: 'id', sortKey: 'sid' },
       findKeys: [
         { indexName: 'gs1', partitionKey: 'gs1part', sortKey: 'gs1sort' },
       ]
@@ -113,8 +113,8 @@ describe('toWrapped', () => {
   test('generates a wrapped value with a generated ID for a collection value', () => {
     const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
     expect(toWrapped(collectionDefinition, value)).toEqual({
-      id: 'test-id',
-      collectionname: 'locations',
+      id: 'locations|-|test-id',
+      sid: 'locations|-|test-id',
       gs1part: 'locations|-|AU',
       gs1sort: 'locations|-|NSW|-|Sydney',
       value: { ...value, _id: 'test-id' },
@@ -130,8 +130,8 @@ describe('toWrapped', () => {
   test('generates a wrapped value with a provided ID for a collection value', () => {
     const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
     expect(toWrapped(collectionDefinition, value)).toEqual({
-      id: 'better-id',
-      collectionname: 'locations',
+      id: 'locations|-|better-id',
+      sid: 'locations|-|better-id',
       gs1part: 'locations|-|AU',
       gs1sort: 'locations|-|NSW|-|Sydney',
       value: { ...value, _id: 'better-id' },
@@ -141,8 +141,8 @@ describe('toWrapped', () => {
   test('generates a wrapped value when some of the extracted keys are all undefined', () => {
     const value = { name: 'United Kingdom', address: { country: 'UK' } };
     expect(toWrapped(collectionDefinition, value)).toEqual({
-      id: 'test-id',
-      collectionname: 'locations',
+      id: 'locations|-|test-id',
+      sid: 'locations|-|test-id',
       gs1part: 'locations|-|UK',
       value: { ...value, _id: 'test-id' },
     });

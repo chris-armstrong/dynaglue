@@ -10,6 +10,9 @@ export const SEPARATOR = '|-|';
 
 export type IndexedValue = string | undefined;
 
+export const assemblePrimaryKeyValue = (collectionName: string, _id: string): string =>
+  `${collectionName}${SEPARATOR}${_id}`;
+
 // FIXME: distinguish correctly between:
 //  - sparse keys - a value is not always written to the all the key fields (from DynamoDB's persective, not optional sort
 //                  key values) which leverages DynamoDB's behaviour to not index the record in that GSI
@@ -79,8 +82,8 @@ export const toWrapped = (
     .filter(x => typeof x !== 'undefined');
 
   const wrapped = Object.assign({
-    [collection.layout.primaryKey.partitionKey]: updatedValue._id,
-    [collection.layout.primaryKey.sortKey]: collection.name,
+    [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collection.name, updatedValue._id),
+    [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collection.name, updatedValue._id),
     value: updatedValue,
   }, ...extractedKeys);
   return wrapped;

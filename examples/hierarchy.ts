@@ -1,5 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, listAll, findById, find, deleteById } from '../lib';
+import { Collection, createContext, insert, findById, find, deleteById } from '../lib';
 import { Context } from '../lib/context';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
@@ -72,7 +72,7 @@ const locationsCollection: Collection = {
 type Location = {
   description: {
     name: string;
-  },
+  };
   country: string;
   state: string;
   city: string;

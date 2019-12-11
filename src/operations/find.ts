@@ -78,7 +78,8 @@ const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: Query
   switch (qo) {
   case 'equals': return `${sortKeyName} = ${sortValueName}`;
   default:
-  case 'match': return `begins_with(${sortKeyName}, ${sortValueName})`;
+  case 'match':
+    return `begins_with(${sortKeyName}, ${sortValueName})`;
   }
   throw new Error('unreachable');
 }
@@ -155,8 +156,8 @@ export async function find(
   const layout = findAccessPatternLayout(collection.layout?.findKeys ?? [], ap);
   if (!layout) {
     throw new ConfigurationException(
+      `Unable to find layout for index specified in access pattern`,
       { info: { collectionName, indexName: ap.indexName } },
-      `Unable to find layout for index specified in access pattern`
     );
   }
 

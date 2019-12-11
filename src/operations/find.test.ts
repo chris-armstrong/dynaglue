@@ -5,6 +5,7 @@ import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { InvalidQueryException } from '../exceptions';
 import { Converter } from 'aws-sdk/clients/dynamodb';
+import { Collection } from '../collection';
 
 describe('isEqualKey', () => {
   test('when both values are strings', () => {

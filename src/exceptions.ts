@@ -24,8 +24,9 @@ export class IndexNotFoundException extends VError {
 }
 
 export class ConfigurationException extends VError {
-  constructor(message: string) {
+  constructor(message: string, options: VError.Options = {}) {
     super({
+      ...options,
       name: 'configuration.error',
     }, message);
   }

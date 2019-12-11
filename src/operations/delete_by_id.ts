@@ -1,6 +1,6 @@
 import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, unwrap } from '../util';
+import { getCollection, unwrap, assemblePrimaryKeyValue } from '../util';
 import { WrappedDocument } from '../common';
 
 /**
@@ -16,8 +16,8 @@ export async function deleteById(context: Context, collectionName: string, id: s
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: id,
-      [collection.layout.primaryKey.sortKey]: collectionName,
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collectionName, id),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id),
     }),
     ReturnValues: 'ALL_OLD',
   };

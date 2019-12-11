@@ -1,7 +1,7 @@
 import DynamoDB from 'aws-sdk/clients/dynamodb';
 import { Collection } from '../collection';
 import { ConfigurationException } from '../exceptions';
-import { validateListAllKey, validateFindKeys } from './validators';
+import { validateFindKeys } from './validators';
 import { DynaglueContext } from './context_types';
 import { buildAndValidateAccessPatterns } from './extract_keys';
 import { ExtractKey } from '../collection_definition';
@@ -29,11 +29,6 @@ export function createContext(
       throw new ConfigurationException(
         `Duplicate collection definition: '${name}'`
       );
-    }
-
-    if (layout.listAllKey) {
-      const { listAllKey, primaryKey } = layout;
-      validateListAllKey(listAllKey, primaryKey);
     }
 
     if (layout.findKeys) {

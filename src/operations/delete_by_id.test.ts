@@ -31,8 +31,8 @@ describe('deleteById', () => {
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'idvalue' },
-        collection: { S: 'test-collection' },
+        id: { S: 'test-collection|-|idvalue' },
+        collection: { S: 'test-collection|-|idvalue' },
       },
       ReturnValues: 'ALL_OLD',
     });
@@ -54,8 +54,8 @@ describe('deleteById', () => {
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'idvalue' },
-        collection: { S: 'test-collection' },
+        id: { S: 'test-collection|-|idvalue' },
+        collection: { S: 'test-collection|-|idvalue' },
       },
       ReturnValues: 'ALL_OLD',
     });
