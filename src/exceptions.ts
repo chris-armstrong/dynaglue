@@ -24,6 +24,11 @@ export class IndexNotFoundException extends VError {
 }
 
 export class ConfigurationException extends VError {
+  constructor(message: string) {
+    super({
+      name: 'configuration.error',
+    }, message);
+  }
 }
 
 export class PersistenceException extends VError {}
@@ -37,5 +42,19 @@ export class InvalidQueryException extends VError {
       },
       name: 'invalid_query.error',
     }, message);
+  }
+}
+
+export class InvalidUpdateException extends VError {
+  constructor(message: string) {
+    super({
+      name: 'invalid_update.error',
+    }, message);
+  }
+}
+
+export class ExistingItemNotFoundForUpdateException extends VError {
+  constructor(message: string, id: string) {
+    super({ info: { id }, name: 'existing_item_not_found_for_update.error' }, message);
   }
 }
