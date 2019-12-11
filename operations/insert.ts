@@ -1,7 +1,7 @@
 import { PutItemInput, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, toWrapped } from '../util';
-import { ConflictException } from '../exceptions';
+import { getCollection, toWrapped } from '../base/util';
+import { ConflictException } from '../base/exceptions';
 
 /**
  * Insert a value into a collection. Adds an _id field to the value

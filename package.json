@@ -2,8 +2,8 @@
   "name": "dynaglue",
   "version": "0.1.0-alpha.2",
   "description": "dynaglue",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "lint": "eslint 'src/**/*.ts'",

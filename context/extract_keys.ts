@@ -1,8 +1,8 @@
-import { KeyPath, AccessPatternOptions } from '../access_pattern';
-import { Collection } from '../collection';
-import { describeAccessPattern } from '../access_pattern';
-import { ConfigurationException } from '../exceptions';
-import { ExtractKey } from '../collection_definition';
+import { KeyPath, AccessPatternOptions } from '../base/access_pattern';
+import { Collection } from '../base/collection';
+import { describeAccessPattern } from '../base/access_pattern';
+import { ConfigurationException } from '../base/exceptions';
+import { ExtractKey } from '../base/collection_definition';
 
 export const withTypeCreateExtractKey = (type: 'partition' | 'sort') =>
   (key: string, valuePaths: KeyPath[], options?: AccessPatternOptions): ExtractKey => ({

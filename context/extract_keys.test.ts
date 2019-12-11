@@ -1,6 +1,6 @@
-import { CollectionLayout } from "../layout";
+import { CollectionLayout } from "../base/layout";
 import { buildAndValidateAccessPatterns } from "./extract_keys";
-import { Collection } from "../collection";
+import { Collection } from "../base/collection";
 
 describe('buildAndValidateAccessPatterns', () => {
   const partitionKeyName = 'identifier';

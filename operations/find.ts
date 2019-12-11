@@ -2,12 +2,12 @@ import isEqual from 'lodash/isEqual';
 import { Key, QueryInput, Converter } from 'aws-sdk/clients/dynamodb';
 
 import { Context } from '../context';
-import { DocumentWithId, WrappedDocument } from '../common';
-import { getCollection, unwrap, assembleIndexedValue, IndexedValue } from '../util';
-import { Collection } from '../collection';
-import { InvalidQueryException, ConfigurationException } from '../exceptions';
-import { KeyPath, AccessPattern, AccessPatternOptions } from '../access_pattern';
-import { SecondaryIndexLayout } from '../layout';
+import { DocumentWithId, WrappedDocument } from '../base/common';
+import { getCollection, unwrap, assembleIndexedValue, IndexedValue } from '../base/util';
+import { Collection } from '../base/collection';
+import { InvalidQueryException, ConfigurationException } from '../base/exceptions';
+import { KeyPath, AccessPattern, AccessPatternOptions } from '../base/access_pattern';
+import { SecondaryIndexLayout } from '../base/layout';
 
 type QueryOperator = 'match' | 'equals';
 

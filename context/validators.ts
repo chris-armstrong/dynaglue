@@ -1,5 +1,5 @@
-import { SecondaryIndexLayout } from '../layout';
-import { ConfigurationException } from '../exceptions';
+import { SecondaryIndexLayout } from '../base/layout';
+import { ConfigurationException } from '../base/exceptions';
 
 export function validateFindKeys(findKeys: SecondaryIndexLayout[]): void {
   const alreadyDefinedIndexes: string[] = [];

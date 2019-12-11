@@ -1,5 +1,5 @@
 import { validateFindKeys } from './validators';
-import { ConfigurationException } from '../exceptions';
+import { ConfigurationException } from '../base/exceptions';
 
 test('validateFindKeys throws on already used indexes', () => {
   const findKeys = [

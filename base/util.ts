@@ -1,5 +1,5 @@
 import get from 'lodash/get';
-import { Context } from './context';
+import { Context } from '../context';
 import { CollectionNotFoundException, InvalidIdException, PersistenceException } from './exceptions';
 import { DocumentWithId, WrappedDocument } from './common';
 import newId from './new_id';

@@ -1,7 +1,7 @@
 import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, unwrap, assemblePrimaryKeyValue } from '../util';
-import { WrappedDocument } from '../common';
+import { getCollection, unwrap, assemblePrimaryKeyValue } from '../base/util';
+import { WrappedDocument } from '../base/common';
 
 /**
  * Delete an object using its `_id` field

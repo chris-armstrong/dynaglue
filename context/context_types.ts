@@ -1,5 +1,5 @@
 import DynamoDB from 'aws-sdk/clients/dynamodb';
-import { CollectionDefinition } from '../collection_definition';
+import { CollectionDefinition } from '../base/collection_definition';
 
 /**
  * A context object. This type should be considered opaque and

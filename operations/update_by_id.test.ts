@@ -1,8 +1,8 @@
-import { CollectionLayout } from "../layout";
-import { createDynamoMock, createDynamoMockError, createAWSError } from "../../testutil/dynamo_mock";
+import { CollectionLayout } from "../base/layout";
+import { createDynamoMock, createDynamoMockError, createAWSError } from "../testutil/dynamo_mock";
 import { createContext } from "../context";
 import { DynamoDB } from "aws-sdk/clients/all";
-import { ExistingItemNotFoundForUpdateException } from "../exceptions";
+import { ExistingItemNotFoundForUpdateException } from "../base/exceptions";
 import { updateById } from './update_by_id';
 
 describe('updateById', () => {

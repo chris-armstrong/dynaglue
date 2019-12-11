@@ -1,8 +1,8 @@
 import { Converter, PutItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { toWrapped, getCollection } from '../util';
-import { InvalidUpdateException, ExistingItemNotFoundForUpdateException } from '../exceptions';
-import { DocumentWithId } from '../common';
+import { toWrapped, getCollection } from '../base/util';
+import { InvalidUpdateException, ExistingItemNotFoundForUpdateException } from '../base/exceptions';
+import { DocumentWithId } from '../base/common';
 
 export async function updateById(context: Context, collectionName: string, value: DocumentWithId): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);

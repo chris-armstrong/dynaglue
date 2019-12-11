@@ -1,9 +1,9 @@
-import { CollectionLayout } from "../layout";
-import { createDynamoMock, createDynamoMockError, createAWSError } from "../../testutil/dynamo_mock";
+import { CollectionLayout } from "../base/layout";
+import { createDynamoMock, createDynamoMockError, createAWSError } from "../testutil/dynamo_mock";
 import { createContext } from "../context";
 import { DynamoDB } from "aws-sdk/clients/all";
 import { insert } from "./insert";
-import { ConflictException } from "../exceptions";
+import { ConflictException } from "../base/exceptions";
 
 describe('insert', () => {
   const layout: CollectionLayout = {

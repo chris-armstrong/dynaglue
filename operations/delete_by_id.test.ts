@@ -1,9 +1,9 @@
-import { CollectionNotFoundException } from "../exceptions";
+import { CollectionNotFoundException } from "../base/exceptions";
 import { deleteById } from "./delete_by_id";
 import { createContext } from "../context";
 import { DynamoDB } from "aws-sdk/clients/all";
 import { Converter } from "aws-sdk/clients/dynamodb";
-import { createDynamoMock } from '../../testutil/dynamo_mock';
+import { createDynamoMock } from '../testutil/dynamo_mock';
 
 describe('deleteById', () => {
   const layout = {

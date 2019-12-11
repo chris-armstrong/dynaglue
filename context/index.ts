@@ -1,10 +1,10 @@
 import DynamoDB from 'aws-sdk/clients/dynamodb';
-import { Collection } from '../collection';
-import { ConfigurationException } from '../exceptions';
+import { Collection } from '../base/collection';
+import { ConfigurationException } from '../base/exceptions';
 import { validateFindKeys } from './validators';
 import { DynaglueContext } from './context_types';
 import { buildAndValidateAccessPatterns } from './extract_keys';
-import { ExtractKey } from '../collection_definition';
+import { ExtractKey } from '../base/collection_definition';
 
 type Opaque<K, T> = T & { __TYPE__: K };
 export type Context = Opaque<'DynaglueContext', DynaglueContext>

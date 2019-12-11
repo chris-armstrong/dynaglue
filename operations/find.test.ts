@@ -1,11 +1,11 @@
 import { isEqualKey, findAccessPattern, findAccessPatternLayout, assembleQueryValue, find } from './find';
-import { AccessPattern, KeyPath } from '../access_pattern';
+import { AccessPattern, KeyPath } from '../base/access_pattern';
 import { DynamoDB } from 'aws-sdk/clients/all';
-import { createDynamoMock } from '../../testutil/dynamo_mock';
+import { createDynamoMock } from '../testutil/dynamo_mock';
 import { createContext } from '../context';
-import { InvalidQueryException } from '../exceptions';
+import { InvalidQueryException } from '../base/exceptions';
 import { Converter } from 'aws-sdk/clients/dynamodb';
-import { Collection } from '../collection';
+import { Collection } from '../base/collection';
 
 describe('isEqualKey', () => {
   test('when both values are strings', () => {
