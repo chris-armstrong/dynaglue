@@ -1,7 +1,13 @@
-src/
+base/
+context/
+operations/
+testutil/
+index.ts
+dynamo_mock.ts
 examples/
 tsconfig.*
 .prettierrc
 coverage/
 .vscode/
 *.test.js
+.travis.yml
