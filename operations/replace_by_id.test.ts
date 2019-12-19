@@ -3,9 +3,9 @@ import { createDynamoMock, createDynamoMockError, createAWSError } from "../test
 import { createContext } from "../context";
 import { DynamoDB } from "aws-sdk/clients/all";
 import { ExistingItemNotFoundForUpdateException } from "../base/exceptions";
-import { updateById } from './update_by_id';
+import { replaceById } from './replace_by_id';
 
-describe('updateById', () => {
+describe('replaceById', () => {
   const layout: CollectionLayout = {
     tableName: 'my-objects',
     primaryKey: { partitionKey: 'pkey', sortKey: 'skey' },
@@ -15,12 +15,12 @@ describe('updateById', () => {
     layout,
   };
 
-  test('should updateById an item conditionally', async () => {
+  test('should replaceById an item conditionally', async () => {
     const ddb = createDynamoMock('putItem', {});
     const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
-    const result = await updateById(context, 'users', value);
+    const result = await replaceById(context, 'users', value);
     expect(result).toHaveProperty('_id');
 
     const request = ddb.putItem.mock.calls[0][0];
@@ -34,6 +34,6 @@ describe('updateById', () => {
     const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
-    expect(updateById(context, 'users', value)).rejects.toThrowError(ExistingItemNotFoundForUpdateException);
+    expect(replaceById(context, 'users', value)).rejects.toThrowError(ExistingItemNotFoundForUpdateException);
   });
 })

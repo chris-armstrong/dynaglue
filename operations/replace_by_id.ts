@@ -4,7 +4,7 @@ import { toWrapped, getCollection } from '../base/util';
 import { InvalidUpdateException, ExistingItemNotFoundForUpdateException } from '../base/exceptions';
 import { DocumentWithId } from '../base/common';
 
-export async function updateById(context: Context, collectionName: string, value: DocumentWithId): Promise<DocumentWithId> {
+export async function replaceById(context: Context, collectionName: string, value: DocumentWithId): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);
   if (!value._id) {
     throw new InvalidUpdateException('must be an existing indexed value');

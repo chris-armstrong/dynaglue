@@ -1,5 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, findById, find, deleteById } from '../../dist';
+import { Collection, createContext, insert, findById, find, deleteById, replaceById } from '../../dist';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 const REGION = process.env.REGION || 'fake';
@@ -10,17 +10,18 @@ const REGION = process.env.REGION || 'fake';
  *
  *  docker run -p 8000:8000 amazon/dynamodb-local
  *
- *  aws dynamodb create-table \
- *    --endpoint-url http://localhost:8000 \
- *    --table-name global \
- *    --attribute-definitions AttributeName=id,AttributeType=S AttributeName=collection,AttributeType=S \
- *      AttributeName=gs2p,AttributeType=S AttributeName=gs2s,AttributeType=S \
- *      AttributeName=gs3p,AttributeType=S AttributeName=gs3s,AttributeType=S \
- *    --key-schema KeyType=HASH,AttributeName=id KeyType=SORT,AttributeName=collection \
- *    --billing-mode PAY_PER_REQUEST \
- *    --global-secondary-indexes 'IndexName=gs1,KeySchema=[{KeyType="HASH",AttributeName=collection},{KeyType=SORT,AttributeName=id}],Projection={ProjectionType=ALL}' \
- *      'IndexName=gs2,KeySchema=[{KeyType="HASH",AttributeName="gs2p"},{KeyType=SORT,AttributeName=gs2s}],Projection={ProjectionType=ALL}' \
- *      'IndexName=gs3,KeySchema=[{KeyType="HASH",AttributeName="gs3p"},{KeyType=SORT,AttributeName=gs3s}],Projection={ProjectionType=ALL}'
+ *
+  aws dynamodb create-table \
+     --endpoint-url http://localhost:8000 \
+     --table-name global \
+     --attribute-definitions AttributeName=id,AttributeType=S AttributeName=collection,AttributeType=S \
+       AttributeName=gs2p,AttributeType=S AttributeName=gs2s,AttributeType=S \
+       AttributeName=gs3p,AttributeType=S AttributeName=gs3s,AttributeType=S \
+     --key-schema KeyType=HASH,AttributeName=id KeyType=SORT,AttributeName=collection \
+     --billing-mode PAY_PER_REQUEST \
+     --global-secondary-indexes 'IndexName=gs1,KeySchema=[{KeyType="HASH",AttributeName=collection},{KeyType=SORT,AttributeName=id}],Projection={ProjectionType=ALL}' \
+       'IndexName=gs2,KeySchema=[{KeyType="HASH",AttributeName="gs2p"},{KeyType=SORT,AttributeName=gs2s}],Projection={ProjectionType=ALL}' \
+       'IndexName=gs3,KeySchema=[{KeyType="HASH",AttributeName="gs3p"},{KeyType=SORT,AttributeName=gs3s}],Projection={ProjectionType=ALL}'
  */
 
 const globalTableLayout = {
@@ -119,6 +120,14 @@ async function main() {
 
   const deletedItem = await deleteById(ctx, 'posts', post2._id);
   console.log('deleted post #2', deletedItem);
+
+  const updatedPost = await replaceById(ctx, 'posts', {
+    ...post3,
+    title: 'Updated first post',
+  });
+  console.log('updated post #3', updatedPost);
+
+  console.log('posts by user 2', await find(ctx, 'posts', { userId: user2._id }));
 
   const emailSearch = await find(ctx, 'users', { email: 'anayah' });
   console.log('email search results', emailSearch);
