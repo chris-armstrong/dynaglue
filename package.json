@@ -1,6 +1,6 @@
 {
   "name": "dynaglue",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "dynaglue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
