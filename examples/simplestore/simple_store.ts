@@ -61,7 +61,7 @@ const postsCollection: Collection = {
   ]
 }
 
-async function main() {
+async function main(): Promise<void> {
   const ddb = new DynamoDB({ endpoint: DYNAMODB_ENDPOINT, region: REGION });
   const ctx = createContext(ddb, [usersCollection, postsCollection]);
 

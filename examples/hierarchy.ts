@@ -1,7 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 import { Collection, createContext, insert, find } from '../dist';
 import { Context } from '../dist/context';
-import { replaceById } from '../operations/replace_by_id';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 
@@ -98,7 +97,7 @@ const createLocation = (
   street,
   description: {
     name,
-  }
+  },
 });
 
 const populateLocations = (ctx: Context) => {
@@ -106,11 +105,17 @@ const populateLocations = (ctx: Context) => {
   addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Bondi', 'Campbell Parade', 'Bondi Beach'));
   addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Sydney', 'Wheat Road', 'Darling Harbour'));
   addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Manly', 'The Corso', 'The Corso'));
-  addLocation(ctx, createLocation('AU', 'NSW', 'Byron Bay', 'Byron Bay', 'Cape Byron Walking Track', 'Smokey Cape Lighthouse'));
+  addLocation(
+    ctx,
+    createLocation('AU', 'NSW', 'Byron Bay', 'Byron Bay', 'Cape Byron Walking Track', 'Smokey Cape Lighthouse')
+  );
   addLocation(ctx, createLocation('AU', 'NSW', 'Clifton', 'Clifton', 'Lawrence Hargrave Dr', 'Seacliff Bridge'));
   addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Melbourne', 'Queen Street', 'Queen Victoria Market'));
   addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Melbourne', 'Flinders Street', 'Federation Square'));
-  addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'South Yarra', 'Birdwood Avenue', 'Royal Botanic Gardens Victoria'));
+  addLocation(
+    ctx,
+    createLocation('AU', 'VIC', 'Melbourne', 'South Yarra', 'Birdwood Avenue', 'Royal Botanic Gardens Victoria')
+  );
   addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Belgrave', 'Old Monbulk Road', 'Puffing Billy Railway'));
 };
 
@@ -130,7 +135,7 @@ async function main() {
   console.log('All Victoria locations', allVictoriaLocations.items);
 
   const findSLocations = await find(ctx, 'locations', { 'description.name': 'S' });
-  console.log('locations beginning with \'S\':', findSLocations.items);
+  console.log("locations beginning with 'S':", findSLocations.items);
 }
 
 main();
