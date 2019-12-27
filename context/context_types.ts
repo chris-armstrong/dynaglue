@@ -1,5 +1,5 @@
 import DynamoDB from 'aws-sdk/clients/dynamodb';
-import { CollectionDefinition } from '../base/collection_definition';
+import { CollectionDefinition, ChildCollectionDefinition, RootCollectionDefinition } from '../base/collection_definition';
 
 /**
  * A context object. This type should be considered opaque and
@@ -8,4 +8,6 @@ import { CollectionDefinition } from '../base/collection_definition';
 export interface DynaglueContext {
   ddb: DynamoDB;
   definitions: Map<string, CollectionDefinition>;
+  rootDefinitions: Map<string, RootCollectionDefinition>;
+  childDefinitions: Map<string, ChildCollectionDefinition>;
 };

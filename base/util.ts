@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 import { Context } from '../context';
-import { CollectionNotFoundException, InvalidIdException, PersistenceException } from './exceptions';
+import { CollectionNotFoundException, InvalidIdException, PersistenceException, InvalidParentIdException } from './exceptions';
 import { DocumentWithId, WrappedDocument } from './common';
 import newId from './new_id';
 import { KeyPath, describeKeyPath, AccessPatternOptions } from './access_pattern';
@@ -28,6 +28,18 @@ export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName:
     return undefined;
   }
   return `${collectionName}${SEPARATOR}${values.map(x => typeof x === 'string' ? x : '').join(SEPARATOR)}`;
+};
+
+export const getRootCollection = (context: Context, collectionName: string): CollectionDefinition => {
+  const c = context.rootDefinitions.get(collectionName);
+  if (!c) throw new CollectionNotFoundException(collectionName);
+  return c;
+};
+
+export const getChildCollection = (context: Context, collectionName: string): CollectionDefinition => {
+  const c = context.childDefinitions.get(collectionName);
+  if (!c) throw new CollectionNotFoundException(collectionName);
+  return c;
 };
 
 export const getCollection = (context: Context, collectionName: string): CollectionDefinition => {
@@ -81,9 +93,22 @@ export const toWrapped = (
     })
     .filter(x => typeof x !== 'undefined');
 
+  let partitionKeyValue;
+  let sortKeyValue;
+  if (collection.type === 'child') {
+    const parentId = get(value, collection.foreignKeyPath);
+    if (typeof parentId !== 'string') {
+      throw new InvalidParentIdException(parentId, collection.name, collection.parentCollectionName);
+    }
+    partitionKeyValue = assemblePrimaryKeyValue(collection.parentCollectionName, parentId);
+    sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id);
+  } else {
+    partitionKeyValue = sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id);
+  }
+
   const wrapped = Object.assign({
-    [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collection.name, updatedValue._id),
-    [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collection.name, updatedValue._id),
+    [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
+    [collection.layout.primaryKey.sortKey]: sortKeyValue,
     value: updatedValue,
   }, ...extractedKeys);
   return wrapped;

@@ -4,7 +4,8 @@ import { ConfigurationException } from '../base/exceptions';
 import { validateFindKeys } from './validators';
 import { DynaglueContext } from './context_types';
 import { buildAndValidateAccessPatterns } from './extract_keys';
-import { ExtractKey } from '../base/collection_definition';
+import { ExtractKey, RootCollectionDefinition, ChildCollectionDefinition } from '../base/collection_definition';
+import isEqual from 'lodash/isEqual';
 
 type Opaque<K, T> = T & { __TYPE__: K };
 export type Context = Opaque<'DynaglueContext', DynaglueContext>
@@ -22,6 +23,8 @@ export function createContext(
   collections: Collection[]
 ): Context {
   const definitions = new Map();
+  const rootDefinitions = new Map<string, RootCollectionDefinition>();
+  const childDefinitions = new Map<string, ChildCollectionDefinition>();
 
   for (const collection of collections) {
     const { name, layout } = collection;
@@ -43,10 +46,29 @@ export function createContext(
       ...collection,
       wrapperExtractKeys,
     });
+
+    if (collection.type === 'child') {
+      childDefinitions.set(collection.name, { ...collection, wrapperExtractKeys });
+    } else {
+      rootDefinitions.set(collection.name, { ...collection, wrapperExtractKeys });
+    }
   }
+
+  for (const childDefinition of childDefinitions.values()) {
+    const parentDefinition = rootDefinitions.get(childDefinition.parentCollectionName);
+    if (!parentDefinition) {
+      throw new ConfigurationException(`Child collection ${childDefinition.name} refers to non-existent parent definition ${childDefinition.parentCollectionName}`);
+    }
+    if (!isEqual(parentDefinition.layout, childDefinition.layout)) {
+      throw new ConfigurationException(`Child collection ${childDefinition.name} must have same layout as parent definition ${parentDefinition.name}`);
+    }
+  }
+
   return {
     ddb: dynamodb,
     definitions,
+    rootDefinitions,
+    childDefinitions,
     __TYPE__: 'DynaglueContext',
   };
 }

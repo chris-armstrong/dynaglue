@@ -1,5 +1,5 @@
 import { KeyPath, AccessPatternOptions } from "./access_pattern";
-import { Collection } from "./collection";
+import { Collection, ChildCollection, RootCollection } from "./collection";
 
 /**
  * Extracted keys from access patterns. Used internally
@@ -16,5 +16,11 @@ export type ExtractKey = {
  * Collection mapping used internally
  */
 export type CollectionDefinition = Collection & {
+  wrapperExtractKeys: ExtractKey[];
+};
+export type RootCollectionDefinition = RootCollection & {
+  wrapperExtractKeys: ExtractKey[];
+};
+export type ChildCollectionDefinition = ChildCollection & {
   wrapperExtractKeys: ExtractKey[];
 };

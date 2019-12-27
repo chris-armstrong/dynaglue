@@ -1,10 +1,10 @@
 import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, unwrap, assemblePrimaryKeyValue } from '../base/util';
+import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
 import { WrappedDocument } from '../base/common';
 
 /**
- * Delete an object using its `_id` field
+ * Delete a root object using its `_id` field
  * @param context the context object
  * @param collectionName the name of the collection
  * @param id the object to remove
@@ -12,7 +12,7 @@ import { WrappedDocument } from '../base/common';
  * undefined if not found
  */
 export async function deleteById(context: Context, collectionName: string, id: string): Promise<any> {
-  const collection = getCollection(context, collectionName);
+  const collection = getRootCollection(context, collectionName);
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({

@@ -1,10 +1,10 @@
 import { Converter, GetItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, unwrap, assemblePrimaryKeyValue } from '../base/util';
+import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
 import { WrappedDocument } from '../base/common';
 
 /**
- * Retrieve an item by its `_id` field.
+ * Retrieve a root item by its `_id` field.
  *
  * @param context the context object
  * @param collectionName name of the collection to search
@@ -16,7 +16,7 @@ export async function findById(
   collectionName: string,
   id: string
 ): Promise<any> {
-  const collection = getCollection(context, collectionName);
+  const collection = getRootCollection(context, collectionName);
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({

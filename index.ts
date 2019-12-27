@@ -1,4 +1,4 @@
-export { findById, insert, find, deleteById, replaceById } from './operations';
+export { findById, insert, find, deleteById, replace } from './operations';
 export { createContext } from './context';
 export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';
 export { AccessPattern, KeyPath, NormaliserFunction} from './base/access_pattern';

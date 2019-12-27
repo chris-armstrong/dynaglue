@@ -1,7 +1,9 @@
 import { PutItemInput, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, toWrapped } from '../base/util';
+import { getCollection, toWrapped, assemblePrimaryKeyValue } from '../base/util';
 import { ConflictException } from '../base/exceptions';
+import get from 'lodash/get';
+import { DocumentWithId } from '../base/common';
 
 /**
  * Insert a value into a collection. Adds an _id field to the value
@@ -17,19 +19,33 @@ import { ConflictException } from '../base/exceptions';
 export async function insert(
   context: Context,
   collectionName: string,
-  value: object
-): Promise<any> {
+  value: object,
+): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped(collection, value);
-  const request: PutItemInput = {
-    TableName: collection.layout.tableName,
-    Item: Converter.marshall(wrapped),
-    ReturnValues: 'NONE',
-    ConditionExpression: 'attribute_not_exists(#idAttribute)',
-    ExpressionAttributeNames: {
-      '#idAttribute': collection.layout.primaryKey.partitionKey,
-    },
-  };
+  let request: PutItemInput;
+  if (collection.type === 'child') {
+    request = {
+      TableName: collection.layout.tableName,
+      Item: Converter.marshall(wrapped),
+      ReturnValues: 'NONE',
+      ConditionExpression: 'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
+      ExpressionAttributeNames: {
+        '#parentIdAttribute': assemblePrimaryKeyValue(collection.parentCollectionName, get(value, collection.foreignKeyPath)),
+        '#childIdAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id),
+      },
+    };
+  } else {
+    request = {
+      TableName: collection.layout.tableName,
+      Item: Converter.marshall(wrapped),
+      ReturnValues: 'NONE',
+      ConditionExpression: 'attribute_not_exists(#idAttribute)',
+      ExpressionAttributeNames: {
+        '#idAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id),
+      },
+    };
+  }
   try {
     await context.ddb.putItem(request).promise();
   } catch (error) {

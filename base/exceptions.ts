@@ -6,8 +6,21 @@ export class ConflictException extends VError {
   }
 }
 export class InvalidIdException extends VError {
-  constructor(id: string) {
+  constructor(id: any) {
     super({ info: { id }, name: 'invaild_id.error' }, 'The provided document has an invalid ID');
+  }
+}
+
+export class InvalidParentIdException extends VError {
+  constructor(parentId: any, collectionName: string, parentCollectionName: string) {
+    super({
+      info: {
+        parentId,
+        collectionName,
+        parentCollectionName,
+      },
+      name: 'invalid_parent_id.error',
+    }, `The provided document has a missing parent ID or it is the incorrect type`);
   }
 }
 
@@ -43,19 +56,5 @@ export class InvalidQueryException extends VError {
       },
       name: 'invalid_query.error',
     }, message);
-  }
-}
-
-export class InvalidUpdateException extends VError {
-  constructor(message: string) {
-    super({
-      name: 'invalid_update.error',
-    }, message);
-  }
-}
-
-export class ExistingItemNotFoundForUpdateException extends VError {
-  constructor(message: string, id: string) {
-    super({ info: { id }, name: 'existing_item_not_found_for_update.error' }, message);
   }
 }

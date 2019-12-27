@@ -1,8 +1,8 @@
 import './new_id';
 import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap } from "./util";
-import { PersistenceException, InvalidIdException } from "./exceptions";
+import { PersistenceException, InvalidIdException, InvalidParentIdException } from "./exceptions";
 import { KeyPath } from "./access_pattern";
-import { CollectionDefinition } from "./collection_definition";
+import { ChildCollectionDefinition, RootCollectionDefinition } from "./collection_definition";
 
 jest.mock('./new_id', () => ({
   __esModule: true,
@@ -92,15 +92,16 @@ describe('toWrapped', () => {
   const countryValuePath = ['address', 'country'];
   const stateValuePath = ['address', 'state'];
   const cityValuePath = ['address', 'city'];
-  const collectionDefinition: CollectionDefinition = {
+  const layout = {
+    tableName: 'table-1',
+    primaryKey: { partitionKey: 'id', sortKey: 'sid' },
+    findKeys: [
+      { indexName: 'gs1', partitionKey: 'gs1part', sortKey: 'gs1sort' },
+    ]
+  };
+  const rootCollection: RootCollectionDefinition = {
     name: 'locations',
-    layout: {
-      tableName: 'table-1',
-      primaryKey: { partitionKey: 'id', sortKey: 'sid' },
-      findKeys: [
-        { indexName: 'gs1', partitionKey: 'gs1part', sortKey: 'gs1sort' },
-      ]
-    },
+    layout,
     accessPatterns: [
       { indexName: 'gs1', partitionKeys: [countryValuePath], sortKeys: [stateValuePath, cityValuePath] },
     ],
@@ -110,37 +111,73 @@ describe('toWrapped', () => {
     ],
   };
 
-  test('generates a wrapped value with a generated ID for a collection value', () => {
-    const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-    expect(toWrapped(collectionDefinition, value)).toEqual({
-      id: 'locations|-|test-id',
-      sid: 'locations|-|test-id',
-      gs1part: 'locations|-|AU',
-      gs1sort: 'locations|-|NSW|-|Sydney',
-      value: { ...value, _id: 'test-id' },
+  const childCollection: ChildCollectionDefinition = {
+    name: 'locations_descriptors',
+    type: 'child',
+    layout,
+    foreignKeyPath: ['location'],
+    parentCollectionName: 'locations',
+    wrapperExtractKeys: [],
+  };
+
+  describe('with top-level collections', () => {
+    test('generates a wrapped value with a generated ID for a collection value', () => {
+      const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      expect(toWrapped(rootCollection, value)).toEqual({
+        id: 'locations|-|test-id',
+        sid: 'locations|-|test-id',
+        gs1part: 'locations|-|AU',
+        gs1sort: 'locations|-|NSW|-|Sydney',
+        value: { ...value, _id: 'test-id' },
+      });
+    });
+
+    test('generates a wrapped value with a provided ID for a collection value', () => {
+      const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      expect(toWrapped(rootCollection, value)).toEqual({
+        id: 'locations|-|better-id',
+        sid: 'locations|-|better-id',
+        gs1part: 'locations|-|AU',
+        gs1sort: 'locations|-|NSW|-|Sydney',
+        value: { ...value, _id: 'better-id' },
+      });
+    });
+  });
+
+  describe('with child collections', () => {
+    test('generates a wrapped value with a generated ID for a collection value', () => {
+      const value = { location: 'sydney-1', lang: 'en', description: 'Sydney' };
+      expect(toWrapped(childCollection, value)).toEqual({
+        id: 'locations|-|sydney-1',
+        sid: 'locations_descriptors|-|test-id',
+        value: { ...value, _id: 'test-id' },
+      });
+    });
+
+    test('throws an exception when the foreign key is missing', () => {
+      const value = { lang: 'en', description: 'Sydney' };
+      expect(() => toWrapped(childCollection, value)).toThrowError(InvalidParentIdException);
+    });
+
+    test('uses the provided _id correctly when it is valid', () => {
+      const value = { _id: 'sydney-1-en', location: 'sydney-1', lang: 'en', description: 'Sydney' };
+      expect(toWrapped(childCollection, value)).toEqual({
+        id: 'locations|-|sydney-1',
+        sid: 'locations_descriptors|-|sydney-1-en',
+        value,
+      });
     });
   });
 
   test('throws an exception when an invalid ID is provided', () => {
     const value = { _id: 234872, name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-    expect(() => toWrapped(collectionDefinition, value))
+    expect(() => toWrapped(rootCollection, value))
       .toThrow(InvalidIdException);
-  });
-
-  test('generates a wrapped value with a provided ID for a collection value', () => {
-    const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-    expect(toWrapped(collectionDefinition, value)).toEqual({
-      id: 'locations|-|better-id',
-      sid: 'locations|-|better-id',
-      gs1part: 'locations|-|AU',
-      gs1sort: 'locations|-|NSW|-|Sydney',
-      value: { ...value, _id: 'better-id' },
-    });
   });
 
   test('generates a wrapped value when some of the extracted keys are all undefined', () => {
     const value = { name: 'United Kingdom', address: { country: 'UK' } };
-    expect(toWrapped(collectionDefinition, value)).toEqual({
+    expect(toWrapped(rootCollection, value)).toEqual({
       id: 'locations|-|test-id',
       sid: 'locations|-|test-id',
       gs1part: 'locations|-|UK',
