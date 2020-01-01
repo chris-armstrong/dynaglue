@@ -4,7 +4,7 @@ import { CollectionNotFoundException, InvalidIdException, PersistenceException, 
 import { DocumentWithId, WrappedDocument } from './common';
 import newId from './new_id';
 import { KeyPath, describeKeyPath, AccessPatternOptions } from './access_pattern';
-import { CollectionDefinition } from './collection_definition';
+import { CollectionDefinition, ChildCollectionDefinition, RootCollectionDefinition } from './collection_definition';
 
 export const SEPARATOR = '|-|';
 
@@ -30,13 +30,13 @@ export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName:
   return `${collectionName}${SEPARATOR}${values.map(x => typeof x === 'string' ? x : '').join(SEPARATOR)}`;
 };
 
-export const getRootCollection = (context: Context, collectionName: string): CollectionDefinition => {
+export const getRootCollection = (context: Context, collectionName: string): RootCollectionDefinition => {
   const c = context.rootDefinitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
 };
 
-export const getChildCollection = (context: Context, collectionName: string): CollectionDefinition => {
+export const getChildCollection = (context: Context, collectionName: string): ChildCollectionDefinition => {
   const c = context.childDefinitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
@@ -114,6 +114,6 @@ export const toWrapped = (
   return wrapped;
 };
 
-export const unwrap = (document: WrappedDocument): any => {
+export const unwrap = (document: WrappedDocument): DocumentWithId => {
   return document.value;
 };

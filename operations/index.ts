@@ -3,3 +3,6 @@ export { insert } from './insert';
 export { find } from './find';
 export { deleteById } from './delete_by_id';
 export { replace } from './replace';
+export { findChildren } from './find_children';
+export { findChildById } from './find_child_by_id';
+export { deleteChildById } from './delete_child_by_id';

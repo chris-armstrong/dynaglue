@@ -1,6 +1,20 @@
-export { findById, insert, find, deleteById, replace } from './operations';
+export {
+  findById,
+  insert,
+  find,
+  deleteById,
+  replace,
+  findChildren,
+  findChildById,
+  deleteChildById,
+} from './operations';
 export { createContext } from './context';
 export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';
-export { AccessPattern, KeyPath, NormaliserFunction} from './base/access_pattern';
+export { AccessPattern, KeyPath, NormaliserFunction } from './base/access_pattern';
 export { Collection } from './base/collection';
-export { CollectionNotFoundException, ConflictException, InvalidIdException, IndexNotFoundException } from './base/exceptions';
+export {
+  CollectionNotFoundException,
+  ConflictException,
+  InvalidIdException,
+  IndexNotFoundException,
+} from './base/exceptions';
