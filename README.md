@@ -75,7 +75,26 @@ const usersInTeam2 = await find(ctx, 'users', { 'team.id': 'team-code-2' });
 // Find user by teamId and employeeCode (access pattern 2)
 const specificUser = await find(ctx, 'users', { 'team.id': 'team-code-1', employeeCode: 'AC-2' });
 // => [{ _id: '...', name: 'Ruairidh Hughes', ... }]
+
+// Update an item
+const updatedItem = await updateById(ctx, 'users', user4._id, {
+  'team.employeeCode': 'GT-10',
+  'name': 'James Alles',
+});
 ```
+
+## Getting Started
+
+For now, the best recommendation is to nstall it into your project, look at the examples,
+and examine the API.
+
+You can see what it is doing to DynamoDB by running your code with the environment variable:
+
+```bash
+export DEBUG=dynaglue:*
+```
+
+which will print out the queries it executes.
 
 ## Rationale
 
@@ -112,11 +131,8 @@ and on the merits of single table vs multi table design (this library is agnosti
 
 ## Status
 
-This project is currently **experimental**, more proof-of-concept than rock-solid
-production-ready modelling library.
-
-**Its API is unstable and will change**, so it should not be used for anything
-important (just yet anyway :-).
+This project is currently in in progress (alpha). **Its API is unstable and is undergoing change**,
+so take care and keep an eye on updates for now.
 
 Please try it out, report bugs, suggest improvements or submit sensible code
 changes.
@@ -167,15 +183,15 @@ This is what I'm aware of - I'm sure there is much more:
 * *It is impossible to use projected attributes on GSIs with the current data layout*
   *to control index storange and return value size.* This could be achieved with a
   completely different storage pattern, which is probably going to happen
-* *No support for update expressions or filter expressions.* No reason AFAIK
+* *Limited update item support* - this is being added (just SET actions for now!)
+* *No support for update filter expressions.* No reason AFAIK
   that prevents these from being added. They just need an API :-)
 * *Only string types for values used to build indexes.* Obviously numbers
   and dates are useful for sort key expressions, but they require more
   sophisticated handling
-* *No adjacency lists* - everything is a top-level object. You
-  can still create relationships with indexed foreign keys, but this is not the
-  same (for starters, it requires an extra GSI instead of overloading the
-  primary key).
+* ~~No adjacency lists~~ - there is basic adjanency list support now - see
+  the new `ChildCollection` type and `*ChildById` APIs :-) in the `basic_children.ts`
+  example
 * *No write sharding support for low-variance partition keys.* If you have hot partition
   keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
   and you query them on one of those values relentlessly, you will get a
