@@ -2,6 +2,7 @@ import { Converter, GetItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
 import { WrappedDocument } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 /**
  * Retrieve a root item by its `_id` field.
@@ -24,6 +25,7 @@ export async function findById(
       [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id),
     }),
   };
+  debugDynamo('GetItem', request);
   const result = await context.ddb.getItem(request).promise();
   if (result.Item) {
     const wrapped = Converter.unmarshall(result.Item);

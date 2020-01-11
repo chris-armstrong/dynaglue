@@ -2,6 +2,7 @@ import { getChildCollection, assemblePrimaryKeyValue, SEPARATOR, unwrap } from '
 import { QueryInput, Key, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 type FindChildrenResults = {
   items: DocumentWithId[];
@@ -51,6 +52,7 @@ export async function findChildren(
     ExclusiveStartKey: nextToken,
   };
 
+  debugDynamo('Query', request);
   const results = await ctx.ddb.query(request).promise();
   return {
     items: (results.Items||[]).map(item => unwrap(Converter.unmarshall(item) as WrappedDocument)),

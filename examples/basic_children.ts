@@ -1,8 +1,6 @@
-import { curry } from 'lodash';
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, find, findChildren, findChildById, deleteChildById } from '../dist';
-import { Context } from '../dist/context';
-import { ChildCollection } from '../dist/base/collection';
+import { Collection, createContext, insert, find, findChildren, findChildById, deleteChildById, updateById } from '../dist';
+import { ChildCollection, RootCollection } from '../dist/base/collection';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 
@@ -37,9 +35,12 @@ const globalTableLayout = {
   ],
 };
 
-const usersCollection = {
+const usersCollection: RootCollection = {
   name: 'users',
   layout: globalTableLayout,
+  accessPatterns: [
+    { indexName: 'gs2', partitionKeys: [['group'], ['type']], sortKeys: [['name']] },
+  ]
 };
 
 const addressesCollection: ChildCollection = {
@@ -53,16 +54,16 @@ const addressesCollection: ChildCollection = {
 async function main(): Promise<void> {
   const ddb = new DynamoDB({
     endpoint: DYNAMODB_ENDPOINT,
-    region: 'us-east-1',
+    region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
   });
   const ctx = createContext(ddb, [usersCollection, addressesCollection]);
 
-  const user1 = await insert(ctx, 'users', { name: 'Joyce Mannheim' });
+  const user1 = await insert(ctx, 'users', { type: 'administrator', group: 'red', name: 'Joyce Mannheim' });
   console.log('created user 1', user1);
   const address1 = await insert(ctx, 'addresses', { userId: user1._id, type: 'home', line1: '10 Home Place', suburb: 'HomeTown' });
   const address2 = await insert(ctx, 'addresses', { userId: user1._id, type: 'work', line1: '78 Work Close', suburb: 'CityVillage' });
 
-  const user2 = await insert(ctx, 'users', { name: 'Bill Langham' });
+  const user2 = await insert(ctx, 'users', { type: 'guest', group: 'blue', name: 'Bill Langham' });
   console.log('created user 2', user2);
   const address3 = await insert(ctx, 'addresses', { userId: user2._id, type: 'home', line1: '62 Local St', suburb: 'Daceyville' });
 
@@ -73,6 +74,9 @@ async function main(): Promise<void> {
 
   const deleteAddress1 = await deleteChildById(ctx, 'addresses', address1._id, user1._id);
   console.log('deleted address 1', deleteAddress1);
+
+  const newObject = await updateById(ctx, 'users', user1._id, { name: 'James Mannheim', password: 'test-password', group: 'red', type: 'blue' });
+  console.log('updated user 1', newObject);
 }
 
 main().catch(error => console.error('error', error));

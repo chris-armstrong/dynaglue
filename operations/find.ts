@@ -8,6 +8,7 @@ import { Collection } from '../base/collection';
 import { InvalidQueryException, ConfigurationException } from '../base/exceptions';
 import { KeyPath, AccessPattern, AccessPatternOptions } from '../base/access_pattern';
 import { SecondaryIndexLayout } from '../base/layout';
+import debugDynamo from '../debug/debugDynamo';
 
 type QueryOperator = 'match' | 'equals';
 
@@ -179,6 +180,7 @@ export async function find(
     },
     ExclusiveStartKey: nextToken,
   };
+  debugDynamo('Query', queryRequest);
   const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb.query(queryRequest).promise();
   const unwrappedItems = items ? items.map(item => unwrap(Converter.unmarshall(item) as WrappedDocument)) : [];
   return {

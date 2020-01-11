@@ -2,6 +2,7 @@ import { Converter, PutItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { toWrapped, getCollection } from '../base/util';
 import { DocumentWithId } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 export async function replace(context: Context, collectionName: string, value: object): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);
@@ -11,7 +12,7 @@ export async function replace(context: Context, collectionName: string, value: o
     Item: Converter.marshall(wrapped),
     ReturnValues: 'NONE',
   };
-
+  debugDynamo('PutItem', request);
   await context.ddb.putItem(request).promise();
   return wrapped.value;
 }

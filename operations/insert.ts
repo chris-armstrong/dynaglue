@@ -4,6 +4,7 @@ import { getCollection, toWrapped, assemblePrimaryKeyValue } from '../base/util'
 import { ConflictException } from '../base/exceptions';
 import get from 'lodash/get';
 import { DocumentWithId } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 /**
  * Insert a value into a collection. Adds an _id field to the value
@@ -47,6 +48,7 @@ export async function insert(
     };
   }
   try {
+    debugDynamo('PutItem', request);
     await context.ddb.putItem(request).promise();
   } catch (error) {
     if (error.code === 'ConditionalCheckFailedException') {

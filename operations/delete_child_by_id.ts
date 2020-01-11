@@ -2,6 +2,7 @@ import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { unwrap, assemblePrimaryKeyValue, getChildCollection } from '../base/util';
 import { WrappedDocument, DocumentWithId } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 /**
  * Delete a child object using its `_id` field and its parents `_id`.
@@ -22,6 +23,7 @@ export async function deleteChildById(context: Context, collectionName: string, 
     }),
     ReturnValues: 'ALL_OLD',
   };
+  debugDynamo('DeleteItem', request);
   const result = await context.ddb.deleteItem(request).promise();
   if (result.Attributes) {
     const wrapped = Converter.unmarshall(result.Attributes);

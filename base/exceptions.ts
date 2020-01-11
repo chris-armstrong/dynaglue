@@ -58,3 +58,25 @@ export class InvalidQueryException extends VError {
     }, message);
   }
 }
+
+export class InvalidUpdatesException extends VError {
+  constructor(message: string) {
+    super({
+      name: 'invalid_updates.error',
+    }, message);
+  }
+}
+
+export class InvalidUpdateValueException extends VError {
+  constructor(path: string, message: string) {
+    super(
+      {
+        name: 'invalid_update_value',
+        info: {
+          path,
+        },
+      },
+      message
+    );
+  }
+}
