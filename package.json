@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
+    "doc": "typedoc index.ts",
     "lint": "eslint '**/*.ts'",
     "test": "jest"
   },
