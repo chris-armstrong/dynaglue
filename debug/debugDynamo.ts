@@ -1,5 +1,6 @@
 import debug from 'debug';
 
+/** @internal */
 const logger = debug('dynaglue:dynamodb');
 
 /**

@@ -3,8 +3,11 @@
 
 import { randomBytes } from 'crypto';
 
+/** @internal */
 const PROCESS_UNIQUE = randomBytes(5);
+/** @internal */
 let IdIndex = ~~(Math.random() * 0xffffff);
+/** @internal */
 const getInc = (): number => (IdIndex = (IdIndex + 1) % 0xffffff);
 
 /**
