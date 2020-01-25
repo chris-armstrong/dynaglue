@@ -1,0 +1,479 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>dynaglue</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">dynaglue</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>dynaglue</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#dynaglue" id="dynaglue" style="color: inherit; text-decoration: none;">
+					<h1>Dynaglue</h1>
+				</a>
+				<p>An opinionated JavaScript library to make single-table designs in DynamoDB easier
+				to query and update.</p>
+				<pre><code class="language-sh">npm install dynaglue</code></pre>
+				<a href="#rationale" id="rationale" style="color: inherit; text-decoration: none;">
+					<h2>Rationale</h2>
+				</a>
+				<p>Querying and storing data in single-table DynamoDB designs <strong>is hard</strong>. Keeping indexes up-to-date and
+				constructing DynamoDB queries and update expressions is time-consuming and error-prone.</p>
+				<p><em>dynaglue</em> takes the hassle out of managing your data with a straightforward way to declare its mapping
+				onto your table&#39;s indexes, and wraps it all up with simple and foolproof Mongo-like API.</p>
+				<p>See <a href="#Motivation">Motivation</a> (below) for a more detailed explanation.</p>
+				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+					<h2>Getting Started</h2>
+				</a>
+				<p>A comprehensive <a href="https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide">Getting Started Guide</a> is
+				available explaining how to install and use dynaglue in a new project as well as all its current features.</p>
+				<p>See the <a href="https://github.com/chris-armstrong/dynaglue/tree/master/examples">examples directory</a> for a more
+				concise overview of its features in action.</p>
+				<a href="#status" id="status" style="color: inherit; text-decoration: none;">
+					<h2>Status</h2>
+				</a>
+				<p>This project is currently in in progress (alpha). <strong>Its API is unstable and is undergoing change</strong>,
+				so take care and keep an eye on updates for now.</p>
+				<p>Please try it out, report bugs, suggest improvements or submit sensible code
+				changes.</p>
+				<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
+					<h2>Usage Example</h2>
+				</a>
+				<pre><code class="language-typescript"><span class="hljs-comment">// Declare the layout of your table (its primary and secondary indexes and their key names)</span>
+<span class="hljs-keyword">const</span> layout = {
+  tableName: <span class="hljs-string">'my-table'</span>,
+  primaryKey: { partitionKey: <span class="hljs-string">'id'</span>, sortKey: <span class="hljs-string">'collection'</span> },
+  findKeys: [
+    <span class="hljs-comment">// 2 GSIs =&gt; up to 2 extra access patterns per collection</span>
+    { indexName: <span class="hljs-string">'gs2'</span>, partitionKey: <span class="hljs-string">'gs2p'</span>, sortKey: <span class="hljs-string">'gs2s'</span> },
+    { indexName: <span class="hljs-string">'gs3'</span>, partitionKey: <span class="hljs-string">'gs3p'</span>, sortKey: <span class="hljs-string">'gs3s'</span> },
+  ],
+};
+
+<span class="hljs-comment">// Declare a collection for each data type (like a Mongo collection)</span>
+<span class="hljs-keyword">const</span> usersCollection = {
+  name: <span class="hljs-string">'users'</span>,
+  layout,
+  <span class="hljs-comment">// access patterns that are mapped to indexes in the table layout</span>
+  accessPatterns: [
+    <span class="hljs-comment">// 1. Find users by their email address on GSI2</span>
+    { indexName: <span class="hljs-string">'gs2'</span>, partitionKeys: [], sortKeys: [[<span class="hljs-string">'email'</span>]] },
+    <span class="hljs-comment">// 2. Find users by their team (and optionally, employee code)</span>
+    { indexName: <span class="hljs-string">'gs3'</span>, partitionKeys: [[<span class="hljs-string">'team'</span>, <span class="hljs-string">'id'</span>]], sortKeys: [[<span class="hljs-string">'team'</span>, <span class="hljs-string">'employeeCode'</span>]] },
+  ],
+};
+<span class="hljs-keyword">const</span> ddb = <span class="hljs-keyword">new</span> AWS.DynamoDB();
+<span class="hljs-keyword">const</span> ctx = createContext(ddb, [usersCollection]);
+
+<span class="hljs-comment">// Insert users into collection (auto-generated IDs)</span>
+<span class="hljs-keyword">const</span> user1 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">'users'</span>, {
+  name: <span class="hljs-string">'Anayah Dyer'</span>,
+  email: <span class="hljs-string">'anayahd@example.com'</span>,
+  team: { id: <span class="hljs-string">'team-code-1'</span>, employeeCode: <span class="hljs-string">'AC-1'</span> },
+});
+<span class="hljs-keyword">const</span> user2 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">'users'</span>, {
+  name: <span class="hljs-string">'Ruairidh Hughes'</span>,
+  email: <span class="hljs-string">'ruairidhh@example.com'</span>,
+  team: { id: <span class="hljs-string">'team-code-1'</span>, employeeCode: <span class="hljs-string">'AC-2'</span> },
+});
+<span class="hljs-keyword">const</span> user3 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">'users'</span>, {
+  name: <span class="hljs-string">'Giles Major'</span>,
+  email: <span class="hljs-string">'giles@example.com'</span>,
+  team: { id: <span class="hljs-string">'team-code-2'</span>, employeeCode: <span class="hljs-string">'GT-5'</span> },
+});
+<span class="hljs-keyword">const</span> user4 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">'users'</span>, {
+  name: <span class="hljs-string">'Lance Alles'</span>,
+  email: <span class="hljs-string">'lance@example.com'</span>,
+  team: { id: <span class="hljs-string">'team-code-2'</span>, employeeCode: <span class="hljs-string">'GT-6'</span> },
+});
+
+<span class="hljs-comment">// Find a user by ID (uses primary index)</span>
+<span class="hljs-keyword">const</span> foundUser = <span class="hljs-keyword">await</span> findById(ctx, <span class="hljs-string">'users'</span>, user2._id);
+<span class="hljs-comment">// =&gt; { _id: '...', name: 'Ruairidh Hughes', ... }</span>
+
+<span class="hljs-comment">// Find a user by email (access pattern 1)</span>
+<span class="hljs-keyword">const</span> userByEmail = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">'users'</span>, { email: <span class="hljs-string">'anayahd@example.com'</span> });
+<span class="hljs-comment">// =&gt; [{ _id: '...', name: 'Anayah Dyer', ... }]</span>
+
+<span class="hljs-comment">// Find all users in a team (access pattern 2)</span>
+<span class="hljs-keyword">const</span> usersInTeam2 = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">'users'</span>, { <span class="hljs-string">'team.id'</span>: <span class="hljs-string">'team-code-2'</span> });
+<span class="hljs-comment">// =&gt; [{ _id: '...', name: 'Giles Major', ... }, { _id: '...', name: 'Lance Alles', ... }]</span>
+
+<span class="hljs-comment">// Find user by teamId and employeeCode (access pattern 2)</span>
+<span class="hljs-keyword">const</span> specificUser = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">'users'</span>, { <span class="hljs-string">'team.id'</span>: <span class="hljs-string">'team-code-1'</span>, employeeCode: <span class="hljs-string">'AC-2'</span> });
+<span class="hljs-comment">// =&gt; [{ _id: '...', name: 'Ruairidh Hughes', ... }]</span>
+
+<span class="hljs-comment">// Update an item</span>
+<span class="hljs-keyword">const</span> updatedItem = <span class="hljs-keyword">await</span> updateById(ctx, <span class="hljs-string">'users'</span>, user4._id, {
+  <span class="hljs-string">'team.employeeCode'</span>: <span class="hljs-string">'GT-10'</span>,
+  <span class="hljs-string">'name'</span>: <span class="hljs-string">'James Alles'</span>,
+});</code></pre>
+				<a href="#prerequisite-knowledge" id="prerequisite-knowledge" style="color: inherit; text-decoration: none;">
+					<h2>Prerequisite Knowledge</h2>
+				</a>
+				<p>This library assumes you have a solid understanding of DynamoDB partition and sort keys, primary and secondary indexes,
+				and assumes you understand how single-table designs work in theory.</p>
+				<p>If you&#39;re unsure what any of this means, first learn how to build applications using DynamoDB:</p>
+				<ul>
+					<li><a href="https://www.dynamodbguide.com/">DynamoDB Guide</a></li>
+					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html">Getting Started with DynamoDB - AWS Documentation</a></li>
+				</ul>
+				<p>more advanced DynamoDB modelling:</p>
+				<ul>
+					<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
+					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html">DynamoDB Best Practices</a></li>
+					<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
+					<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
+				</ul>
+				<p>and on the merits of single table vs multi table design (this library is agnostic):</p>
+				<ul>
+					<li><a href="https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/">Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail</a></li>
+					<li><a href="https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices">Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie</a></li>
+				</ul>
+				<a href="#debugging" id="debugging" style="color: inherit; text-decoration: none;">
+					<h2>Debugging</h2>
+				</a>
+				<p>You can see what it is doing to DynamoDB by running your code with the environment variable:</p>
+				<pre><code class="language-bash"><span class="hljs-built_in">export</span> DEBUG=dynaglue:*</code></pre>
+				<p>which will print out the queries it executes.</p>
+				<a href="#motivation" id="motivation" style="color: inherit; text-decoration: none;">
+					<h2>Motivation</h2>
+				</a>
+				<p>In order to leverage DynamoDB properly, you must first:</p>
+				<ul>
+					<li>purge yourself of any sensible knowledge of database design such as normalisation</li>
+					<li>know exactly how your application will access its data for now and all time (in
+					other words, it helps to be psychic)</li>
+					<li>pack multiple values into the same field in order to implement fast composite-key and
+					hierarchical data lookups</li>
+					<li>mix multiple data structures together in the same table, distinguished only by
+					prefixes and values</li>
+				</ul>
+				<p>Once you&#39;ve accepted all that is horrible as best practice, you may then build highly
+				performant and scalable web applications.</p>
+				<p>The next stumbling block is an API that does not make this easy. Combining multiple
+					records from different data types sharing indexes in the same logical table requires
+				great discipline and attention to detail.</p>
+				<p>Most DynamoDB applications will attempt to avoid this by using separate tables
+					for each type of data, using secondary indexes liberally and by naming their keys
+					intuitively based on the data being modelled. This is actually fine: it makes working
+				with the API less painful but it makes it harder to optimise for cost and performance.</p>
+				<p>This library is an attempt at a compromise - it presents a Mongo-like
+					API for looking up data, but still relies on you to identify and declare your access
+				patterns up front.</p>
+				<p>You can query your data as if your storage engine knows how to work out
+					what index to use, but it will fail hard if it can&#39;t find that index, which is
+				(counterintuitively) what you want with DynamoDB.</p>
+				<p>You can use it for single or multi-table designs (in reality, there is no such thing
+					as single-table designs, because there will be at least one access pattern that is
+					so different from your others that it would affect the performance of them if they
+				shared an index or table).</p>
+				<a href="#limitations" id="limitations" style="color: inherit; text-decoration: none;">
+					<h2>Limitations</h2>
+				</a>
+				<p>This is what I&#39;m aware of - I&#39;m sure there is much more:</p>
+				<ul>
+					<li><em>It is highly opinionated about how data is stored.</em> Using this for existing
+					applications is going to require a data migration at the very least</li>
+					<li><em>It is impossible to use projected attributes on GSIs with the current data layout</em>
+						<em>to control index storange and return value size.</em> This could be achieved with a
+					completely different storage pattern, which is probably going to happen</li>
+					<li><em>Limited update item support</em> - this is being added (just SET actions for now!)</li>
+					<li><em>No support for update filter expressions.</em> No reason AFAIK
+					that prevents these from being added. They just need an API :-)</li>
+					<li><em>Only string types for values used to build indexes.</em> Obviously numbers
+						and dates are useful for sort key expressions, but they require more
+					sophisticated handling</li>
+					<li><del>No adjacency lists</del> - there is basic adjanency list support now - see
+						the new <code>ChildCollection</code> type and <code>*ChildById</code> APIs :-) in the <code>basic_children.ts</code>
+					example</li>
+					<li><em>No write sharding support for low-variance partition keys.</em> If you have hot partition
+						keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
+						and you query them on one of those values relentlessly, you will get a
+						hot partition. The normal solution is to add a suffix spread between a given
+						set of values (e.g. 0-19) so that when it is queried on status the query can
+					be split over 20 partitions instead of one.</li>
+					<li><em>This library may not reflect or enforce best practice.</em> This library probably does
+						some things inefficiently and will let you do bad things too (this is a hammer
+					and that might be a nail, so I presume you know what you&#39;re doing)</li>
+				</ul>
+				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+					<h2>Contributing</h2>
+				</a>
+				<p>There isn&#39;t formal contribution guidelines at this time.</p>
+				<p>Open an Issue (<strong>especially before you write any code</strong>) and share your
+				thoughts / plans / ideas before you do anything substantial.</p>
+				<p>Abuse, harrassment, and anything else that is becoming unproductive will be closed
+				without further engagement.</p>
+				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+					<h2>License</h2>
+				</a>
+				<p>Copyright 2019-2020 Christopher Armstrong</p>
+				<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+					you may not use this file except in compliance with the License.
+				You may obtain a copy of the License at</p>
+				<p>  <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+				<p>Unless required by applicable law or agreed to in writing, software
+					distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+					WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+					See the License for the specific language governing permissions and
+				limitations under the License.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/collectionnotfoundexception.html" class="tsd-kind-icon">Collection<wbr>Not<wbr>Found<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/configurationexception.html" class="tsd-kind-icon">Configuration<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/conflictexception.html" class="tsd-kind-icon">Conflict<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/indexnotfoundexception.html" class="tsd-kind-icon">Index<wbr>Not<wbr>Found<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalididexception.html" class="tsd-kind-icon">Invalid<wbr>IdException</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidparentidexception.html" class="tsd-kind-icon">Invalid<wbr>Parent<wbr>IdException</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidqueryexception.html" class="tsd-kind-icon">Invalid<wbr>Query<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidupdatevalueexception.html" class="tsd-kind-icon">Invalid<wbr>Update<wbr>Value<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidupdatesexception.html" class="tsd-kind-icon">Invalid<wbr>Updates<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/persistenceexception.html" class="tsd-kind-icon">Persistence<wbr>Exception</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/accesspattern.html" class="tsd-kind-icon">Access<wbr>Pattern</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/childcollection.html" class="tsd-kind-icon">Child<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/collectionlayout.html" class="tsd-kind-icon">Collection<wbr>Layout</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/commoncollection.html" class="tsd-kind-icon">Common<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/rootcollection.html" class="tsd-kind-icon">Root<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#accesspatternoptions" class="tsd-kind-icon">Access<wbr>Pattern<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#collection" class="tsd-kind-icon">Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#documentwithid" class="tsd-kind-icon">Document<wbr>With<wbr>Id</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#findchildrenresults" class="tsd-kind-icon">Find<wbr>Children<wbr>Results</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#findquery" class="tsd-kind-icon">Find<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#findresults" class="tsd-kind-icon">Find<wbr>Results</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#keypath" class="tsd-kind-icon">Key<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#normaliserfunction" class="tsd-kind-icon">Normaliser<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#primaryindexlayout" class="tsd-kind-icon">Primary<wbr>Index<wbr>Layout</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#queryoperator" class="tsd-kind-icon">Query<wbr>Operator</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#secondaryindexlayout" class="tsd-kind-icon">Secondary<wbr>Index<wbr>Layout</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#setvaluesdocument" class="tsd-kind-icon">Set<wbr>Values<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#updates" class="tsd-kind-icon">Updates</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#wrappeddocument" class="tsd-kind-icon">Wrapped<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#createcontext" class="tsd-kind-icon">create<wbr>Context</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#deletebyid" class="tsd-kind-icon">delete<wbr>ById</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#deletechildbyid" class="tsd-kind-icon">delete<wbr>Child<wbr>ById</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#describeaccesspattern" class="tsd-kind-icon">describe<wbr>Access<wbr>Pattern</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#find" class="tsd-kind-icon">find</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#findbyid" class="tsd-kind-icon">find<wbr>ById</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#findchildbyid" class="tsd-kind-icon">find<wbr>Child<wbr>ById</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#findchildren" class="tsd-kind-icon">find<wbr>Children</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#insert" class="tsd-kind-icon">insert</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#replace" class="tsd-kind-icon">replace</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#updatebyid" class="tsd-kind-icon">update<wbr>ById</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
