@@ -7,7 +7,15 @@ import { buildAndValidateAccessPatterns } from './extract_keys';
 import { ExtractKey, RootCollectionDefinition, ChildCollectionDefinition } from '../base/collection_definition';
 import isEqual from 'lodash/isEqual';
 
+/**
+  * @internal
+  */
 type Opaque<K, T> = T & { __TYPE__: K };
+
+/**
+  * @internal
+  * @ignore
+  */
 export type Context = Opaque<'DynaglueContext', DynaglueContext>
 
 /**
@@ -17,6 +25,7 @@ export type Context = Opaque<'DynaglueContext', DynaglueContext>
  * @param dynamodb dynamodb instance, initialised with correct access key and region
  * @param collections a list of collection definitions to use with this context
  * @returns a context object
+*  @throws {ConfigurationException} when there is a configuration issue in the given collections
  */
 export function createContext(
   dynamodb: DynamoDB,

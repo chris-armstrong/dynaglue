@@ -29,7 +29,8 @@ export type AccessPatternOptions = {
 
 /**
   * A **access pattern** defines how to copy values from the entities
-  * in a collection into an index.
+  * in a collection into an index. They are used to permit indexed
+  * queryies with the [[find]] operation.
   *
   * In order to index values, you must first have defined a GSI in
   * your [[CollectionLayout|collection's layout]].
@@ -37,10 +38,11 @@ export type AccessPatternOptions = {
 export interface AccessPattern {
   /** The name of the index in your [[CollectionLayout|collection's layout]] */
   indexName: string;
-  /** The [[KeyPath|key paths]] to extract and store in the partition key. Partition keys are
-    * stored with the name of the collection concatenated with the value at each key path,
-    * separated by a `|-|` sequence
-    */
+  /** The [[KeyPath|key paths]] to extract and store in the partition key.
+    *
+    * Key paths specified for a partition key must be present in documents
+    * stored in the associated [[Collection]].
+   */
   partitionKeys: KeyPath[];
   /** The [[KeyPath|key paths]] to extract and store in the sort key.    
   *

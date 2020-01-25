@@ -6,10 +6,22 @@ import newId from './new_id';
 import { KeyPath, describeKeyPath, AccessPatternOptions } from './access_pattern';
 import { CollectionDefinition, ChildCollectionDefinition, RootCollectionDefinition } from './collection_definition';
 
+/**
+  * @internal
+  * The separator value.
+  */
 export const SEPARATOR = '|-|';
 
+/**
+  * @internal
+  */
 export type IndexedValue = string | undefined;
 
+/**
+  * @internal
+  * 
+  * Assemble an _id value into its indexed primary key field
+  */
 export const assemblePrimaryKeyValue = (collectionName: string, _id: string): string =>
   `${collectionName}${SEPARATOR}${_id}`;
 
@@ -19,6 +31,11 @@ export const assemblePrimaryKeyValue = (collectionName: string, _id: string): st
 //  - empty key value - an access pattern mapped to a partition+sort defined GSI but that only has partition key values
 //                   needs a "dummy" value in the sort key slot so it gets indexed, and not treated like a sort key
 
+/**
+  * @internal
+  *
+  * Assemble extracted key paths into their indexed value
+  */
 export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexedValue => {
   if (values.length === 0) {
     // empty key value
@@ -30,24 +47,39 @@ export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName:
   return `${collectionName}${SEPARATOR}${values.map(x => typeof x === 'string' ? x : '').join(SEPARATOR)}`;
 };
 
+/**
+  * @internal
+  */
 export const getRootCollection = (context: Context, collectionName: string): RootCollectionDefinition => {
   const c = context.rootDefinitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
 };
 
+/**
+  * @internal
+  */
 export const getChildCollection = (context: Context, collectionName: string): ChildCollectionDefinition => {
   const c = context.childDefinitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
 };
 
+/**
+  * @internal
+  */
 export const getCollection = (context: Context, collectionName: string): CollectionDefinition => {
   const c = context.definitions.get(collectionName);
   if (!c) throw new CollectionNotFoundException(collectionName);
   return c;
 };
 
+/**
+  * @internal
+  *
+  * Given a collection, and set of key paths from an access pattern, create a value that can be used
+  * to look up an index attribute. This is used to generate the value to store in the indexed attribute.
+  */
 export const constructKeyValue = (
   type: 'partition' | 'sort',
   collectionName: string,
@@ -70,6 +102,11 @@ export const constructKeyValue = (
   return assembleIndexedValue(type, collectionName, values);
 };
 
+/**
+  * @internal
+  * 
+  * Generate the wrapped value of a document to store in a table for a collection.
+  */
 export const toWrapped = (
   collection: CollectionDefinition,
   value: { [key: string]: any }
@@ -114,6 +151,9 @@ export const toWrapped = (
   return wrapped;
 };
 
+/**
+  * @internal
+  */
 export const unwrap = (document: WrappedDocument): DocumentWithId => {
   return document.value;
 };

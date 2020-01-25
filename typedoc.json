@@ -1,5 +1,7 @@
 {
   "mode": "file",
   "out": "docs",
-  "exclude": "**/*.test.ts"
+  "exclude": "**/*.test.ts",
+  "excludeNotExported": true,
+  "stripInternal": true
 }
