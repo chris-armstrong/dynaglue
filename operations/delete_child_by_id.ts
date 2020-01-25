@@ -11,7 +11,8 @@ import debugDynamo from '../debug/debugDynamo';
  * @param id the child object to remove
  * @param rootObjectId the parent object id
  * @returns the deleted object (as stored in the database), or
- * undefined if not found
+ * `undefined` if not found
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
 export async function deleteChildById(context: Context, collectionName: string, id: string, rootObjectId: string): Promise<DocumentWithId|undefined> {
   const collection = getChildCollection(context, collectionName);

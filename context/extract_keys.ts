@@ -4,6 +4,12 @@ import { describeAccessPattern } from '../base/access_pattern';
 import { ConfigurationException } from '../base/exceptions';
 import { ExtractKey } from '../base/collection_definition';
 
+/**
+  * @internal
+  * Create the extract key value for setting up the context. An extract
+  * key is an internal definition derived from access patterns to indicate
+  * a key path that should be extracted for indexing upon insert.
+  */
 export const withTypeCreateExtractKey = (type: 'partition' | 'sort') =>
   (key: string, valuePaths: KeyPath[], options?: AccessPatternOptions): ExtractKey => ({
   type,
@@ -12,9 +18,16 @@ export const withTypeCreateExtractKey = (type: 'partition' | 'sort') =>
   options: options || {},
 });
 
+/** @internal */
 export const createPartitionExtractKey = withTypeCreateExtractKey('partition');
+/** @internal */
 export const createSortExtractKey = withTypeCreateExtractKey('sort');
 
+/** @internal 
+  *
+  * Construct the list of key paths to extract on `insert()` and `replace()` operations
+  * for a collection, based on its access patterns.
+  */
 export function buildAndValidateAccessPatterns(collection: Collection): ExtractKey[] {
   const wrapperExtractKeys: ExtractKey[] = [];
   const findKeys = collection.layout.findKeys || [];

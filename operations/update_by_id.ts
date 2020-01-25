@@ -94,6 +94,45 @@ export const findCollectionIndex = (collection: Collection, indexName: string): 
   return layout;
 }
 
+export const replaceStringHex = (sub: string): string => {
+  let replacement = '';
+  for (let i = 0; i < sub.length; i++) {
+    replacement += sub[i].charCodeAt(i).toString(16);
+  }
+  return replacement;
+}
+export const makeSafeAttributeName = (partName: string): string => `#attr_${partName.replace(/[^A-Za-z]+/g, replaceStringHex)}`
+
+export type Action = {
+  action: string;
+  expressionAttributeValue: [string, any];
+  expressionAttributeNames: [string, string][];
+};
+
+export const setActionCreator = () => {
+  let safeNameIndex = 0;
+  let safeValueIndex = 0;
+  return (keyPath: KeyPath, value: any): Action => {
+    const valueName = `:value${safeValueIndex++}`;
+    const marshalledValue = typeof value === 'object' && !Array.isArray(value) ?
+      Converter.marshall(value) : Converter.input(value);
+
+    const updateKeyPath = ['value', ...keyPath];
+    const updateKeyPathMappings: [string, string][] = updateKeyPath.map(part => {
+      if (isSafeAttributeName(part)) {
+        return [part, part];
+      }
+      return [part, `#attr${safeNameIndex++}`];
+    });
+
+    return {
+      expressionAttributeValue: [valueName, marshalledValue],
+      expressionAttributeNames: updateKeyPathMappings.filter(([attr, mapped]) => attr !== mapped),
+      action: `${updateKeyPathMappings.map(([, mapped]) => mapped).join('.')} = ${valueName}`,
+    };
+  };
+};
+
 export async function updateById(
   ctx: Context,
   collectionName: string,
@@ -140,6 +179,7 @@ export async function updateById(
   }
 
   let keyValueIndex = 0;
+
   if (collection.accessPatterns) {
     for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
 

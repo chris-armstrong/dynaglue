@@ -17,6 +17,7 @@ import debugDynamo from '../debug/debugDynamo';
  * @param id the `_id` value
  * @param rootObjectId the _id of the root object
  * @returns the stored value, or `undefined` if not found
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
 export async function findChildById(
   context: Context,

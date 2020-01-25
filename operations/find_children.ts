@@ -4,8 +4,16 @@ import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 
-type FindChildrenResults = {
+/**
+  * The results of a [[findChildren]] operation.
+  */
+export type FindChildrenResults = {
+  /** the items that were returned in this batch */
   items: DocumentWithId[];
+  /** The pagination token. If this value is specified, it means
+    * there is more results for the query. Provide it to another
+    * call to `findChildren` to get the next set of results.
+    */
   nextToken?: Key;
 };
 
@@ -25,6 +33,7 @@ type FindChildrenResults = {
  * @param childCollectionName name of the child object collection
  * @param rootObjectId the `_id` of the root object
  * @param nextToken the next token from the previous call, or `undefined` if there are no more values
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
 export async function findChildren(
   ctx: Context,

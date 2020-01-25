@@ -10,7 +10,8 @@ import debugDynamo from '../debug/debugDynamo';
  * @param collectionName the name of the collection
  * @param id the object to remove
  * @returns the deleted object (as stored in the database), or
- * undefined if not found
+ * `undefined` if not found
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
 export async function deleteById(context: Context, collectionName: string, id: string): Promise<any> {
   const collection = getRootCollection(context, collectionName);

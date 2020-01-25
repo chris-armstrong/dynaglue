@@ -10,21 +10,51 @@ import { KeyPath, AccessPattern, AccessPatternOptions } from '../base/access_pat
 import { SecondaryIndexLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
 
-type QueryOperator = 'match' | 'equals';
+/**
+  * The query operator to use in the `KeyConditionExpression` to `QueryItem`
+  * as called by [[find]]
+  */
+export type QueryOperator = 'match' | 'equals';
 
-type FindQuery = { [matchKey: string]: string };
+/**
+  * A find query. This is a map of key paths (specified dot-separated)
+  * to values to match.
+  *
+  * The query you specify must match an access pattern on the collection,
+  * otherwise an [[IndexNotFoundException]] will be thrown by [[find]]
+  */
+export type FindQuery = { [matchKey: string]: string };
 
-type FindResults = {
+/**
+  * The results of a [[find]] operation.
+  */
+export type FindResults = {
+  /** The items in this batch of results */
   items: DocumentWithId[];
+  /** The pagination token. This value is specified when
+    * there are more results to fetch; pass it to another [[find]] call
+    * to get the next batch. It will be `undefined` when there is no
+    * more results.
+    */
   nextToken?: Key;
 };
 
+/**
+  * @internal
+  * 
+  * Compare key paths and return if they are equal.
+  */
 export const isEqualKey = (lhs: string[] | string, rhs: string[] | string): boolean => {
   const normalisedLhs = typeof lhs === 'string' ? lhs.split('.') : lhs;
   const normalisedRhs = typeof rhs === 'string' ? rhs.split('.') : rhs;
   return isEqual(normalisedLhs, normalisedRhs);
 };
 
+/**
+ * @internal
+ *
+ * Find the access pattern for the specified query.
+ */
 export const findAccessPattern = (collection: Collection, query: FindQuery): AccessPattern | undefined => {
   return (collection.accessPatterns || []).find(ap => {
     const unmatchedQueryKeys = [...Object.keys(query)];
@@ -51,9 +81,19 @@ export const findAccessPattern = (collection: Collection, query: FindQuery): Acc
   });
 };
 
+/**
+ * @internal
+ * 
+ * Find the access pattern layout for the specified access pattern
+ */
 export const findAccessPatternLayout = (findKeys: SecondaryIndexLayout[], ap: AccessPattern): SecondaryIndexLayout | undefined =>
   findKeys.find(fk => fk.indexName === ap.indexName);
 
+/**
+  * @internal
+  *
+  * Assemble a value into the query, taking into account string normalizer options. 
+  */
 export const assembleQueryValue = (
   type: 'partition' | 'sort',
   collectionName: string,
@@ -75,6 +115,10 @@ export const assembleQueryValue = (
 };
 
 // FIXME: distinguish `=` and `begins_with` based on specified sort keys
+
+/**
+  * @internal
+  */
 const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: QueryOperator): string => {
   switch (qo) {
   case 'equals': return `${sortKeyName} = ${sortValueName}`;
@@ -135,6 +179,8 @@ const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: Query
  * @param options options controlling the query
  * @returns an object containing the items found and a pagination token
  * (if there is more results)
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
+ * @throws {InvalidQueryException} when the access pattern cannot be found for the specfied combination of query key paths
  */
 export async function find(
   ctx: Context,

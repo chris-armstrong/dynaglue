@@ -11,6 +11,7 @@ import debugDynamo from '../debug/debugDynamo';
  * @param collectionName name of the collection to search
  * @param id the `_id` value
  * @returns the stored value, or `undefined` if not found
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
 export async function findById(
   context: Context,
