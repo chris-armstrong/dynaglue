@@ -1,22 +1,10 @@
 import { CollectionLayout } from "./layout";
 import { AccessPattern, KeyPath } from "./access_pattern";
 
-/**
- * A collection is a division based on data type
- * for storage in a DynamoDB table. The layout
- * specifies how to map values into DynamoDB
- * primary and secondary indexes, while the optional
- * access patterns defines how to access data based
- * on key-values in your objects.
- */
-
-/**
- * Common collection elements
- */
 export interface CommonCollection {
   /**
    * The name of the collection. Use this
-   * when inserting or retrieving values
+   * when creating, updating or retrieving values.
    */
   name: string;
   /**
@@ -28,7 +16,7 @@ export interface CommonCollection {
   layout: CollectionLayout;
   /**
    * Access patterns define how to retrieve
-   * values on keys other than a documents
+   * values on keys other than a document's
    * `_id` field
    */
   accessPatterns?: AccessPattern[];
@@ -42,14 +30,31 @@ export interface CommonCollection {
  * key.
  */
 export interface RootCollection extends CommonCollection {
+  /**
+    * A fixed value that distinguishes this as a
+    * parent or 'root' collection (It is optional to
+    * specify this)
+    */
   type?: 'root';
 }
 
+/**
+  * A child collection lets you store values related
+  * to a parent collection (defined by [[RootCollection]])
+  * 
+  * It's used to add data to an entity that is not always
+  * needed for every access pattern, and can only be referenced
+  * with regards to its parent.
+  */
 export interface ChildCollection extends CommonCollection {
+  /** A fixed value that must be defined to distinguish
+    * this collection as a child collection
+    */
   type: 'child';
 
   /**
-   * The parent collection
+   * The name of the parent collection. It must be added
+   * to the same context as this child collection.
    */
   parentCollectionName: string;
 
@@ -59,4 +64,18 @@ export interface ChildCollection extends CommonCollection {
   foreignKeyPath: KeyPath;
 }
 
+/**
+ * A collection is a division based on entity type
+ * for storage in a DynamoDB table. It tells dynaglue
+ * how to store your documents and how to index them
+ * for this entity type.
+ *
+ * Defining multiple
+ * collections on the same DynamoDB table layout
+ * allows you to store multiple data types in the
+ * same DynamoDB table (i.e. a single table design).
+ *
+ * *Use the [[RootCollection]] or [[ChildCollection]] for specifying
+ * a collection*
+ */
 export type Collection = RootCollection | ChildCollection;
