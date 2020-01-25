@@ -7,9 +7,33 @@ to query and update.
 npm install dynaglue
 ```
 
-## Usage
+## Rationale
 
-(see the [examples directory](https://github.com/chris-armstrong/dynaglue/tree/master/examples) for more)
+Querying and storing data in single-table DynamoDB designs **is hard**. Keeping indexes up-to-date and
+constructing DynamoDB queries and update expressions is time-consuming and error-prone.
+
+*dynaglue* takes the hassle out of managing your data with a straightforward way to declare its mapping 
+onto your table's indexes, and wraps it all up with simple and foolproof Mongo-like API.
+
+See [Motivation](#Motivation) (below) for a more detailed explanation.
+
+## Getting Started
+
+A comprehensive [Getting Started Guide](https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide) is
+available explaining how to install and use dynaglue in a new project as well as all its current features.
+
+See the [examples directory](https://github.com/chris-armstrong/dynaglue/tree/master/examples) for a more
+concise overview of its features in action.
+
+## Status
+
+This project is currently in in progress (alpha). **Its API is unstable and is undergoing change**,
+so take care and keep an eye on updates for now.
+
+Please try it out, report bugs, suggest improvements or submit sensible code
+changes.
+
+## Usage Example
 
 ```typescript
 // Declare the layout of your table (its primary and secondary indexes and their key names)
@@ -83,36 +107,12 @@ const updatedItem = await updateById(ctx, 'users', user4._id, {
 });
 ```
 
-## Getting Started
+## Prerequisite Knowledge
 
-For now, the best recommendation is to nstall it into your project, look at the examples,
-and examine the API.
+This library assumes you have a solid understanding of DynamoDB partition and sort keys, primary and secondary indexes,
+and assumes you understand how single-table designs work in theory.
 
-You can see what it is doing to DynamoDB by running your code with the environment variable:
-
-```bash
-export DEBUG=dynaglue:*
-```
-
-which will print out the queries it executes.
-
-## Rationale
-
-Implementing single-table designs in DynamoDB (where you store multiple distinct
-data structures in the same table) is difficult with the DynamoDB API. *dynaglue*
-presents a Mongo-like abstraction over DynamoDB that makes it easier to query your
-data, optimised for index-usage and performance.
-
-See [Motivation](#Motivation) (below) for a more detailed explanation.
-
-## Prerequisites
-
-This library is intended for advanced use cases and at the very least, assumes
-strong knowledge of DynamoDB partition and sort keys, primary and secondary indexes,
-single-table design etc.
-
-If you're unsure what any of this means, first learn how to build applications
-using DynamoDB:
+If you're unsure what any of this means, first learn how to build applications using DynamoDB:
 
 * [DynamoDB Guide](https://www.dynamodbguide.com/)
 * [Getting Started with DynamoDB - AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html)
@@ -129,13 +129,15 @@ and on the merits of single table vs multi table design (this library is agnosti
 * [Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail](https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/)
 * [Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie](https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices)
 
-## Status
+## Debugging
 
-This project is currently in in progress (alpha). **Its API is unstable and is undergoing change**,
-so take care and keep an eye on updates for now.
+You can see what it is doing to DynamoDB by running your code with the environment variable:
 
-Please try it out, report bugs, suggest improvements or submit sensible code
-changes.
+```bash
+export DEBUG=dynaglue:*
+```
+
+which will print out the queries it executes.
 
 ## Motivation
 
@@ -214,7 +216,7 @@ without further engagement.
 
 ## License
 
-Copyright 2019 Christopher Armstrong
+Copyright 2019-2020 Christopher Armstrong
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
