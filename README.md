@@ -25,6 +25,9 @@ available explaining how to install and use dynaglue in a new project as well as
 See the [examples directory](https://github.com/chris-armstrong/dynaglue/tree/master/examples) for a more
 concise overview of its features in action.
 
+[Reference Documentation](https://chris-armstrong.github.io/dynaglue/), generated from the source code,
+also contains useful information about the operations and types you need to use dynaglue.
+
 ## Status
 
 This project is currently in in progress (alpha). **Its API is unstable and is undergoing change**,
