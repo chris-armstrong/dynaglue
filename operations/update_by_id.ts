@@ -12,10 +12,21 @@ import debugDynamo from '../debug/debugDynamo';
 
 const debug = createDebug('dynaglue:operations:updateById');
 
+/**
+  * An update object, where the key paths are specified as keys and the values
+  * as the new field values.
+  *
+  * Keep in mind, that although this is a partial update, you need to specify
+  * all the keys for a composite key in an access pattern - it cannot partially
+  * update composite index values.
+  */
 export type SetValuesDocument = {
   [path: string]: any;
 };
 
+/**
+  * The set of updates to apply to a document.
+  */
 export type Updates = SetValuesDocument;
 
 /* eslint-disable */
@@ -38,9 +49,15 @@ const invertMap = (
   [key: string]: string;
 } => Object.assign({}, ...Array.from(map.entries(), ([k, v]) => ({ [v]: k })));
 
+/**
+  * @internal
+  */
 export const isSubsetOfKeyPath = (mainPath: KeyPath, subsetPath: KeyPath): boolean =>
   subsetPath.every((key, index) => mainPath[index] === key);
 
+/**
+  * @internal
+  */
 export const findMatchingPath = (keyPaths: KeyPath[], path: KeyPath): KeyPath | undefined => {
   for (const keyPath of keyPaths) {
     if (isSubsetOfKeyPath(path, keyPath)) {
@@ -49,8 +66,14 @@ export const findMatchingPath = (keyPaths: KeyPath[], path: KeyPath): KeyPath | 
   }
 }
 
+/**
+  * @internal
+  */
 export const extractUpdateKeyPaths = (updates: Updates) => Object.keys(updates).map(updatePath => updatePath.split('.'));
 
+/**
+  * @internal
+  */
 export const createUpdateActionForKey = (collectionName: string, keyType: 'partition' | 'sort', keyPaths: KeyPath[], indexLayout: SecondaryIndexLayout, updates: Updates) => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
@@ -85,6 +108,9 @@ export const createUpdateActionForKey = (collectionName: string, keyType: 'parti
   };
 }
 
+/**
+  * @internal
+  */
 export const findCollectionIndex = (collection: Collection, indexName: string): SecondaryIndexLayout => {
   const layout = collection.layout.findKeys?.find(fk => fk.indexName === indexName);
   if (!layout) {
@@ -94,6 +120,9 @@ export const findCollectionIndex = (collection: Collection, indexName: string): 
   return layout;
 }
 
+/**
+  * @internal
+  */
 export const replaceStringHex = (sub: string): string => {
   let replacement = '';
   for (let i = 0; i < sub.length; i++) {
@@ -103,12 +132,18 @@ export const replaceStringHex = (sub: string): string => {
 }
 export const makeSafeAttributeName = (partName: string): string => `#attr_${partName.replace(/[^A-Za-z]+/g, replaceStringHex)}`
 
+/**
+  * @internal
+  */
 export type Action = {
   action: string;
   expressionAttributeValue: [string, any];
   expressionAttributeNames: [string, string][];
 };
 
+/**
+  * @internal
+  */
 export const setActionCreator = () => {
   let safeNameIndex = 0;
   let safeValueIndex = 0;
@@ -133,6 +168,27 @@ export const setActionCreator = () => {
   };
 };
 
+/**
+  * Update a document using its `_id`.
+  *
+  * This operation allows you to do a partial update of a collection document i.e. without
+  * specifying all the values (it uses DynamoDB`s `UpdateItem` operation).
+  *
+  * At this time, the `updates` value just updates specified key paths on the target document.
+  * 
+  * If some of the update key paths are indexed values, the indexes will also be updated. Because
+  * of this, you must specify all the key values in an access pattern to ensure indexes are
+  * updated consistently.
+  *
+  * @param ctx the context
+  * @param collectionName the collection to update
+  * @param objectId the `_id` value of the object to update
+  * @param updates the set of updates to apply.
+  * @returns the updated object value in its entirety.
+  * @throws {CollectionNotFoundException} collection not found
+  * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
+  * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
+  */
 export async function updateById(
   ctx: Context,
   collectionName: string,
