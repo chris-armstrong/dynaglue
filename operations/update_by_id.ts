@@ -1,9 +1,9 @@
 import get from 'lodash/get';
 import createDebug from 'debug';
 import { Context } from '../context';
-import { UpdateItemInput, Converter, AttributeMap } from 'aws-sdk/clients/dynamodb';
+import { UpdateItemInput, Converter, AttributeMap, AttributeValue } from 'aws-sdk/clients/dynamodb';
 import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue } from '../base/util';
-import { KeyPath, AccessPattern } from '../base/access_pattern';
+import { KeyPath } from '../base/access_pattern';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { InvalidUpdatesException, InvalidUpdateValueException, IndexNotFoundException } from '../base/exceptions';
 import { Collection } from '../base/collection';
@@ -156,30 +156,74 @@ export type Action = {
   expressionAttributeNames: [string, string][];
 };
 
-/**
-  * @internal
-  */
-export const setActionCreator = () => {
-  let safeNameIndex = 0;
-  let safeValueIndex = 0;
-  return (keyPath: KeyPath, value: any): Action => {
-    const valueName = `:value${safeValueIndex++}`;
-    const marshalledValue = typeof value === 'object' && !Array.isArray(value) ?
-      Converter.marshall(value) : Converter.input(value);
+ // @internal
+// export const setActionCreator = () => {
+  // let safeNameIndex = 0;
+  // let safeValueIndex = 0;
+  // return (keyPath: KeyPath, value: any): Action => {
+    // const valueName = `:value${safeValueIndex++}`;
+    // const marshalledValue = typeof value === 'object' && !Array.isArray(value) ?
+      // Converter.marshall(value) : Converter.input(value);
+//
+    // const updateKeyPath = ['value', ...keyPath];
+    // const updateKeyPathMappings: [string, string][] = updateKeyPath.map(part => {
+      // if (isSafeAttributeName(part)) {
+        // return [part, part];
+      // }
+      // return [part, `#attr${safeNameIndex++}`];
+    // });
+//
+    // return {
+      // expressionAttributeValue: [valueName, marshalledValue],
+      // expressionAttributeNames: updateKeyPathMappings.filter(([attr, mapped]) => attr !== mapped),
+      // action: `${updateKeyPathMappings.map(([, mapped]) => mapped).join('.')} = ${valueName}`,
+    // };
+  // };
+// };
+//
+const createNameMapper = () => {
+  let currentIndex = 0;
+  const attributeNameMap = new Map<string, string>();
 
-    const updateKeyPath = ['value', ...keyPath];
-    const updateKeyPathMappings: [string, string][] = updateKeyPath.map(part => {
-      if (isSafeAttributeName(part)) {
-        return [part, part];
+  attributeNameMap.set('value', '#value');
+
+  return {
+    map(name: string) {
+      if (isSafeAttributeName(name)) {
+        return name;
       }
-      return [part, `#attr${safeNameIndex++}`];
-    });
+      let nameMapping = attributeNameMap.get(name);
+      if (!nameMapping) {
+        nameMapping = `#attr${currentIndex++}`;
+        attributeNameMap.set(name, nameMapping);
+      }
+      return nameMapping;
+    },
 
-    return {
-      expressionAttributeValue: [valueName, marshalledValue],
-      expressionAttributeNames: updateKeyPathMappings.filter(([attr, mapped]) => attr !== mapped),
-      action: `${updateKeyPathMappings.map(([, mapped]) => mapped).join('.')} = ${valueName}`,
-    };
+    get() {
+      return invertMap(attributeNameMap);
+    }
+  };
+};
+
+const createValueMapper = () => {
+  let currentIndex = 0;
+  const valueMap = new Map<string, AttributeValue>();
+
+  return {
+    map(value: any): string {
+      const valueKey = `:value${currentIndex++}`;
+      const convertedValue = typeof value === 'object' && !Array.isArray(value) ? Converter.marshall(value) : Converter.input(value);
+      valueMap.set(valueKey, convertedValue);
+      return valueKey;
+    },
+
+    get(): { [key: string]: AttributeValue } {
+      return Array.from(valueMap).reduce((obj, [key, value]) => {
+        obj[key] = value;
+        return obj;
+      }, {} as { [key: string]: AttributeValue });
+    }
   };
 };
 
@@ -217,11 +261,9 @@ export async function updateById(
     throw new InvalidUpdatesException('There must be at least one update path in the updates object');
   }
   const updateKeyPaths: KeyPath[] = extractUpdateKeyPaths(updates);
-  const attributeNameMap = new Map<string, string>();
-  attributeNameMap.set('value', '#value');
 
-  const expressionAttributeValues: { [key: string]: any } = {};
-  let safeNameIndex = 0;
+  const nameMapper = createNameMapper();
+  const valueMapper = createValueMapper();
   const expressionSetActions = [];
   for (const [index, updatePath] of updatePaths.entries()) {
     const updateKeyPath = updateKeyPaths[index];
@@ -230,40 +272,21 @@ export async function updateById(
     if (typeof value === 'undefined') {
       throw new InvalidUpdateValueException(updatePath, 'value must not be undefined');
     }
-    const valueName = `:value${index}`;
-    expressionAttributeValues[valueName] =
-      typeof value === 'object' && !Array.isArray(value) ? Converter.marshall(value) : Converter.input(value);
+    const valueName = valueMapper.map(value);
 
-    const expressionAttributeNameParts = ['#value', ...updateKeyPath];
-    expressionAttributeNameParts.forEach((part, index) => {
-      if (isSafeAttributeName(part)) {
-        return;
-      }
-      let nameMapping = attributeNameMap.get(part);
-      if (!nameMapping) {
-        nameMapping = `#attr${safeNameIndex++}`;
-        attributeNameMap.set(part, nameMapping);
-      }
-      expressionAttributeNameParts[index] = nameMapping;
-    });
+    const expressionAttributeNameParts = ['#value', ...updateKeyPath.map(part => nameMapper.map(part))];
     expressionSetActions.push(`${expressionAttributeNameParts.join('.')} = ${valueName}`);
   }
-
-  let keyValueIndex = 0;
 
   if (collection.accessPatterns) {
     for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
 
       if (partitionKeys.length > 0) {
         const layout = findCollectionIndex(collection, indexName);
-
         const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
         if (update) {
-          const nameMapping = `#key${keyValueIndex}`;
-          const valueMapping = `:key${keyValueIndex}`;
-          keyValueIndex++;
-          attributeNameMap.set(update.attributeName, nameMapping);
-          expressionAttributeValues[valueMapping] = Converter.input(update.value);
+          const nameMapping = nameMapper.map(update.attributeName);
+          const valueMapping = valueMapper.map(update.value);
           expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
         }
       }
@@ -271,19 +294,16 @@ export async function updateById(
         const layout = findCollectionIndex(collection, indexName);
         const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
         if (update) {
-          const nameMapping = `#key${keyValueIndex}`;
-          const valueMapping = `:key${keyValueIndex}`;
-          keyValueIndex++;
-          attributeNameMap.set(update.attributeName, nameMapping);
-          expressionAttributeValues[valueMapping] = Converter.input(update.value);
+          const nameMapping = nameMapper.map(update.attributeName);
+          const valueMapping = valueMapper.map(update.value);
           expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
         }
       }
     }
   }
 
-  const expressionAttributeNames = invertMap(attributeNameMap);
-
+  const expressionAttributeNames = nameMapper.get();
+  const expressionAttributeValues = valueMapper.get();
   const updateExpression = `SET ${expressionSetActions.join(', ')}`;
 
   const updateItem: UpdateItemInput = {
