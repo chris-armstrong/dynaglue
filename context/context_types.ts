@@ -1,8 +1,7 @@
-import DynamoDB from 'aws-sdk/clients/dynamodb';
+import { Types as DynamoDB } from 'aws-sdk/clients/dynamodb';
 import { CollectionDefinition, ChildCollectionDefinition, RootCollectionDefinition } from '../base/collection_definition';
 
 /**
- * @internal
  * The internal representation of the context object. 
  *
  * **This type should be considered opaque and subject to change.**

@@ -7,14 +7,12 @@ import { buildAndValidateAccessPatterns } from './extract_keys';
 import { ExtractKey, RootCollectionDefinition, ChildCollectionDefinition } from '../base/collection_definition';
 import isEqual from 'lodash/isEqual';
 
-/**
-  * @internal
-  */
 type Opaque<K, T> = T & { __TYPE__: K };
 
 /**
-  * @internal
-  * @ignore
+  * A dynaglue context. Use [[createContext]] to instantiate.
+  *
+  * The internal layout of this type may change over time.
   */
 export type Context = Opaque<'DynaglueContext', DynaglueContext>
 

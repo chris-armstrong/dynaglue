@@ -1,4 +1,4 @@
-import VError from 'verror';
+import { VError, Options as VErrorOptions } from 'verror';
 
 /**
   * Thrown when insert() is called with a specified _id
@@ -61,7 +61,7 @@ export class IndexNotFoundException extends VError {
   * issue in the specified collections, access patterns or layouts.
   */
 export class ConfigurationException extends VError {
-  constructor(message: string, options: VError.Options = {}) {
+  constructor(message: string, options: VErrorOptions = {}) {
     super({
       ...options,
       name: 'configuration.error',
