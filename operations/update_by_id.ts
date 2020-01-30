@@ -89,7 +89,7 @@ export const createUpdateActionForKey = (collectionName: string, keyType: 'parti
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
   const attributeName = (keyType === 'sort' ? indexLayout.sortKey as string : indexLayout.partitionKey);
-  debug('createUpdateActionForKey collection=%s keyType=%s keyPaths=%o attributeName=%s', collectionName, keyType, keyPaths, attributeName);
+  debug('createUpdateActionForKey: collection=%s keyType=%s keyPaths=%o attributeName=%s', collectionName, keyType, keyPaths, attributeName);
   if (keyType === 'partition') {
     if (matchingUpdatePaths.every(updatePath => updatePath === undefined)) {
       debug('createUpdateActionForKey: no updates to this key');
@@ -145,49 +145,40 @@ export const replaceStringHex = (sub: string): string => {
 /**
   * @internal
   */
-export const makeSafeAttributeName = (partName: string): string => `#attr_${partName.replace(/[^A-Za-z]+/g, replaceStringHex)}`
-
-/**
-  * @internal
-  */
 export type Action = {
   action: string;
   expressionAttributeValue: [string, any];
   expressionAttributeNames: [string, string][];
 };
 
- // @internal
-// export const setActionCreator = () => {
-  // let safeNameIndex = 0;
-  // let safeValueIndex = 0;
-  // return (keyPath: KeyPath, value: any): Action => {
-    // const valueName = `:value${safeValueIndex++}`;
-    // const marshalledValue = typeof value === 'object' && !Array.isArray(value) ?
-      // Converter.marshall(value) : Converter.input(value);
-//
-    // const updateKeyPath = ['value', ...keyPath];
-    // const updateKeyPathMappings: [string, string][] = updateKeyPath.map(part => {
-      // if (isSafeAttributeName(part)) {
-        // return [part, part];
-      // }
-      // return [part, `#attr${safeNameIndex++}`];
-    // });
-//
-    // return {
-      // expressionAttributeValue: [valueName, marshalledValue],
-      // expressionAttributeNames: updateKeyPathMappings.filter(([attr, mapped]) => attr !== mapped),
-      // action: `${updateKeyPathMappings.map(([, mapped]) => mapped).join('.')} = ${valueName}`,
-    // };
-  // };
-// };
-//
-const createNameMapper = () => {
+export type NameMapper = {
+  map(name: string): string;
+  get(): { [mappedName: string]: string };
+};
+
+/**
+ * @internal
+ *
+ * Create a mapper for generating `ExpressionAttributeNames`
+ * entries. [[map]] will generate a new attribute name
+ * that can be used in expressions for every attribute it
+ * is given.
+ *
+ * The value for `ExpressionAttributeNames` can be
+ * returned by [[get]] at the end.
+ */
+const createNameMapper = (): NameMapper => {
   let currentIndex = 0;
   const attributeNameMap = new Map<string, string>();
 
   attributeNameMap.set('value', '#value');
 
   return {
+    /**
+     * Generate an expression attribute name for 
+     * `name` (if necessary - values not requiring
+     * escaping will be returned as-is)
+     */
     map(name: string) {
       if (isSafeAttributeName(name)) {
         return name;
@@ -200,17 +191,41 @@ const createNameMapper = () => {
       return nameMapping;
     },
 
+    /**
+     * Return the map of attribute names
+     */
     get() {
       return invertMap(attributeNameMap);
     }
   };
 };
 
-const createValueMapper = () => {
+export type ValueMapper = {
+  map(value: any): string;
+  get(): { [mappedName: string]: AttributeValue };
+};
+
+/**
+ * @internal
+ *
+ * Create a mapper for generating `ExpressionAttributeValues`
+ * entries. [[map]] will generate a new attribute name
+ * that can be used in expressions for every attribute it
+ * is given.
+ *
+ * The value for `ExpressionAttributeValues` can be
+ * returned by [[get]] at the end.
+ */
+const createValueMapper = (): ValueMapper => {
   let currentIndex = 0;
   const valueMap = new Map<string, AttributeValue>();
 
   return {
+    /**
+     * Given `value`, marshall it to DynamoDB format, store
+     * it internally, and return the `:value` reference that
+     * can be used in expressions
+     */
     map(value: any): string {
       const valueKey = `:value${currentIndex++}`;
       const convertedValue = typeof value === 'object' && !Array.isArray(value) ? Converter.marshall(value) : Converter.input(value);
@@ -218,6 +233,9 @@ const createValueMapper = () => {
       return valueKey;
     },
 
+    /**
+     * Get the map for `ExpressionAttributeValues`
+     */
     get(): { [key: string]: AttributeValue } {
       return Array.from(valueMap).reduce((obj, [key, value]) => {
         obj[key] = value;
@@ -226,6 +244,40 @@ const createValueMapper = () => {
     }
   };
 };
+
+export const mapAccessPatterns = (
+  collection: Collection,
+  { nameMapper, valueMapper }: { nameMapper: NameMapper, valueMapper: ValueMapper },
+  updates: Updates,
+): string[] => {
+  const expressionSetActions: string[] = [];
+  if (!collection.accessPatterns) {
+    return expressionSetActions;
+  }
+  for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
+    if (partitionKeys.length > 0) {
+      const layout = findCollectionIndex(collection, indexName);
+      const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
+      if (update) {
+        debug('mapAccessPatterns: adding set action for partition key in collection %s: %o', collection.name, update);
+        const nameMapping = nameMapper.map(update.attributeName);
+        const valueMapping = valueMapper.map(update.value);
+        expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+      }
+    }
+    if (sortKeys && sortKeys.length > 0) {
+      const layout = findCollectionIndex(collection, indexName);
+      const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
+      if (update) {
+        debug('mapAccessPatterns: adding set action for sort key in collection %s: %o', collection.name, update);
+        const nameMapping = nameMapper.map(update.attributeName);
+        const valueMapping = valueMapper.map(update.value);
+        expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+      }
+    }
+  }
+  return expressionSetActions;
+}
 
 /**
   * Update a document using its `_id`.
@@ -264,7 +316,7 @@ export async function updateById(
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
-  const expressionSetActions = [];
+  let expressionSetActions: string[] = [];
   for (const [index, updatePath] of updatePaths.entries()) {
     const updateKeyPath = updateKeyPaths[index];
 
@@ -278,29 +330,31 @@ export async function updateById(
     expressionSetActions.push(`${expressionAttributeNameParts.join('.')} = ${valueName}`);
   }
 
-  if (collection.accessPatterns) {
-    for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
+  const additionalSetActions = mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
+  expressionSetActions = [...expressionSetActions, ...additionalSetActions];
+  // if (collection.accessPatterns) {
+  //   for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
 
-      if (partitionKeys.length > 0) {
-        const layout = findCollectionIndex(collection, indexName);
-        const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
-        if (update) {
-          const nameMapping = nameMapper.map(update.attributeName);
-          const valueMapping = valueMapper.map(update.value);
-          expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
-        }
-      }
-      if (sortKeys && sortKeys.length > 0) {
-        const layout = findCollectionIndex(collection, indexName);
-        const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
-        if (update) {
-          const nameMapping = nameMapper.map(update.attributeName);
-          const valueMapping = valueMapper.map(update.value);
-          expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
-        }
-      }
-    }
-  }
+  //     if (partitionKeys.length > 0) {
+  //       const layout = findCollectionIndex(collection, indexName);
+  //       const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
+  //       if (update) {
+  //         const nameMapping = nameMapper.map(update.attributeName);
+  //         const valueMapping = valueMapper.map(update.value);
+  //         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+  //       }
+  //     }
+  //     if (sortKeys && sortKeys.length > 0) {
+  //       const layout = findCollectionIndex(collection, indexName);
+  //       const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
+  //       if (update) {
+  //         const nameMapping = nameMapper.map(update.attributeName);
+  //         const valueMapping = valueMapper.map(update.value);
+  //         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+  //       }
+  //     }
+  //   }
+  // }
 
   const expressionAttributeNames = nameMapper.get();
   const expressionAttributeValues = valueMapper.get();
