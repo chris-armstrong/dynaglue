@@ -1,5 +1,5 @@
 import './new_id';
-import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap } from "./util";
+import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap, invertMap, isSubsetOfKeyPath, findMatchingPath } from "./util";
 import { PersistenceException, InvalidIdException, InvalidParentIdException } from "./exceptions";
 import { KeyPath } from "./access_pattern";
 import { ChildCollectionDefinition, RootCollectionDefinition } from "./collection_definition";
@@ -191,5 +191,61 @@ describe('unwrap', () => {
     expect(unwrap({
       value: { _id: 'test-id', name: 'Sydney' },
     })).toEqual({ _id: 'test-id', name: 'Sydney' });
+  });
+});
+
+describe('invertMap', () => {
+  it('should work on empty maps', () => {
+    expect(invertMap(new Map())).toEqual({});
+  });
+
+  it('should work safely on a string, string Map', () => {
+    const myMap = new Map<string, string>();
+    myMap.set('part1', 'value 1');
+    myMap.set('part2', 'value 2');
+    expect(invertMap(myMap)).toEqual({
+      'value 1': 'part1',
+      'value 2': 'part2',
+    });
+  });
+});
+
+describe('isSubsetOfKeyPath', () => {
+  it('should identify an identical path as a subset', () => {
+    expect(isSubsetOfKeyPath(['path'], ['path'])).toBe(true);
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0', 'values'])).toBe(true);
+  });
+
+  it('should identify any subset path correctly', () => {
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items'])).toBe(true);
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0'])).toBe(true);
+  });
+
+  it('should fail on paths that are not a true subset', () => {
+    expect(isSubsetOfKeyPath(['items'], ['values'])).toBe(false);
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['values'])).toBe(false);
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', 'values'])).toBe(false);
+  });
+
+  it('should identify the empty path as a subset', () => {
+    // This test exists for completeness. An empty path is considered to be an
+    // unexpected edge case.
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], [])).toBe(true);
+  });
+});
+
+describe('findMatchingPath', () => {
+  const keyPath = ['profile', 'items', '1'];
+  
+  it('should return undefined for a empty set of paths', () => {
+    expect(findMatchingPath([], keyPath)).toBeUndefined();
+  });
+
+  it('should return undefined when there is no matching paths', () => {
+    expect(findMatchingPath([['items'], ['address', 'line1']], keyPath)).toBeUndefined();
+  });
+
+  it('should return the matching path from the keyPaths list', () => {
+    expect(findMatchingPath([['items'], ['profile', 'items'], ['address', 'line1']], keyPath)).toEqual(['profile', 'items']);
   });
 });

@@ -2,13 +2,14 @@ import get from 'lodash/get';
 import createDebug from 'debug';
 import { Context } from '../context';
 import { UpdateItemInput, Converter, AttributeMap, AttributeValue } from 'aws-sdk/clients/dynamodb';
-import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue } from '../base/util';
+import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue, invertMap, findMatchingPath } from '../base/util';
 import { KeyPath } from '../base/access_pattern';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { InvalidUpdatesException, InvalidUpdateValueException, IndexNotFoundException } from '../base/exceptions';
 import { Collection } from '../base/collection';
 import { SecondaryIndexLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
+import { isSafeAttributeName } from './expression_util';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -30,53 +31,6 @@ export type SetValuesDocument = {
   */
 export type Updates = SetValuesDocument;
 
-/* eslint-disable */
-// prettier-ignore
-/** @internal */
-const DYNAMODB_RESERVED_WORDS = [ 'ABORT', 'ABSOLUTE', 'ACTION', 'ADD', 'AFTER', 'AGENT', 'AGGREGATE', 'ALL', 'ALLOCATE', 'ALTER', 'ANALYZE', 'AND', 'ANY', 'ARCHIVE', 'ARE', 'ARRAY', 'AS', 'ASC', 'ASCII', 'ASENSITIVE', 'ASSERTION', 'ASYMMETRIC', 'AT', 'ATOMIC', 'ATTACH', 'ATTRIBUTE', 'AUTH', 'AUTHORIZATION', 'AUTHORIZE', 'AUTO', 'AVG', 'BACK', 'BACKUP', 'BASE', 'BATCH', 'BEFORE', 'BEGIN', 'BETWEEN', 'BIGINT', 'BINARY', 'BIT', 'BLOB', 'BLOCK', 'BOOLEAN', 'BOTH', 'BREADTH', 'BUCKET', 'BULK', 'BY', 'BYTE', 'CALL', 'CALLED', 'CALLING', 'CAPACITY', 'CASCADE', 'CASCADED', 'CASE', 'CAST', 'CATALOG', 'CHAR', 'CHARACTER', 'CHECK', 'CLASS', 'CLOB', 'CLOSE', 'CLUSTER', 'CLUSTERED', 'CLUSTERING', 'CLUSTERS', 'COALESCE', 'COLLATE', 'COLLATION', 'COLLECTION', 'COLUMN', 'COLUMNS', 'COMBINE', 'COMMENT', 'COMMIT', 'COMPACT', 'COMPILE', 'COMPRESS', 'CONDITION', 'CONFLICT', 'CONNECT', 'CONNECTION', 'CONSISTENCY', 'CONSISTENT', 'CONSTRAINT', 'CONSTRAINTS', 'CONSTRUCTOR', 'CONSUMED', 'CONTINUE', 'CONVERT', 'COPY', 'CORRESPONDING', 'COUNT', 'COUNTER', 'CREATE', 'CROSS', 'CUBE', 'CURRENT', 'CURSOR', 'CYCLE', 'DATA', 'DATABASE', 'DATE', 'DATETIME', 'DAY', 'DEALLOCATE', 'DEC', 'DECIMAL', 'DECLARE', 'DEFAULT', 'DEFERRABLE', 'DEFERRED', 'DEFINE', 'DEFINED', 'DEFINITION', 'DELETE', 'DELIMITED', 'DEPTH', 'DEREF', 'DESC', 'DESCRIBE', 'DESCRIPTOR', 'DETACH', 'DETERMINISTIC', 'DIAGNOSTICS', 'DIRECTORIES', 'DISABLE', 'DISCONNECT', 'DISTINCT', 'DISTRIBUTE', 'DO', 'DOMAIN', 'DOUBLE', 'DROP', 'DUMP', 'DURATION', 'DYNAMIC', 'EACH', 'ELEMENT', 'ELSE', 'ELSEIF', 'EMPTY', 'ENABLE', 'END', 'EQUAL', 'EQUALS', 'ERROR', 'ESCAPE', 'ESCAPED', 'EVAL', 'EVALUATE', 'EXCEEDED', 'EXCEPT', 'EXCEPTION', 'EXCEPTIONS', 'EXCLUSIVE', 'EXEC', 'EXECUTE', 'EXISTS', 'EXIT', 'EXPLAIN', 'EXPLODE', 'EXPORT', 'EXPRESSION', 'EXTENDED', 'EXTERNAL', 'EXTRACT', 'FAIL', 'FALSE', 'FAMILY', 'FETCH', 'FIELDS', 'FILE', 'FILTER', 'FILTERING', 'FINAL', 'FINISH', 'FIRST', 'FIXED', 'FLATTERN', 'FLOAT', 'FOR', 'FORCE', 'FOREIGN', 'FORMAT', 'FORWARD', 'FOUND', 'FREE', 'FROM', 'FULL', 'FUNCTION', 'FUNCTIONS', 'GENERAL', 'GENERATE', 'GET', 'GLOB', 'GLOBAL', 'GO', 'GOTO', 'GRANT', 'GREATER', 'GROUP', 'GROUPING', 'HANDLER', 'HASH', 'HAVE', 'HAVING', 'HEAP', 'HIDDEN', 'HOLD', 'HOUR', 'IDENTIFIED', 'IDENTITY', 'IF', 'IGNORE', 'IMMEDIATE', 'IMPORT', 'IN', 'INCLUDING', 'INCLUSIVE', 'INCREMENT', 'INCREMENTAL', 'INDEX', 'INDEXED', 'INDEXES', 'INDICATOR', 'INFINITE', 'INITIALLY', 'INLINE', 'INNER', 'INNTER', 'INOUT', 'INPUT', 'INSENSITIVE', 'INSERT', 'INSTEAD', 'INT', 'INTEGER', 'INTERSECT', 'INTERVAL', 'INTO', 'INVALIDATE', 'IS', 'ISOLATION', 'ITEM', 'ITEMS', 'ITERATE', 'JOIN', 'KEY', 'KEYS', 'LAG', 'LANGUAGE', 'LARGE', 'LAST', 'LATERAL', 'LEAD', 'LEADING', 'LEAVE', 'LEFT', 'LENGTH', 'LESS', 'LEVEL', 'LIKE', 'LIMIT', 'LIMITED', 'LINES', 'LIST', 'LOAD', 'LOCAL', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCATION', 'LOCATOR', 'LOCK', 'LOCKS', 'LOG', 'LOGED', 'LONG', 'LOOP', 'LOWER', 'MAP', 'MATCH', 'MATERIALIZED', 'MAX', 'MAXLEN', 'MEMBER', 'MERGE', 'METHOD', 'METRICS', 'MIN', 'MINUS', 'MINUTE', 'MISSING', 'MOD', 'MODE', 'MODIFIES', 'MODIFY', 'MODULE', 'MONTH', 'MULTI', 'MULTISET', 'NAME', 'NAMES', 'NATIONAL', 'NATURAL', 'NCHAR', 'NCLOB', 'NEW', 'NEXT', 'NO', 'NONE', 'NOT', 'NULL', 'NULLIF', 'NUMBER', 'NUMERIC', 'OBJECT', 'OF', 'OFFLINE', 'OFFSET', 'OLD', 'ON', 'ONLINE', 'ONLY', 'OPAQUE', 'OPEN', 'OPERATOR', 'OPTION', 'OR', 'ORDER', 'ORDINALITY', 'OTHER', 'OTHERS', 'OUT', 'OUTER', 'OUTPUT', 'OVER', 'OVERLAPS', 'OVERRIDE', 'OWNER', 'PAD', 'PARALLEL', 'PARAMETER', 'PARAMETERS', 'PARTIAL', 'PARTITION', 'PARTITIONED', 'PARTITIONS', 'PATH', 'PERCENT', 'PERCENTILE', 'PERMISSION', 'PERMISSIONS', 'PIPE', 'PIPELINED', 'PLAN', 'POOL', 'POSITION', 'PRECISION', 'PREPARE', 'PRESERVE', 'PRIMARY', 'PRIOR', 'PRIVATE', 'PRIVILEGES', 'PROCEDURE', 'PROCESSED', 'PROJECT', 'PROJECTION', 'PROPERTY', 'PROVISIONING', 'PUBLIC', 'PUT', 'QUERY', 'QUIT', 'QUORUM', 'RAISE', 'RANDOM', 'RANGE', 'RANK', 'RAW', 'READ', 'READS', 'REAL', 'REBUILD', 'RECORD', 'RECURSIVE', 'REDUCE', 'REF', 'REFERENCE', 'REFERENCES', 'REFERENCING', 'REGEXP', 'REGION', 'REINDEX', 'RELATIVE', 'RELEASE', 'REMAINDER', 'RENAME', 'REPEAT', 'REPLACE', 'REQUEST', 'RESET', 'RESIGNAL', 'RESOURCE', 'RESPONSE', 'RESTORE', 'RESTRICT', 'RESULT', 'RETURN', 'RETURNING', 'RETURNS', 'REVERSE', 'REVOKE', 'RIGHT', 'ROLE', 'ROLES', 'ROLLBACK', 'ROLLUP', 'ROUTINE', 'ROW', 'ROWS', 'RULE', 'RULES', 'SAMPLE', 'SATISFIES', 'SAVE', 'SAVEPOINT', 'SCAN', 'SCHEMA', 'SCOPE', 'SCROLL', 'SEARCH', 'SECOND', 'SECTION', 'SEGMENT', 'SEGMENTS', 'SELECT', 'SELF', 'SEMI', 'SENSITIVE', 'SEPARATE', 'SEQUENCE', 'SERIALIZABLE', 'SESSION', 'SET', 'SETS', 'SHARD', 'SHARE', 'SHARED', 'SHORT', 'SHOW', 'SIGNAL', 'SIMILAR', 'SIZE', 'SKEWED', 'SMALLINT', 'SNAPSHOT', 'SOME', 'SOURCE', 'SPACE', 'SPACES', 'SPARSE', 'SPECIFIC', 'SPECIFICTYPE', 'SPLIT', 'SQL', 'SQLCODE', 'SQLERROR', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'START', 'STATE', 'STATIC', 'STATUS', 'STORAGE', 'STORE', 'STORED', 'STREAM', 'STRING', 'STRUCT', 'STYLE', 'SUB', 'SUBMULTISET', 'SUBPARTITION', 'SUBSTRING', 'SUBTYPE', 'SUM', 'SUPER', 'SYMMETRIC', 'SYNONYM', 'SYSTEM', 'TABLE', 'TABLESAMPLE', 'TEMP', 'TEMPORARY', 'TERMINATED', 'TEXT', 'THAN', 'THEN', 'THROUGHPUT', 'TIME', 'TIMESTAMP', 'TIMEZONE', 'TINYINT', 'TO', 'TOKEN', 'TOTAL', 'TOUCH', 'TRAILING', 'TRANSACTION', 'TRANSFORM', 'TRANSLATE', 'TRANSLATION', 'TREAT', 'TRIGGER', 'TRIM', 'TRUE', 'TRUNCATE', 'TTL', 'TUPLE', 'TYPE', 'UNDER', 'UNDO', 'UNION', 'UNIQUE', 'UNIT', 'UNKNOWN', 'UNLOGGED', 'UNNEST', 'UNPROCESSED', 'UNSIGNED', 'UNTIL', 'UPDATE', 'UPPER', 'URL', 'USAGE', 'USE', 'USER', 'USERS', 'USING', 'UUID', 'VACUUM', 'VALUE', 'VALUED', 'VALUES', 'VARCHAR', 'VARIABLE', 'VARIANCE', 'VARINT', 'VARYING', 'VIEW', 'VIEWS', 'VIRTUAL', 'VOID', 'WAIT', 'WHEN', 'WHENEVER', 'WHERE', 'WHILE', 'WINDOW', 'WITH', 'WITHIN', 'WITHOUT', 'WORK', 'WRAPPED', 'WRITE', 'YEAR', 'ZONE' ];
-/* eslint-enable */
-
-/**
-  * @internal
-  */
-const isReservedWord = (word: string): boolean => DYNAMODB_RESERVED_WORDS.includes(word.toUpperCase());
-
-/**
-  * @internal
-  */
-const isSafeAttributeName = (attributeName: string): boolean => {
-  if (isReservedWord(attributeName)) {
-    return false;
-  }
-  return /[A-Za-z][A-Za-z0-9]*/.test(attributeName);
-};
-
-/**
-  * @internal
-  */
-const invertMap = (
-  map: Map<string, string>
-): {
-  [key: string]: string;
-} => Object.assign({}, ...Array.from(map.entries(), ([k, v]) => ({ [v]: k })));
-
-/**
-  * @internal
-  */
-export const isSubsetOfKeyPath = (mainPath: KeyPath, subsetPath: KeyPath): boolean =>
-  subsetPath.every((key, index) => mainPath[index] === key);
-
-/**
-  * @internal
-  */
-export const findMatchingPath = (keyPaths: KeyPath[], path: KeyPath): KeyPath | undefined => {
-  for (const keyPath of keyPaths) {
-    if (isSubsetOfKeyPath(path, keyPath)) {
-      return keyPath;
-    }
-  }
-}
-
 /**
   * @internal
   */
@@ -90,15 +44,13 @@ export const createUpdateActionForKey = (collectionName: string, keyType: 'parti
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
   const attributeName = (keyType === 'sort' ? indexLayout.sortKey as string : indexLayout.partitionKey);
   debug('createUpdateActionForKey: collection=%s keyType=%s keyPaths=%o attributeName=%s', collectionName, keyType, keyPaths, attributeName);
-  if (keyType === 'partition') {
-    if (matchingUpdatePaths.every(updatePath => updatePath === undefined)) {
-      debug('createUpdateActionForKey: no updates to this key');
-      return undefined;
-    } else if (!matchingUpdatePaths.every(updatePath => updatePath !== undefined)) {
-      throw new InvalidUpdatesException(`all values are required for ${keyType} access pattern with keys {${keyPaths.map(kp => kp.join('.')).join(', ')}}`)
-    }
+  if (matchingUpdatePaths.every(updatePath => updatePath === undefined)) {
+    debug('createUpdateActionForKey: no updates to %s key in collection %s', keyType, collectionName);
+    return undefined;
   }
-
+  if (keyType === 'partition' && !matchingUpdatePaths.every(updatePath => updatePath !== undefined)) {
+    throw new InvalidUpdatesException(`all values are required for ${keyType} access pattern with keys {${keyPaths.map(kp => kp.join('.')).join(', ')}}`)
+  } 
   debug('createUpdateActionForKey: key to be updated matchingUpdatePaths=%o', matchingUpdatePaths);
   const updateValues = keyPaths.map((keyPath, index) => {
     const matchingUpdatePath = matchingUpdatePaths[index];
@@ -129,17 +81,6 @@ export const findCollectionIndex = (collection: Collection, indexName: string): 
   }
 
   return layout;
-}
-
-/**
-  * @internal
-  */
-export const replaceStringHex = (sub: string): string => {
-  let replacement = '';
-  for (let i = 0; i < sub.length; i++) {
-    replacement += sub[i].charCodeAt(i).toString(16);
-  }
-  return replacement;
 }
 
 /**
@@ -332,29 +273,6 @@ export async function updateById(
 
   const additionalSetActions = mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
   expressionSetActions = [...expressionSetActions, ...additionalSetActions];
-  // if (collection.accessPatterns) {
-  //   for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
-
-  //     if (partitionKeys.length > 0) {
-  //       const layout = findCollectionIndex(collection, indexName);
-  //       const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
-  //       if (update) {
-  //         const nameMapping = nameMapper.map(update.attributeName);
-  //         const valueMapping = valueMapper.map(update.value);
-  //         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
-  //       }
-  //     }
-  //     if (sortKeys && sortKeys.length > 0) {
-  //       const layout = findCollectionIndex(collection, indexName);
-  //       const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
-  //       if (update) {
-  //         const nameMapping = nameMapper.map(update.attributeName);
-  //         const valueMapping = valueMapper.map(update.value);
-  //         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
-  //       }
-  //     }
-  //   }
-  // }
 
   const expressionAttributeNames = nameMapper.get();
   const expressionAttributeValues = valueMapper.get();

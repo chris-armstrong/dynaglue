@@ -157,3 +157,30 @@ export const toWrapped = (
 export const unwrap = (document: WrappedDocument): DocumentWithId => {
   return document.value;
 };
+
+/**
+  * @internal
+  */
+export const invertMap = (
+  map: Map<string, string>
+): {
+  [key: string]: string;
+} => Object.assign({}, ...Array.from(map.entries(), ([k, v]) => ({ [v]: k })));
+
+/**
+  * @internal
+  */
+export const isSubsetOfKeyPath = (mainPath: KeyPath, subsetPath: KeyPath): boolean =>
+  subsetPath.every((key, index) => mainPath[index] === key);
+
+/**
+  * @internal
+  */
+export const findMatchingPath = (keyPaths: KeyPath[], path: KeyPath): KeyPath | undefined => {
+  for (const keyPath of keyPaths) {
+    if (isSubsetOfKeyPath(path, keyPath)) {
+      return keyPath;
+    }
+  }
+}
+
