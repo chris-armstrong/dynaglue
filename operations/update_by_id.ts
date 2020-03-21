@@ -34,12 +34,18 @@ export type Updates = SetValuesDocument;
 /**
   * @internal
   */
-export const extractUpdateKeyPaths = (updates: Updates) => Object.keys(updates).map(updatePath => updatePath.split('.'));
+export const extractUpdateKeyPaths = (updates: Updates): KeyPath[] =>
+  Object.keys(updates).map(updatePath => updatePath.split('.'));
 
 /**
   * @internal
   */
-export const createUpdateActionForKey = (collectionName: string, keyType: 'partition' | 'sort', keyPaths: KeyPath[], indexLayout: SecondaryIndexLayout, updates: Updates) => {
+export const createUpdateActionForKey = (
+  collectionName: string,
+  keyType: 'partition' | 'sort',
+  keyPaths: KeyPath[], indexLayout: SecondaryIndexLayout,
+  updates: Updates
+): { attributeName: string; value?: string } | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
   const attributeName = (keyType === 'sort' ? indexLayout.sortKey as string : indexLayout.partitionKey);
@@ -74,7 +80,10 @@ export const createUpdateActionForKey = (collectionName: string, keyType: 'parti
 /**
   * @internal
   */
-export const findCollectionIndex = (collection: Collection, indexName: string): SecondaryIndexLayout => {
+export const findCollectionIndex = (
+  collection: Collection,
+  indexName: string
+): SecondaryIndexLayout => {
   const layout = collection.layout.findKeys?.find(fk => fk.indexName === indexName);
   if (!layout) {
     throw new IndexNotFoundException(indexName);
@@ -108,7 +117,7 @@ export type NameMapper = {
  * The value for `ExpressionAttributeNames` can be
  * returned by [[get]] at the end.
  */
-const createNameMapper = (): NameMapper => {
+export const createNameMapper = (): NameMapper => {
   let currentIndex = 0;
   const attributeNameMap = new Map<string, string>();
 
@@ -157,7 +166,7 @@ export type ValueMapper = {
  * The value for `ExpressionAttributeValues` can be
  * returned by [[get]] at the end.
  */
-const createValueMapper = (): ValueMapper => {
+export const createValueMapper = (): ValueMapper => {
   let currentIndex = 0;
   const valueMap = new Map<string, AttributeValue>();
 
@@ -169,7 +178,7 @@ const createValueMapper = (): ValueMapper => {
      */
     map(value: any): string {
       const valueKey = `:value${currentIndex++}`;
-      const convertedValue = typeof value === 'object' && !Array.isArray(value) ? Converter.marshall(value) : Converter.input(value);
+      const convertedValue = Converter.input(value);
       valueMap.set(valueKey, convertedValue);
       return valueKey;
     },
@@ -186,14 +195,25 @@ const createValueMapper = (): ValueMapper => {
   };
 };
 
+/**
+ * @internal
+ *
+ * Given the set of updates, create the SET and DELETE
+ * actions for the access patterns that also have to be
+ * changed.
+ */
 export const mapAccessPatterns = (
   collection: Collection,
-  { nameMapper, valueMapper }: { nameMapper: NameMapper, valueMapper: ValueMapper },
+  { nameMapper, valueMapper }: { nameMapper: NameMapper; valueMapper: ValueMapper },
   updates: Updates,
-): string[] => {
+): {
+  setActions: string[];
+  deleteActions: string[];
+} => {
   const expressionSetActions: string[] = [];
+  const expressionDeleteActions: string[] = [];
   if (!collection.accessPatterns) {
-    return expressionSetActions;
+    return { setActions: expressionSetActions, deleteActions: expressionDeleteActions };
   }
   for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
     if (partitionKeys.length > 0) {
@@ -210,14 +230,19 @@ export const mapAccessPatterns = (
       const layout = findCollectionIndex(collection, indexName);
       const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
       if (update) {
-        debug('mapAccessPatterns: adding set action for sort key in collection %s: %o', collection.name, update);
-        const nameMapping = nameMapper.map(update.attributeName);
-        const valueMapping = valueMapper.map(update.value);
-        expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+        debug('mapAccessPatterns: adding set/delete action for sort key in collection %s: %o', collection.name, update);
+        if (typeof update.value !== 'undefined') {
+          const nameMapping = nameMapper.map(update.attributeName);
+          const valueMapping = valueMapper.map(update.value);
+          expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+        } else {
+          const nameMapping = nameMapper.map(update.attributeName);
+          expressionDeleteActions.push(nameMapping);
+        }
       }
     }
   }
-  return expressionSetActions;
+  return { setActions: expressionSetActions, deleteActions: expressionDeleteActions };
 }
 
 /**
@@ -258,6 +283,7 @@ export async function updateById(
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
   let expressionSetActions: string[] = [];
+  let expressionDeleteActions: string[] = [];
   for (const [index, updatePath] of updatePaths.entries()) {
     const updateKeyPath = updateKeyPaths[index];
 
@@ -271,12 +297,16 @@ export async function updateById(
     expressionSetActions.push(`${expressionAttributeNameParts.join('.')} = ${valueName}`);
   }
 
-  const additionalSetActions = mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
+  const { setActions: additionalSetActions, deleteActions: additionalDeleteActions } = 
+    mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
   expressionSetActions = [...expressionSetActions, ...additionalSetActions];
+  expressionDeleteActions = [...expressionDeleteActions, ...additionalDeleteActions];
 
   const expressionAttributeNames = nameMapper.get();
   const expressionAttributeValues = valueMapper.get();
-  const updateExpression = `SET ${expressionSetActions.join(', ')}`;
+  const updateExpression = 
+    (expressionSetActions ? `SET ${expressionSetActions.join(', ')}` : '') +
+    (expressionDeleteActions ? `REMOVE ${expressionDeleteActions.join(', ')}` : '');
 
   const updateItem: UpdateItemInput = {
     TableName: collection.layout.tableName,
