@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import createDebug from 'debug';
 import { Context } from '../context';
-import { UpdateItemInput, Converter, AttributeMap, AttributeValue } from 'aws-sdk/clients/dynamodb';
+import { UpdateItemInput, Converter, AttributeMap, AttributeValue, Key } from 'aws-sdk/clients/dynamodb';
 import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue, invertMap, findMatchingPath } from '../base/util';
 import { KeyPath } from '../base/access_pattern';
 import { WrappedDocument, DocumentWithId } from '../base/common';
@@ -129,7 +129,7 @@ export const createNameMapper = (): NameMapper => {
      * `name` (if necessary - values not requiring
      * escaping will be returned as-is)
      */
-    map(name: string) {
+    map(name: string): string {
       if (isSafeAttributeName(name)) {
         return name;
       }
@@ -144,7 +144,7 @@ export const createNameMapper = (): NameMapper => {
     /**
      * Return the map of attribute names
      */
-    get() {
+    get(): Record<string, string> {
       return invertMap(attributeNameMap);
     }
   };
@@ -246,34 +246,13 @@ export const mapAccessPatterns = (
 }
 
 /**
-  * Update a document using its `_id`.
-  *
-  * This operation allows you to do a partial update of a collection document i.e. without
-  * specifying all the values (it uses DynamoDB`s `UpdateItem` operation).
-  *
-  * At this time, the `updates` value just updates specified key paths on the target document.
-  * 
-  * If some of the update key paths are indexed values, the indexes will also be updated. Because
-  * of this, you must specify all the key values in an access pattern to ensure indexes are
-  * updated consistently.
-  *
-  * @param ctx the context
-  * @param collectionName the collection to update
-  * @param objectId the `_id` value of the object to update
-  * @param updates the set of updates to apply.
-  * @returns the updated object value in its entirety.
-  * @throws {CollectionNotFoundException} collection not found
-  * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
-  * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
-  */
-export async function updateById(
-  ctx: Context,
-  collectionName: string,
-  objectId: string,
-  updates: Updates
-): Promise<DocumentWithId> {
-  const collection = getRootCollection(ctx, collectionName);
-
+ * @internal
+ *
+ * Performs an update operation for the given collection and key
+ * value. Shares most of the code between updateById and updateChildById
+ *
+ */
+export async function updateInternal(ctx: Context, collection: Collection, key: Key, updates: Updates): Promise<DocumentWithId> {
   const updatePaths: string[] = Object.keys(updates);
   if (updatePaths.length === 0) {
     throw new InvalidUpdatesException('There must be at least one update path in the updates object');
@@ -310,10 +289,7 @@ export async function updateById(
 
   const updateItem: UpdateItemInput = {
     TableName: collection.layout.tableName,
-    Key: {
-      [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
-      [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
-    },
+    Key: key,
     ReturnValues: 'ALL_NEW',
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
@@ -327,3 +303,40 @@ export async function updateById(
   const updatedDocument = unwrap(unmarshalledAttributes as WrappedDocument);
   return updatedDocument;
 }
+
+/**
+  * Update a document using its `_id`.
+  *
+  * This operation allows you to do a partial update of a collection document i.e. without
+  * specifying all the values (it uses DynamoDB`s `UpdateItem` operation).
+  *
+  * At this time, the `updates` value just updates specified key paths on the target document.
+  * 
+  * If some of the update key paths are indexed values, the indexes will also be updated. Because
+  * of this, you must specify all the key values in an access pattern to ensure indexes are
+  * updated consistently.
+  *
+  * @param ctx the context
+  * @param collectionName the collection to update
+  * @param objectId the `_id` value of the object to update
+  * @param updates the set of updates to apply.
+  * @returns the updated object value in its entirety.
+  * @throws {CollectionNotFoundException} collection not found
+  * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
+  * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
+  */
+export async function updateById(
+  ctx: Context,
+  collectionName: string,
+  objectId: string,
+  updates: Updates
+): Promise<DocumentWithId> {
+  const collection = getRootCollection(ctx, collectionName);
+
+  const key = {
+    [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
+    [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
+  };
+  return updateInternal(ctx, collection, key, updates);
+};
+
