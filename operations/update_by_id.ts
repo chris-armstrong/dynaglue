@@ -305,8 +305,8 @@ export async function updateById(
   const expressionAttributeNames = nameMapper.get();
   const expressionAttributeValues = valueMapper.get();
   const updateExpression = 
-    (expressionSetActions ? `SET ${expressionSetActions.join(', ')}` : '') +
-    (expressionDeleteActions ? `REMOVE ${expressionDeleteActions.join(', ')}` : '');
+    (expressionSetActions.length ? ` SET ${expressionSetActions.join(', ')}` : '') +
+    (expressionDeleteActions.length ? ` REMOVE ${expressionDeleteActions.join(', ')}` : '');
 
   const updateItem: UpdateItemInput = {
     TableName: collection.layout.tableName,
@@ -317,7 +317,7 @@ export async function updateById(
     ReturnValues: 'ALL_NEW',
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
-    UpdateExpression: updateExpression,
+    UpdateExpression: updateExpression.trim(),
   };
 
   debugDynamo('UpdateItem', updateItem);

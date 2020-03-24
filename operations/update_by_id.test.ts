@@ -4,9 +4,37 @@ import {
   createNameMapper, 
   createValueMapper,
   mapAccessPatterns,
+  updateById,
 } from './update_by_id';
-import { InvalidUpdatesException, IndexNotFoundException } from '../base/exceptions';
+import { InvalidUpdatesException, IndexNotFoundException, InvalidUpdateValueException } from '../base/exceptions';
 import { Collection } from '../base/collection';
+import { createContext } from '../context';
+import { createDynamoMock } from '../testutil/dynamo_mock';
+import newId from '../base/new_id';
+import { Converter, UpdateItemOutput, UpdateItemInput } from 'aws-sdk/clients/dynamodb';
+
+const layoutForIndex = (index: number) => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` })
+const layout = {
+  tableName: 'general',
+  primaryKey: {
+    partitionKey: 'pk0',
+    sortKey: 'sk0',
+  },
+  findKeys: Array(3).fill({}).map((_, index) => layoutForIndex(index + 1)),
+};
+const collectionWithNoAPs: Collection = {
+  name: 'test-collection',
+  layout,
+};
+
+const collectionWithAPs: Collection = {
+  ...collectionWithNoAPs,
+  accessPatterns: [
+    { indexName: 'index1', partitionKeys: [], sortKeys: [['name']] },
+    { indexName: 'index2', partitionKeys: [['department']], sortKeys: [['profile', 'staffNumber']] },
+    { indexName: 'index3', partitionKeys: [], sortKeys: [['profile', 'email']]}
+  ],
+};
 
 describe('createUpdateActionForKey', () => {
   const indexLayout = {
@@ -83,30 +111,12 @@ describe('createUpdateActionForKey', () => {
 });
 
 describe('findCollectionIndex', () => {
-  const indexLayout = {
-    indexName: 'index1',
-    partitionKey: 'pk1',
-    sortKey: 'sk1',
-  };
-
-  const collection: Collection = {
-    name: 'test-collection',
-    layout: {
-      tableName: 'general',
-      primaryKey: {
-        partitionKey: 'pk0',
-        sortKey: 'sk0',
-      },
-      findKeys: [indexLayout],
-    }
-  };
-
   it('should throw when the index is not found', () => {
-    expect(() => findCollectionIndex(collection, 'notindex')).toThrowError(IndexNotFoundException);
+    expect(() => findCollectionIndex(collectionWithNoAPs, 'notindex')).toThrowError(IndexNotFoundException);
   });
 
   it('should return the index when it is found', () => {
-    expect(findCollectionIndex(collection, 'index1')).toEqual(indexLayout);
+    expect(findCollectionIndex(collectionWithNoAPs, 'index1')).toEqual(jasmine.objectContaining({ indexName: 'index1' }));
   });
 });
 
@@ -184,27 +194,6 @@ describe('createValueMapper', () => {
 });
 
 describe('mapAccessPatterns', () => {
-  const layoutForIndex = index => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` })
-  const collectionWithNoAPs: Collection = {
-    name: 'test-collection',
-    layout: {
-      tableName: 'general',
-      primaryKey: {
-        partitionKey: 'pk0',
-        sortKey: 'sk0',
-      },
-      findKeys: Array(3).fill({}).map((_, index) => layoutForIndex(index + 1)),
-    },
-  };
-
-  const collectionWithAPs: Collection = {
-    ...collectionWithNoAPs,
-    accessPatterns: [
-      { indexName: 'index1', partitionKeys: [], sortKeys: [['name']] },
-      { indexName: 'index2', partitionKeys: [['department']], sortKeys: [['profile', 'staffNumber']] },
-      { indexName: 'index3', partitionKeys: [], sortKeys: [['profile', 'email']]}
-    ],
-  };
 
   it('should return an empty array if the collection has no access patterns', () => {
     const mappers = { nameMapper: createNameMapper(), valueMapper: createValueMapper() };
@@ -259,9 +248,128 @@ describe('mapAccessPatterns', () => {
   });
 });
 
-xdescribe('updateById', () => {
- xit('should handle basic set updates', async () => {
+describe('updateById', () => {
+  it('should throw InvalidUpdatesException if the updates object is empty', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', { });
+    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    expect(updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      { },
+    )).rejects.toThrowError(InvalidUpdatesException);
+  });
 
- });
+  it('should throw InvalidUpdateValueException if one of the updates is empty', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', { });
+    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    expect(updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      { value1: undefined, value2: {} },
+    )).rejects.toThrowError(InvalidUpdateValueException);
+  });
 
+  it('should handle basic set updates', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      profile: {
+        name: 'new name',
+      },
+      topLevelValue: [1, 2, 4],
+      somethingElse: false,
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: Converter.marshall({
+        value: createdValue, 
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    const results = await updateById(context, collectionWithNoAPs.name, testId, {
+      'profile.name': 'new name',
+      'topLevelValue': [
+        1,
+        2,
+        4,
+      ],
+    });
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.updateItem).toBeCalledTimes(1);
+    expect(ddbMock.updateItem).toBeCalledWith({
+      TableName: layout.tableName,
+      UpdateExpression: 'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1',
+      Key: {
+        'pk0': { S: `test-collection|-|${testId}` },
+        'sk0': { S: `test-collection|-|${testId}` },
+      },
+      ExpressionAttributeNames: {
+        '#value': 'value',
+        '#attr0': 'name',
+      },
+      ExpressionAttributeValues: {
+        ':value0': { S: 'new name' },
+        ':value1': {
+          L: [
+            { N: '1' },
+            { N: '2' },
+            { N: '4' },
+          ],
+        }
+      },
+      ReturnValues: 'ALL_NEW',
+    } as UpdateItemInput);
+  });
+  
+  it('should handle updates to multiple access patterns', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+        enabled: true,
+      },
+      department: 'department 2',
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: Converter.marshall({
+        value: createdValue, 
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock, [collectionWithAPs]);
+    const results = await updateById(context, collectionWithNoAPs.name, testId, {
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+        enabled: true,
+      },
+      department: 'department 2', 
+    });
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.updateItem).toHaveBeenCalledWith({
+      TableName: layout.tableName,
+      UpdateExpression: 'SET #value.#attr0 = :value0, #value.profile = :value1, #value.department = :value2, sk1 = :value3, pk2 = :value4, sk3 = :value5 REMOVE sk2',
+      Key: {
+        'pk0': { S: `test-collection|-|${testId}` },
+        'sk0': { S: `test-collection|-|${testId}` },
+      },
+      ExpressionAttributeNames: {
+        '#value': 'value',
+        '#attr0': 'name',
+      },
+      ExpressionAttributeValues: {
+        ':value0': { S: 'new name' },
+        ':value1': Converter.input({ email: 'email@email.com', enabled: true }),
+        ':value2': { S: 'department 2' },
+        ':value3': { S: `test-collection|-|new name` },
+        ':value4': { S: `test-collection|-|department 2` },
+        ':value5': { S: `test-collection|-|email@email.com` },
+      },
+      ReturnValues: 'ALL_NEW',
+    } as UpdateItemInput);
+  });
 });
