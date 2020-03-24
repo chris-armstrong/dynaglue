@@ -11,3 +11,8 @@ coverage/
 .vscode/
 *.test.js
 .travis.yml
+docs/
+.babelrc
+.eslintrc.js
+typedoc.json
+
