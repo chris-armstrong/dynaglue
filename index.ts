@@ -8,6 +8,7 @@ export {
   findChildById,
   deleteChildById,
   updateById,
+  updateChildById,
 } from './operations';
 export { createContext } from './context';
 export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';
