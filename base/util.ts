@@ -36,7 +36,7 @@ export const assemblePrimaryKeyValue = (collectionName: string, _id: string): st
   *
   * Assemble extracted key paths into their indexed value
   */
-export const assembleIndexedValue = (type: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexedValue => {
+export const assembleIndexedValue = (_: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexedValue => {
   if (values.length === 0) {
     // empty key value
     return collectionName;
