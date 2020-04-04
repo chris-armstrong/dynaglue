@@ -39,6 +39,7 @@ export async function findChildren(
   ctx: Context,
   childCollectionName: string,
   rootObjectId: string,
+  options: { limit?: number, scanForward?: boolean } = {},
   nextToken?: Key,
 ): Promise<FindChildrenResults> {
   const childCollection = getChildCollection(ctx, childCollectionName);
@@ -59,6 +60,8 @@ export async function findChildren(
       },
     },
     ExclusiveStartKey: nextToken,
+    Limit: options?.limit,
+    ScanIndexForward: options?.scanForward ?? true, 
   };
 
   debugDynamo('Query', request);

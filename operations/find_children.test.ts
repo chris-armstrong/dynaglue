@@ -85,7 +85,7 @@ describe('findChildren', () => {
       LastEvaluatedKey: undefined,
     });
     const context = createContext(dynamoMock as unknown as DynamoDB, [rootCollection, childCollection]);
-    const result = await findChildren(context, 'addresses', 'user-1', { S: 'address-2' });
+    const result = await findChildren(context, 'addresses', 'user-1', {}, { S: 'address-2' });
     expect(result).toEqual({
       items: [address3],
       nextToken: undefined

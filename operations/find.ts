@@ -189,6 +189,8 @@ export async function find(
   nextToken?: Key,
   options?: {
     queryOperator: QueryOperator;
+    limit?: number;
+    scanForward?: boolean;
   }
 ): Promise<FindResults> {
   const collection = getCollection(ctx, collectionName);
@@ -225,6 +227,8 @@ export async function find(
       ...(sortKeyValue && layout.sortKey ? { ':indexSortKey': { S: sortKeyValue } } : {}),
     },
     ExclusiveStartKey: nextToken,
+    Limit: options?.limit,
+    ScanIndexForward: options?.scanForward ?? true,
   };
   debugDynamo('Query', queryRequest);
   const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb.query(queryRequest).promise();
