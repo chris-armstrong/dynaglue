@@ -14,7 +14,7 @@ import {
  * An element in the expression parse tree, used
  * to assist error messaging.
  */
-type ParseElement = { type: 'array', index: number } | { type: 'object', key: string }; 
+type ParseElement = { type: 'array'; index: number } | { type: 'object'; key: string }; 
 
 /**
  * @internal
@@ -64,6 +64,31 @@ const mapKeyPath = (key: string, nameMapper: NameMapper) => {
   const path = ['value', ...key.split('.')];
   return path.map(pathElement => nameMapper.map(pathElement)).join('.');
 }
+
+/**
+ * @internal
+ *
+ * Parse an object expression and give back a filter/condition expression
+ * for DynamoDB.
+ *
+ * @param clause the expression object
+ * @param context a context - pass your current NameMapper and ValueMapper, which will be filled out with filter expression parts
+ * @returns the condition/filter expression
+ */
+export const parseCompositeCondition = (clause: CompositeCondition, context: ConditionParseContext): string => {
+  /* eslint-disable @typescript-eslint/no-use-before-define */
+  if (Object.keys(clause).length === 1) {
+    if ('$and' in clause) {
+      return parseAndCondition(clause as AndCondition, context);
+    } else if ('$or' in clause) {
+      return parseOrCondition(clause as OrCondition, context);
+    } else if ('$not' in clause) {
+      return parseNotCondition(clause as NotCondition, context);
+    }
+  }
+  return parseKeyPathsAndClause(clause as KeyPathsAndClause, context);
+  /* eslint-enable @typescript-eslint/no-use-before-define */
+};
 
 /**
  * @internal
@@ -183,26 +208,4 @@ const parseKeyPathsAndClause = (clause: KeyPathsAndClause, context: ConditionPar
   return clauses.join(' AND ');
 };
 
-/**
- * @internal
- *
- * Parse an object expression and give back a filter/condition expression
- * for DynamoDB.
- *
- * @param clause the expression object
- * @param context a context - pass your current NameMapper and ValueMapper, which will be filled out with filter expression parts
- * @returns the condition/filter expression
- */
-export const parseCompositeCondition = (clause: CompositeCondition, context: ConditionParseContext): string => {
-  if (Object.keys(clause).length === 1) {
-    if ('$and' in clause) {
-      return parseAndCondition(clause as AndCondition, context);
-    } else if ('$or' in clause) {
-      return parseOrCondition(clause as OrCondition, context);
-    } else if ('$not' in clause) {
-      return parseNotCondition(clause as NotCondition, context);
-    }
-  }
-  return parseKeyPathsAndClause(clause as KeyPathsAndClause, context);
-};
 

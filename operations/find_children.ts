@@ -39,7 +39,7 @@ export async function findChildren(
   ctx: Context,
   childCollectionName: string,
   rootObjectId: string,
-  options: { limit?: number, scanForward?: boolean } = {},
+  options: { limit?: number; scanForward?: boolean } = {},
   nextToken?: Key,
 ): Promise<FindChildrenResults> {
   const childCollection = getChildCollection(ctx, childCollectionName);
