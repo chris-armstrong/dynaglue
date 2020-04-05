@@ -6,14 +6,18 @@ export type ConditionValue = string | number | null | boolean | DynamoDBSet;
 
 export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL' | 'L' | 'M';
 
-export type ConditionClause = AndCondition | OrCondition | KeyPathsAndClause;
+export type CompositeCondition = AndCondition | OrCondition | NotCondition | KeyPathsAndClause;
 
 export type AndCondition = {
-  $and: ConditionClause[];
+  $and: CompositeCondition[];
 };
 
 export type OrCondition = {
-  $or: ConditionClause[];
+  $or: CompositeCondition[];
+};
+
+export type NotCondition = {
+  $not: CompositeCondition;
 };
 
 export type EqCondition = {
