@@ -63,15 +63,12 @@ describe('findChildren', () => {
     expect(dynamoMock.query).toBeCalledTimes(1);
     expect(dynamoMock.query).toBeCalledWith(jasmine.objectContaining({
       TableName: layout.tableName,
-      ExpressionAttributeNames: {
-        '#partitionKeyName': 'pk1',
-        '#sortKeyName': 'sk1',
-      },
+      ExpressionAttributeNames: undefined,
       ExpressionAttributeValues: {
-        ':parentId': {
+        ':value0': {
           S: 'users|-|user-1',
         },
-        ':childCollectionName': {
+        ':value1': {
           S: 'addresses|-|',
         },
       },
@@ -85,7 +82,7 @@ describe('findChildren', () => {
       LastEvaluatedKey: undefined,
     });
     const context = createContext(dynamoMock as unknown as DynamoDB, [rootCollection, childCollection]);
-    const result = await findChildren(context, 'addresses', 'user-1', {}, { S: 'address-2' });
+    const result = await findChildren(context, 'addresses', 'user-1', { 'field': { S: 'address-2' } });
     expect(result).toEqual({
       items: [address3],
       nextToken: undefined
@@ -94,19 +91,16 @@ describe('findChildren', () => {
     expect(dynamoMock.query).toBeCalledTimes(1);
     expect(dynamoMock.query).toBeCalledWith(jasmine.objectContaining({
       TableName: layout.tableName,
-      ExpressionAttributeNames: {
-        '#partitionKeyName': 'pk1',
-        '#sortKeyName': 'sk1',
-      },
+      ExpressionAttributeNames: undefined,
       ExpressionAttributeValues: {
-        ':parentId': {
+        ':value0': {
           S: 'users|-|user-1',
         },
-        ':childCollectionName': {
+        ':value1': {
           S: 'addresses|-|',
         },
       },
-      ExclusiveStartKey: { S: 'address-2' },
+      ExclusiveStartKey: { field: { S: 'address-2' } },
     }));
   });
 });

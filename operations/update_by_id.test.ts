@@ -120,7 +120,7 @@ describe('findCollectionIndex', () => {
 });
 
 describe('mapAccessPatterns', () => {
-  it('should return an empty array if the collection has no access patterns', () => {
+  it('should return `undefined` if the collection has no access patterns', () => {
     const mappers = { nameMapper: createNameMapper(), valueMapper: createValueMapper() };
     const updates = {
       'x.y': 8,
@@ -129,8 +129,8 @@ describe('mapAccessPatterns', () => {
     const { setActions, deleteActions } = mapAccessPatterns(collectionWithNoAPs, mappers, updates);
     expect(setActions).toEqual([]);
     expect(deleteActions).toEqual([]);
-    expect(mappers.nameMapper.get()).toEqual({ '#value': 'value' });
-    expect(mappers.valueMapper.get()).toEqual({});
+    expect(mappers.nameMapper.get()).toBeUndefined();
+    expect(mappers.valueMapper.get()).toBeUndefined();
   });
 
   it('should map simple index updates when part of the update object', () => {
@@ -142,9 +142,7 @@ describe('mapAccessPatterns', () => {
     const { setActions, deleteActions } = mapAccessPatterns(collectionWithAPs, mappers, updates);
     expect(setActions).toEqual(['sk1 = :value0']);
     expect(deleteActions).toEqual([]);
-    expect(mappers.nameMapper.get()).toEqual({
-      '#value': 'value',
-    });
+    expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
     });
@@ -162,9 +160,7 @@ describe('mapAccessPatterns', () => {
     const { setActions, deleteActions } = mapAccessPatterns(collectionWithAPs, mappers, updates);
     expect(setActions).toEqual(['sk1 = :value0', 'pk2 = :value1', 'sk2 = :value2']);
     expect(deleteActions).toEqual(['sk3']);
-    expect(mappers.nameMapper.get()).toEqual({
-      '#value': 'value',
-    });
+    expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
       ':value1': { S: 'test-collection|-|x' },

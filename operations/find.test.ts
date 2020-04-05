@@ -184,9 +184,78 @@ describe('find', () => {
     };
 
     const result = await find(context, 'test-collection', query);
+    expect(ddb.query).toHaveBeenCalled();
+    expect(ddb.query).lastCalledWith(expect.objectContaining({
+      TableName: layout.tableName,
+      IndexName: 'index1',
+      ExpressionAttributeNames: { '#indexPartitionKey': layout.findKeys[0].partitionKey, '#indexSortKey': layout.findKeys[0].sortKey },
+      ExpressionAttributeValues: {
+        ':value0': Converter.input('test-collection|-|NSW'),
+        ':value1': Converter.input('test-collection|-|AU'),
+      },
+      KeyConditionExpression: '#indexPartitionKey = :value1 AND begins_with(#indexSortKey, :value0)',
+    }));
     expect(result).toEqual({ items: [testItem1.value], nextToken: undefined });
 
     const params = ddb.query.mock.calls[0][0];
     expect(params.TableName).toEqual('test-table');
+  });
+
+  it('should pass on a nextToken when specified', async () => {
+    const testItem1 = { value: { _id: 'testValue1' } };
+    const ddb = createDynamoMock('query', {
+      Items: [Converter.marshall(testItem1)],
+    });
+    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+
+    const query = {
+      'location.country': 'AU',
+      'location.state': 'NSW',
+    };
+    const nextToken = { [layout.primaryKey.partitionKey]: { S: 'a'}, [layout.primaryKey.sortKey]: { S: 'b' } }
+    await find(context, 'test-collection', query, nextToken);
+    expect(ddb.query).lastCalledWith(expect.objectContaining({ ExclusiveStartKey: nextToken }));
+  });
+
+  it('should pass on a limit parameter when specified', async () => {
+    const testItem1 = { value: { _id: 'testValue1' } };
+    const ddb = createDynamoMock('query', {
+      Items: [Converter.marshall(testItem1)],
+    });
+    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+
+    const query = {
+      'location.country': 'AU',
+      'location.state': 'NSW',
+    };
+    await find(context, 'test-collection', query, undefined, { limit: 5 });
+    expect(ddb.query).lastCalledWith(expect.objectContaining({ Limit: 5 }));
+  });
+
+  it('should integrate a filter expression if given', async () => {
+    const testItem1 = { value: { _id: 'testValue1' } };
+    const ddb = createDynamoMock('query', {
+      Items: [Converter.marshall(testItem1)],
+    });
+    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+
+    const query = {
+      'location.country': 'AU',
+      'location.state': 'NSW',
+    };
+
+    const filterExpression = {
+      'location.suburb': { $beginsWith: 'c' },
+    };
+    await find(context, 'test-collection', query, undefined, { limit: 5, filter: filterExpression });
+    expect(ddb.query).lastCalledWith(expect.objectContaining({
+      FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
+      ExpressionAttributeNames: expect.objectContaining({
+        '#attr0': 'location',
+      }),
+      ExpressionAttributeValues: expect.objectContaining({
+        ':value2': Converter.input('c'),
+      }),
+    }));
   });
 });

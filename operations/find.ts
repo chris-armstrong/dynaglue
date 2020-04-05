@@ -9,6 +9,9 @@ import { InvalidQueryException, ConfigurationException } from '../base/exception
 import { KeyPath, AccessPattern, AccessPatternOptions } from '../base/access_pattern';
 import { SecondaryIndexLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
+import { CompositeCondition } from '../base/conditions';
+import { createNameMapper, createValueMapper } from '../base/mappers';
+import { parseCompositeCondition } from '../base/conditions_parser';
 
 /**
   * The query operator to use in the `KeyConditionExpression` to `QueryItem`
@@ -156,7 +159,7 @@ const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: Query
  *
  * For example, if your sort key is defined as:
  *
- * ``[['state'], ['city'], ['street', 'name'], ['street', 'number']]```
+ * `[['state'], ['city'], ['street', 'name'], ['street', 'number']]`
  *
  * you could specify any of the following combinations:
  * - `{ state: '...' }`
@@ -177,21 +180,26 @@ const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: Query
  * values to match (see above)s
  * @param nextToken pagination token
  * @param options options controlling the query
+ * @param options.queryOperator query operator to use (defaults to `begins_with()`)
+ * @param options.limit number of records to return
+ * @param options.scanForward scan direction, true for forward across the index (default) or false for backward
+ * @param options.filter a filter expression
  * @returns an object containing the items found and a pagination token
  * (if there is more results)
- * @throws {CollectionNotFoundException} when the collection is not found in the context
- * @throws {InvalidQueryException} when the access pattern cannot be found for the specfied combination of query key paths
+ * @throws [[`CollectionNotFoundException`]] when the collection is not found in the context
+ * @throws [[`InvalidQueryException`]] when the access pattern cannot be found for the specfied combination of query key paths
  */
 export async function find(
   ctx: Context,
   collectionName: string,
   query: FindQuery,
   nextToken?: Key,
-  options?: {
-    queryOperator: QueryOperator;
+  options: {
+    queryOperator?: QueryOperator;
     limit?: number;
     scanForward?: boolean;
-  }
+    filter?: CompositeCondition;
+  } = {}
 ): Promise<FindResults> {
   const collection = getCollection(ctx, collectionName);
 
@@ -213,22 +221,31 @@ export async function find(
   const partitionKeyValue = assembleQueryValue('partition', collection.name, query, ap.options || {}, ap.partitionKeys);
   const sortKeyValue = assembleQueryValue('sort', collection.name, query, ap.options || {}, ap.sortKeys);
 
-  const sortKeyOp = sortKeyValue && getQueryOperator('#indexSortKey', ':indexSortKey', options?.queryOperator);
+  const nameMapper = createNameMapper();
+  const valueMapper = createValueMapper();
+
+  const sortKeyOp = sortKeyValue && getQueryOperator(
+    nameMapper.map(layout.sortKey!, '#indexSortKey'), 
+    valueMapper.map(sortKeyValue), 
+    options?.queryOperator,
+  );
+  const keyConditionExpression = `${nameMapper.map(layout.partitionKey, '#indexPartitionKey')} = ${valueMapper.map(partitionKeyValue)}${sortKeyValue ? ` AND ${sortKeyOp}` : ''}`;
+
+  let filterExpression;
+  if (options?.filter) {
+    filterExpression = parseCompositeCondition(options.filter, { nameMapper, valueMapper, parsePath: [] });
+  }
+
   const queryRequest: QueryInput = {
     TableName: collection.layout.tableName,
     IndexName: ap.indexName,
-    KeyConditionExpression: `#indexPartitionKey = :indexPartitionKey${sortKeyValue ? ` AND ${sortKeyOp}` : ''}`,
-    ExpressionAttributeNames: {
-      '#indexPartitionKey': layout.partitionKey,
-      ...(sortKeyValue && layout.sortKey ? { '#indexSortKey': layout.sortKey } : {}),
-    },
-    ExpressionAttributeValues: {
-      ':indexPartitionKey': { S: partitionKeyValue },
-      ...(sortKeyValue && layout.sortKey ? { ':indexSortKey': { S: sortKeyValue } } : {}),
-    },
+    KeyConditionExpression: keyConditionExpression,
+    ExpressionAttributeNames: nameMapper.get(),
+    ExpressionAttributeValues: valueMapper.get(),
     ExclusiveStartKey: nextToken,
     Limit: options?.limit,
     ScanIndexForward: options?.scanForward ?? true,
+    FilterExpression: filterExpression,
   };
   debugDynamo('Query', queryRequest);
   const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb.query(queryRequest).promise();

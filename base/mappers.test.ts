@@ -6,10 +6,12 @@ describe('createNameMapper', () => {
     expect(createNameMapper()).toHaveProperty('map');
   });
 
-  it('should automatically include a mapping of value => #value', () => {
+
+  it('should use the mappedName value when provided if not already mapped', () => {
     const mapper = createNameMapper();
-    expect(mapper.map('value')).toEqual('#value');
-    expect(mapper.get()).toEqual({ '#value': 'value' });
+    expect(mapper.map('1unsafe', '#attrx')).toBe('#attrx');
+    expect(mapper.map('1unsafe')).toBe('#attrx');
+    expect(mapper.map('1unsafe', '#attry')).toBe('#attrx');
   });
 
   it('should collect and add mapping properly', () => {
@@ -26,7 +28,6 @@ describe('createNameMapper', () => {
     expect(mapper.map('attribute')).toBe('#attr1');
 
     expect(mapper.get()).toEqual({
-      '#value': 'value',
       '#attr0': 'not.a.safe.one',
       '#attr1': 'attribute',
       '#attr2': '1unsafe',

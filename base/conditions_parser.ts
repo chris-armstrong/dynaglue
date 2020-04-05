@@ -60,10 +60,8 @@ const isConditionKey = (key: string) => ['$or', '$and', '$eq', '$neq', '$gt', '$
  * @internal
  * Convert a string to a key path, adding the `value` object prefix.
  */
-const mapKeyPath = (key: string, nameMapper: NameMapper) => {
-  const path = ['value', ...key.split('.')];
-  return path.map(pathElement => nameMapper.map(pathElement)).join('.');
-}
+const mapKeyPath = (key: string, nameMapper: NameMapper) =>
+  [nameMapper.map('value', '#value'), ...key.split('.').map(pathElement => nameMapper.map(pathElement))].join('.');
 
 /**
  * @internal

@@ -6,8 +6,8 @@ import { invertMap } from './util';
  * @internal
  */
 export type NameMapper = {
-  map(name: string): string;
-  get(): { [mappedName: string]: string };
+  map(name: string, mappedName?: string): string;
+  get(): { [mappedName: string]: string } | undefined;
 };
 
 /**
@@ -25,21 +25,19 @@ export const createNameMapper = (): NameMapper => {
   let currentIndex = 0;
   const attributeNameMap = new Map<string, string>();
 
-  attributeNameMap.set('value', '#value');
-
   return {
     /**
      * Generate an expression attribute name for 
      * `name` (if necessary - values not requiring
      * escaping will be returned as-is)
      */
-    map(name: string): string {
-      if (isSafeAttributeName(name)) {
+    map(name: string, mappedName?: string): string {
+      if (!mappedName && isSafeAttributeName(name)) {
         return name;
       }
       let nameMapping = attributeNameMap.get(name);
       if (!nameMapping) {
-        nameMapping = `#attr${currentIndex++}`;
+        nameMapping = mappedName ?? `#attr${currentIndex++}`;
         attributeNameMap.set(name, nameMapping);
       }
       return nameMapping;
@@ -48,8 +46,10 @@ export const createNameMapper = (): NameMapper => {
     /**
      * Return the map of attribute names
      */
-    get(): Record<string, string> {
-      return invertMap(attributeNameMap);
+    get(): Record<string, string> | undefined {
+      const result = invertMap(attributeNameMap);
+      if (Object.keys(result).length === 0) return undefined;
+      return result;
     }
   };
 };
@@ -59,7 +59,7 @@ export const createNameMapper = (): NameMapper => {
  */
 export type ValueMapper = {
   map(value: any): string;
-  get(): { [mappedName: string]: AttributeValue };
+  get(): { [mappedName: string]: AttributeValue } | undefined;
 };
 
 /**
@@ -93,7 +93,8 @@ export const createValueMapper = (): ValueMapper => {
     /**
      * Get the map for `ExpressionAttributeValues`
      */
-    get(): { [key: string]: AttributeValue } {
+    get(): { [key: string]: AttributeValue } | undefined {
+      if (valueMap.size === 0) return undefined;
       return Array.from(valueMap).reduce((obj, [key, value]) => {
         obj[key] = value;
         return obj;

@@ -10,6 +10,8 @@ import { Collection } from '../base/collection';
 import { SecondaryIndexLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
 import { createNameMapper, createValueMapper, NameMapper, ValueMapper } from '../base/mappers';
+import { CompositeCondition } from '../base/conditions';
+import { parseCompositeCondition } from '../base/conditions_parser';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -44,7 +46,7 @@ export const createUpdateActionForKey = (
   collectionName: string,
   keyType: 'partition' | 'sort',
   keyPaths: KeyPath[], indexLayout: SecondaryIndexLayout,
-  updates: Updates
+  updates: Updates,
 ): { attributeName: string; value?: string } | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
@@ -158,7 +160,13 @@ export const mapAccessPatterns = (
  * value. Shares most of the code between updateById and updateChildById
  *
  */
-export async function updateInternal(ctx: Context, collection: Collection, key: Key, updates: Updates): Promise<DocumentWithId> {
+export async function updateInternal(
+  ctx: Context,
+  collection: Collection,
+  key: Key,
+  updates: Updates,
+  options: { condition?: CompositeCondition },
+): Promise<DocumentWithId> {
   const updatePaths: string[] = Object.keys(updates);
   if (updatePaths.length === 0) {
     throw new InvalidUpdatesException('There must be at least one update path in the updates object');
@@ -178,7 +186,7 @@ export async function updateInternal(ctx: Context, collection: Collection, key: 
     }
     const valueName = valueMapper.map(value);
 
-    const expressionAttributeNameParts = ['#value', ...updateKeyPath.map(part => nameMapper.map(part))];
+    const expressionAttributeNameParts = [nameMapper.map('value', '#value'), ...updateKeyPath.map(part => nameMapper.map(part))];
     expressionSetActions.push(`${expressionAttributeNameParts.join('.')} = ${valueName}`);
   }
 
@@ -186,6 +194,11 @@ export async function updateInternal(ctx: Context, collection: Collection, key: 
     mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
   expressionSetActions = [...expressionSetActions, ...additionalSetActions];
   expressionDeleteActions = [...expressionDeleteActions, ...additionalDeleteActions];
+
+  let conditionExpression;
+  if (options.condition) {
+    conditionExpression = parseCompositeCondition(options.condition, { nameMapper, valueMapper, parsePath: [] });
+  }
 
   const expressionAttributeNames = nameMapper.get();
   const expressionAttributeValues = valueMapper.get();
@@ -200,6 +213,7 @@ export async function updateInternal(ctx: Context, collection: Collection, key: 
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
     UpdateExpression: updateExpression.trim(),
+    ConditionExpression: conditionExpression,
   };
 
   debugDynamo('UpdateItem', updateItem);
@@ -235,7 +249,8 @@ export async function updateById(
   ctx: Context,
   collectionName: string,
   objectId: string,
-  updates: Updates
+  updates: Updates,
+  options: { condition?: CompositeCondition } = {},
 ): Promise<DocumentWithId> {
   const collection = getRootCollection(ctx, collectionName);
 
@@ -243,6 +258,6 @@ export async function updateById(
     [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
     [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
   };
-  return updateInternal(ctx, collection, key, updates);
+  return updateInternal(ctx, collection, key, updates, options);
 };
 

@@ -3,18 +3,34 @@ import { Context } from '../context';
 import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
 import { WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
+import { CompositeCondition } from '../base/conditions';
+import { createNameMapper, createValueMapper } from '../base/mappers';
+import { parseCompositeCondition } from '../base/conditions_parser';
 
 /**
  * Delete a root object using its `_id` field
  * @param context the context object
  * @param collectionName the name of the collection
  * @param id the object to remove
+ * @param options options to apply
+ * @param options.condition an optional conditional expression that must be satifisfied for the update to proceed
  * @returns the deleted object (as stored in the database), or
  * `undefined` if not found
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
-export async function deleteById(context: Context, collectionName: string, id: string): Promise<any> {
+export async function deleteById(
+  context: Context,
+  collectionName: string,
+  id: string,
+  options: { condition?: CompositeCondition } = {},
+): Promise<any> {
   const collection = getRootCollection(context, collectionName);
+  const nameMapper = createNameMapper();
+  const valueMapper = createValueMapper();
+  let conditionExpression;
+  if (options.condition) {
+    conditionExpression = parseCompositeCondition(options.condition, { nameMapper, valueMapper, parsePath: [] });
+  }
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
@@ -22,6 +38,9 @@ export async function deleteById(context: Context, collectionName: string, id: s
       [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id),
     }),
     ReturnValues: 'ALL_OLD',
+    ConditionExpression: conditionExpression,
+    ExpressionAttributeNames: nameMapper.get(),
+    ExpressionAttributeValues: valueMapper.get(),
   };
   debugDynamo('DeleteItem', request);
   const result = await context.ddb.deleteItem(request).promise();

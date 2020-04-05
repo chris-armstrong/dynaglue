@@ -5,11 +5,11 @@ import { WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 
 /**
- * Retrieve a root item by its `_id` field.
+ * Retrieve a top-level document by its `_id` field.
  *
  * @param context the context object
  * @param collectionName name of the collection to search
- * @param id the `_id` value
+ * @param id the `_id` value of the root document
  * @returns the stored value, or `undefined` if not found
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
