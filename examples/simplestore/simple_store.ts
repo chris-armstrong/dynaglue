@@ -1,5 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, findById, find, deleteById, replaceById } from '../../dist';
+import { Collection, createContext, insert, findById, find, deleteById, replace } from '../../dist';
 
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 const REGION = process.env.REGION || 'fake';
@@ -121,7 +121,7 @@ async function main(): Promise<void> {
   const deletedItem = await deleteById(ctx, 'posts', post2._id);
   console.log('deleted post #2', deletedItem);
 
-  const updatedPost = await replaceById(ctx, 'posts', {
+  const updatedPost = await replace(ctx, 'posts', {
     ...post3,
     title: 'Updated first post',
   });
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
 
   console.log('posts by user 2', await find(ctx, 'posts', { userId: user2._id }));
 
-  const emailSearch = await find(ctx, 'users', { email: 'anayah' });
+  const emailSearch = await find(ctx, 'users', { email: 'anayah' }, undefined, { filter: { 'team.employeeCode': { $beginsWith: 'AC' }, 'profile': { $exists: false } } });
   console.log('email search results', emailSearch);
 
   // Find all users in a team (access pattern 2)
