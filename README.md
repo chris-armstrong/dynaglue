@@ -1,6 +1,6 @@
 # Dynaglue
 
-An opinionated JavaScript library to make single-table designs in DynamoDB easier
+*dynaglue* is an opinionated JavaScript library that makes single-table designs in DynamoDB easier
 to query and update.
 
 ```sh
