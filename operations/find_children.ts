@@ -46,7 +46,7 @@ export async function findChildren(
   childCollectionName: string,
   rootObjectId: string,
   nextToken?: Key,
-  options: { limit?: number; scanForward?: boolean, filter?: CompositeCondition } = {},
+  options: { limit?: number; scanForward?: boolean; filter?: CompositeCondition } = {},
 ): Promise<FindChildrenResults> {
   const childCollection = getChildCollection(ctx, childCollectionName);
   const nameMapper = createNameMapper();
