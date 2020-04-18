@@ -129,6 +129,7 @@ describe('toWrapped', () => {
         gs1part: 'locations|-|AU',
         gs1sort: 'locations|-|NSW|-|Sydney',
         value: { ...value, _id: 'test-id' },
+        type: 'locations',
       });
     });
 
@@ -140,6 +141,7 @@ describe('toWrapped', () => {
         gs1part: 'locations|-|AU',
         gs1sort: 'locations|-|NSW|-|Sydney',
         value: { ...value, _id: 'better-id' },
+        type: 'locations',
       });
     });
   });
@@ -151,6 +153,7 @@ describe('toWrapped', () => {
         id: 'locations|-|sydney-1',
         sid: 'locations_descriptors|-|test-id',
         value: { ...value, _id: 'test-id' },
+        type: 'locations_descriptors',
       });
     });
 
@@ -165,6 +168,7 @@ describe('toWrapped', () => {
         id: 'locations|-|sydney-1',
         sid: 'locations_descriptors|-|sydney-1-en',
         value,
+        type: 'locations_descriptors',
       });
     });
   });
@@ -182,6 +186,7 @@ describe('toWrapped', () => {
       sid: 'locations|-|test-id',
       gs1part: 'locations|-|UK',
       value: { ...value, _id: 'test-id' },
+      type: 'locations',
     });
   });
 });

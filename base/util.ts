@@ -147,6 +147,7 @@ export const toWrapped = (
     [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
     [collection.layout.primaryKey.sortKey]: sortKeyValue,
     value: updatedValue,
+    type: collection.name,
   }, ...extractedKeys);
   return wrapped;
 };
