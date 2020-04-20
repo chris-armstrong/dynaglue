@@ -4,7 +4,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 export type DynamoDBSet = DocumentClient.DynamoDbSet;
 
 /* The value for a condition expression */
-export type ConditionValue = undefined; 
+export type ConditionValue = any; 
 
 /* A DynamoDB type, for the $type condition operator (see [[TypeCondition]]) */
 export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL' | 'L' | 'M';
