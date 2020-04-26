@@ -48,4 +48,10 @@ export interface CollectionLayout {
    * Optional secondary find keys for additional lookups
    */
   findKeys?: SecondaryIndexLayout[];
+
+  /**
+   * The name of the attribute configured as the
+   * TimeToLiveSpecification attribute
+   */
+  ttlAttribute?: string;
 };

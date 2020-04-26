@@ -3,6 +3,7 @@ import {
   findCollectionIndex,
   mapAccessPatterns,
   updateById,
+  createUpdateActionForTTLKey,
 } from './update_by_id';
 import { InvalidUpdatesException, IndexNotFoundException, InvalidUpdateValueException } from '../base/exceptions';
 import { Collection } from '../base/collection';
@@ -12,7 +13,7 @@ import newId from '../base/new_id';
 import { Converter, UpdateItemOutput, UpdateItemInput } from 'aws-sdk/clients/dynamodb';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 
-const layoutForIndex = (index: number) => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` })
+const layoutForIndex = (index: number) => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` });
 const layout = {
   tableName: 'general',
   primaryKey: {
@@ -106,6 +107,38 @@ describe('createUpdateActionForKey', () => {
         attributeName: 'pk1',
         value: `${collectionName}|-|AAA|-|123456`,
       });
+  });
+});
+
+describe('createUpdateActionForTTLKey', () => {
+  const attributeName = 'expiry';
+  const expiryDate = new Date();
+  const updates = {
+    'test.0': {
+      'home': 'string',
+      'a date': expiryDate,
+    },
+    'direct.path': expiryDate.getTime(),
+  };
+
+  it('should return undefined when there is no matching update path', () => {
+    expect(createUpdateActionForTTLKey(attributeName, ['test', '1', 'a date'], updates))
+      .toBeUndefined();
+  }); 
+
+  it('should return with a correct value when it is directly specified in the updates', () => {
+    expect(createUpdateActionForTTLKey(attributeName, ['direct', 'path'], updates))
+      .toEqual({ attributeName, value: Math.ceil(expiryDate.getTime() / 1000) });
+  });
+
+  it('should return with a correct value when it is indirectly specified in the updates', () => {
+    expect(createUpdateActionForTTLKey(attributeName, ['test', '0', 'a date'], updates))
+      .toEqual({ attributeName, value: Math.ceil(expiryDate.getTime() / 1000) });
+  });
+
+  it('should return with an undefined value if the ttl key path points to an undefined value', () => {
+    expect(createUpdateActionForTTLKey(attributeName, ['test', '0', 'something else'], updates))
+      .toEqual({ attributeName, value: undefined });
   });
 });
 

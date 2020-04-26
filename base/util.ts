@@ -1,4 +1,5 @@
 import get from 'lodash/get';
+import isISOString from 'validator/lib/isISO8601';
 import { Context } from '../context';
 import { CollectionNotFoundException, InvalidIdException, PersistenceException, InvalidParentIdException } from './exceptions';
 import { DocumentWithId, WrappedDocument } from './common';
@@ -75,18 +76,49 @@ export const getCollection = (context: Context, collectionName: string): Collect
 };
 
 /**
+ * @internal
+ *
+ * Converts a TTL value from a document
+ * to a DynamoDB compatible TTL value (UNIX date in seconds stored as a number)
+ */
+export const transformTTLValue = (ttlValue: any): number | undefined => {
+  let transformedValue;
+  if (typeof ttlValue === 'object' && ttlValue instanceof Date) {
+    transformedValue = Math.ceil(ttlValue.getTime() / 1000);
+  } else if (typeof ttlValue === 'number') {
+    transformedValue = Math.ceil(ttlValue / 1000);
+  } else if (typeof ttlValue === 'string' && isISOString(ttlValue)) {
+    transformedValue = Math.ceil(new Date(ttlValue).getTime() / 1000);
+  }
+  return transformedValue;
+};
+
+/**
+ * @internal
+ *
+ * Extract a transformed TTL value from a document
+ */
+export const extractTransformedTTLValue = (value: DocumentWithId, valuePath: KeyPath): number | undefined => {
+  const ttlValue = get(value, valuePath);
+  return transformTTLValue(ttlValue);
+};
+
+/**
   * @internal
   *
   * Given a collection, and set of key paths from an access pattern, create a value that can be used
   * to look up an index attribute. This is used to generate the value to store in the indexed attribute.
   */
 export const constructKeyValue = (
-  type: 'partition' | 'sort',
+  type: 'partition' | 'sort' | 'ttl',
   collectionName: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
   value: DocumentWithId
-): string|undefined => {
+): string|number|undefined => {
+  if (type === 'ttl') {
+    return extractTransformedTTLValue(value, valuePaths[0]);
+  }
   const values = valuePaths.map(valuePath => {
     const extractedValue = get(value, valuePath);
     if (typeof extractedValue !== 'undefined' && typeof extractedValue !== 'string') {

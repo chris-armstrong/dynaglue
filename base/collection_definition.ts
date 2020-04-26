@@ -7,7 +7,7 @@ import { Collection, ChildCollection, RootCollection } from "./collection";
  * to build stored values
  */
 export type ExtractKey = {
-  type: 'partition' | 'sort';
+  type: 'partition' | 'sort' | 'ttl';
   key: string;
   valuePaths: KeyPath[];
   options: AccessPatternOptions;

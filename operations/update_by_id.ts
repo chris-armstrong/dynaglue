@@ -2,7 +2,7 @@ import get from 'lodash/get';
 import createDebug from 'debug';
 import { Context } from '../context';
 import { UpdateItemInput, Converter, AttributeMap, Key } from 'aws-sdk/clients/dynamodb';
-import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue, findMatchingPath } from '../base/util';
+import { getRootCollection, assemblePrimaryKeyValue, unwrap, assembleIndexedValue, findMatchingPath, transformTTLValue } from '../base/util';
 import { KeyPath } from '../base/access_pattern';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { InvalidUpdatesException, InvalidUpdateValueException, IndexNotFoundException } from '../base/exceptions';
@@ -40,12 +40,25 @@ export const extractUpdateKeyPaths = (updates: Updates): KeyPath[] =>
   Object.keys(updates).map(updatePath => updatePath.split('.'));
 
 /**
+ * @internal
+ */
+export const getValueForUpdatePath = (matchingUpdatePath: KeyPath, keyPath: KeyPath, updates: Updates): any => {
+  let value = updates[matchingUpdatePath.join('.')];
+  if (keyPath.length !== matchingUpdatePath.length) {
+    const difference = keyPath.slice(matchingUpdatePath.length);
+    value = get(value, difference);
+  }
+  return value;
+}
+
+/**
   * @internal
   */
 export const createUpdateActionForKey = (
   collectionName: string,
   keyType: 'partition' | 'sort',
-  keyPaths: KeyPath[], indexLayout: SecondaryIndexLayout,
+  keyPaths: KeyPath[],
+  indexLayout: SecondaryIndexLayout,
   updates: Updates,
 ): { attributeName: string; value?: string } | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
@@ -65,18 +78,32 @@ export const createUpdateActionForKey = (
     if (!matchingUpdatePath) {
       return undefined;
     }
-    let value = updates[matchingUpdatePath.join('.')];
-    if (keyPath.length !== matchingUpdatePath.length) {
-      const difference = keyPath.slice(matchingUpdatePath.length);
-      value = get(value, difference);
-    }
-    return value;
+    return getValueForUpdatePath(matchingUpdatePath, keyPath, updates);
   });
 
   return {
     attributeName,
     value: assembleIndexedValue(keyType, collectionName, updateValues),
   };
+}
+
+/**
+ * @internal
+ *
+ * Create the update action for a TTL key path
+ */
+export const createUpdateActionForTTLKey = (
+  attributeName: string,
+  keyPath: KeyPath,
+  updates: Updates,
+): { attributeName: string; value?: number } | undefined => {
+  const updateKeyPaths = extractUpdateKeyPaths(updates);
+  const matchingUpdatePath = findMatchingPath(updateKeyPaths, keyPath);
+  if (matchingUpdatePath) {
+    const value = getValueForUpdatePath(matchingUpdatePath, keyPath, updates);
+    return { attributeName, value: value ? transformTTLValue(value) : undefined };
+  }
+  return undefined;
 }
 
 /**
@@ -120,10 +147,8 @@ export const mapAccessPatterns = (
 } => {
   const expressionSetActions: string[] = [];
   const expressionDeleteActions: string[] = [];
-  if (!collection.accessPatterns) {
-    return { setActions: expressionSetActions, deleteActions: expressionDeleteActions };
-  }
-  for (const { indexName, partitionKeys, sortKeys } of collection.accessPatterns) {
+  const { accessPatterns = [], ttlKeyPath } = collection
+  for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
     if (partitionKeys.length > 0) {
       const layout = findCollectionIndex(collection, indexName);
       const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
@@ -147,6 +172,18 @@ export const mapAccessPatterns = (
           const nameMapping = nameMapper.map(update.attributeName);
           expressionDeleteActions.push(nameMapping);
         }
+      }
+    }
+  }
+  if (ttlKeyPath) {
+    const updateAction = createUpdateActionForTTLKey(collection.layout.ttlAttribute!, ttlKeyPath, updates);
+    if (updateAction) {
+      const nameMapping = nameMapper.map(updateAction.attributeName);
+      if (updateAction.value) {
+        const valueMapping = valueMapper.map(updateAction.value);
+        expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+      } else {
+        expressionDeleteActions.push(nameMapping);
       }
     }
   }

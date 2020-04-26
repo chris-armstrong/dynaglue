@@ -20,6 +20,24 @@ export interface CommonCollection {
    * `_id` field
    */
   accessPatterns?: AccessPattern[];
+  /**
+   * The optional key path of an attribute
+   * that will be copied to the TTL attribute
+   * on collection documents.
+   *
+   * The value must be either:
+   * * a Date object
+   * * a string in ISO8601 format
+   * * a number, in milliseconds since the Epoch
+   *
+   * (any other value will be ignored)
+   *
+   * The layout must also define `ttlAttribute` when you
+   * specify `ttlKeyPath`, otherwise
+   * an exception will be thrown when you create
+   * the context.
+   */
+  ttlKeyPath?: KeyPath;
 }
 
 /**

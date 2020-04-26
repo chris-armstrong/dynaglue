@@ -6,6 +6,7 @@ import { DynaglueContext } from './context_types';
 import { buildAndValidateAccessPatterns } from './extract_keys';
 import { ExtractKey, RootCollectionDefinition, ChildCollectionDefinition } from '../base/collection_definition';
 import isEqual from 'lodash/isEqual';
+import { describeKeyPath } from '../base/access_pattern';
 
 type Opaque<K, T> = T & { __TYPE__: K };
 
@@ -48,6 +49,14 @@ export function createContext(
     let wrapperExtractKeys: ExtractKey[] = [];
     if (collection.accessPatterns) {
       wrapperExtractKeys = buildAndValidateAccessPatterns(collection);
+    }
+    if (collection.ttlKeyPath) {
+      const { ttlKeyPath } = collection;
+      if (!layout.ttlAttribute) {
+        throw new ConfigurationException(`Collection '${name}' defines ttlKeyPath=${describeKeyPath(ttlKeyPath)} but layout has no ttlAttribute specified`);
+      }
+      const ttlExtractKey: ExtractKey = { type: 'ttl', key: layout.ttlAttribute, valuePaths: [ttlKeyPath], options: {} };
+      wrapperExtractKeys = [...wrapperExtractKeys, ttlExtractKey];
     }
     definitions.set(collection.name, {
       ...collection,
