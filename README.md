@@ -181,31 +181,30 @@ shared an index or table).
 
 ## Limitations
 
-This is what I'm aware of - I'm sure there is much more:
+This is a list of current limitations:
 
 * *It is highly opinionated about how data is stored.* Using this for existing
-  applications is going to require a data migration at the very least
+  applications is going to require a data migration at the very least (there
+  are plans to add some flexibility around separators and important attribute
+  names)
 * *It is impossible to use projected attributes on GSIs with the current data layout*
-  *to control index storange and return value size.* This could be achieved with a
-  completely different storage pattern, which is probably going to happen
-* *Limited update item support* - this is being added (just SET actions for now!)
-* *No support for update filter expressions.* No reason AFAIK
-  that prevents these from being added. They just need an API :-)
+  *to control index storage and return value size.* 
 * *Only string types for values used to build indexes.* Obviously numbers
   and dates are useful for sort key expressions, but they require more
-  sophisticated handling
-* ~~No adjacency lists~~ - there is basic adjanency list support now - see
+  sophisticated handling than the library currently supports
+* *Incomplete adjacency list support* - there is basic adjacency list support now - see
   the new `ChildCollection` type and `*ChildById` APIs :-) in the `basic_children.ts`
-  example
-* *No write sharding support for low-variance partition keys.* If you have hot partition
-  keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
+  example. This will be improved.
+* *Batch Read/Write and Transaction Support is still to be done*
+* *No write sharding support for low-variance partition keys.* (NOTE: This isn't important for most use cases)
+  If you have hot partition keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
   and you query them on one of those values relentlessly, you will get a
   hot partition. The normal solution is to add a suffix spread between a given
   set of values (e.g. 0-19) so that when it is queried on status the query can
   be split over 20 partitions instead of one.
-* *This library may not reflect or enforce best practice.* This library probably does
-  some things inefficiently and will let you do bad things too (this is a hammer
-  and that might be a nail, so I presume you know what you're doing)
+* *This library may not reflect "best practice"* All effort has been
+  made to ensure this aligns with the current accepted best practice for
+  storing typical object models in DynamoDB for a single-table design, but
 
 ## Contributing
 
