@@ -12,5 +12,6 @@ export type DocumentWithId = {
  * You should not have to manipulate this type directly.
  */
 export type WrappedDocument = {
+  type: string;
   value: DocumentWithId;
 };

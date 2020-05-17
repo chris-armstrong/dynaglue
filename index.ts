@@ -9,6 +9,7 @@ export {
   deleteChildById,
   updateById,
   updateChildById,
+  findByIdWithChildren,
 } from './operations';
 export { createContext } from './context';
 export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';

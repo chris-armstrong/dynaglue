@@ -8,3 +8,5 @@ export { findChildById } from './find_child_by_id';
 export { deleteChildById } from './delete_child_by_id';
 export { updateById } from './update_by_id';
 export { updateChildById } from './update_child_by_id';
+export { findByIdWithChildren } from './find_by_id_with_children';
+
