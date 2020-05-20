@@ -5,8 +5,6 @@ import { unwrap, getCollection, getChildCollection, SEPARATOR, assemblePrimaryKe
 import { CollectionNotFoundException } from '../base/exceptions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import debugDynamo from '../debug/debugDynamo';
-import { CompositeCondition } from '../base/conditions';
-import { parseCompositeCondition } from '../base/conditions_parser';
 
 export type FindByIdWithChildrenResult = {
   /**
@@ -228,7 +226,7 @@ export const findByIdWithChildren = async (
 
   let root: DocumentWithId | undefined;
   const children: { [collection: string]: DocumentWithId[] } = {};
-  for (let item of Items) {
+  for (const item of Items) {
     const attributes = Converter.unmarshall(item) as WrappedDocument;
     if (attributes.type === rootCollectionName) {
       root = unwrap(attributes);
