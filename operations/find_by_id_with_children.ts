@@ -1,7 +1,7 @@
 import { Key, Converter, QueryInput } from 'aws-sdk/clients/dynamodb';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { Context } from '../context';
-import { unwrap, getCollection, getChildCollection, SEPARATOR } from '../base/util';
+import { unwrap, getCollection, getChildCollection, SEPARATOR, assemblePrimaryKeyValue } from '../base/util';
 import { CollectionNotFoundException } from '../base/exceptions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import debugDynamo from '../debug/debugDynamo';
@@ -180,7 +180,7 @@ export const findByIdWithChildren = async (
   rootObjectId: string,
   childCollectionNames?: string[],
   nextToken?: Key,
-  options: { limit?: number; scanForward?: boolean; filter?: CompositeCondition } = {},
+  options: { limit?: number; scanForward?: boolean } = {},
 ): Promise<FindByIdWithChildrenResult> => {
   const collection = getCollection(ctx, rootCollectionName);
   let childCollections;
@@ -200,22 +200,17 @@ export const findByIdWithChildren = async (
 
   const firstCollection = allCollectionNames[0];
   const lastCollection = allCollectionNames[allCollectionNames.length - 1];
+  const lastCollectionBound = lastCollection + SEPARATOR + '\uFFFF'
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
 
   const { partitionKey, sortKey } = collection.layout.primaryKey;
 
-  const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(rootObjectId)} ` + 
-    `AND ${nameMapper.map(sortKey)} BETWEEN ${valueMapper.map(firstCollection + SEPARATOR)} AND ${valueMapper.map(lastCollection + SEPARATOR)}`;
+  const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(assemblePrimaryKeyValue(rootCollectionName, rootObjectId))} ` + 
+    `AND ${nameMapper.map(sortKey)} BETWEEN ${valueMapper.map(firstCollection + SEPARATOR)} AND ${valueMapper.map(lastCollectionBound)}`;
 
-  const collectionNamesFilter: CompositeCondition = {
-    type: {
-      $in: allCollectionNames,
-    },
-  };
-  const combinedFilter = options?.filter ? { $and: [collectionNamesFilter, options.filter] } : collectionNamesFilter;
-  const filterExpression = parseCompositeCondition(combinedFilter, { nameMapper, valueMapper, parsePath: [] });
+  const filterExpression = `${nameMapper.map('type')} IN (${allCollectionNames.map(c => valueMapper.map(c)).join(',')})`;
   const request: QueryInput = {
     TableName: collection.layout.tableName,
     KeyConditionExpression: keyConditionExpression,
