@@ -65,7 +65,7 @@
 				<a href="#dynaglue" id="dynaglue" style="color: inherit; text-decoration: none;">
 					<h1>Dynaglue</h1>
 				</a>
-				<p>An opinionated JavaScript library to make single-table designs in DynamoDB easier
+				<p><em>dynaglue</em> is an opinionated JavaScript library that makes single-table designs in DynamoDB easier
 				to query and update.</p>
 				<pre><code class="language-sh">npm install dynaglue</code></pre>
 				<a href="#rationale" id="rationale" style="color: inherit; text-decoration: none;">
@@ -177,6 +177,7 @@
 				<p>more advanced DynamoDB modelling:</p>
 				<ul>
 					<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
+					<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a></li>
 					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html">DynamoDB Best Practices</a></li>
 					<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
 					<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
@@ -227,31 +228,30 @@
 				<a href="#limitations" id="limitations" style="color: inherit; text-decoration: none;">
 					<h2>Limitations</h2>
 				</a>
-				<p>This is what I&#39;m aware of - I&#39;m sure there is much more:</p>
+				<p>This is a list of current limitations:</p>
 				<ul>
 					<li><em>It is highly opinionated about how data is stored.</em> Using this for existing
-					applications is going to require a data migration at the very least</li>
+						applications is going to require a data migration at the very least (there
+						are plans to add some flexibility around separators and important attribute
+					names)</li>
 					<li><em>It is impossible to use projected attributes on GSIs with the current data layout</em>
-						<em>to control index storange and return value size.</em> This could be achieved with a
-					completely different storage pattern, which is probably going to happen</li>
-					<li><em>Limited update item support</em> - this is being added (just SET actions for now!)</li>
-					<li><em>No support for update filter expressions.</em> No reason AFAIK
-					that prevents these from being added. They just need an API :-)</li>
+					<em>to control index storage and return value size.</em> </li>
 					<li><em>Only string types for values used to build indexes.</em> Obviously numbers
 						and dates are useful for sort key expressions, but they require more
-					sophisticated handling</li>
-					<li><del>No adjacency lists</del> - there is basic adjanency list support now - see
+					sophisticated handling than the library currently supports</li>
+					<li><em>Incomplete adjacency list support</em> - there is basic adjacency list support now - see
 						the new <code>ChildCollection</code> type and <code>*ChildById</code> APIs :-) in the <code>basic_children.ts</code>
-					example</li>
-					<li><em>No write sharding support for low-variance partition keys.</em> If you have hot partition
-						keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
+					example. This will be improved.</li>
+					<li><em>Batch Read/Write and Transaction Support is still to be done</em></li>
+					<li><em>No write sharding support for low-variance partition keys.</em> (NOTE: This isn&#39;t important for most use cases)
+						If you have hot partition keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
 						and you query them on one of those values relentlessly, you will get a
 						hot partition. The normal solution is to add a suffix spread between a given
 						set of values (e.g. 0-19) so that when it is queried on status the query can
 					be split over 20 partitions instead of one.</li>
-					<li><em>This library may not reflect or enforce best practice.</em> This library probably does
-						some things inefficiently and will let you do bad things too (this is a hammer
-					and that might be a nail, so I presume you know what you&#39;re doing)</li>
+					<li><em>This library may not reflect &quot;best practice&quot;</em> All effort has been
+						made to ensure this aligns with the current accepted best practice for
+					storing typical object models in DynamoDB for a single-table design, but</li>
 				</ul>
 				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
 					<h2>Contributing</h2>
@@ -392,6 +392,9 @@
 						<a href="globals.html#extractkey" class="tsd-kind-icon">Extract<wbr>Key</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#findbyidwithchildrenresult" class="tsd-kind-icon">Find<wbr>ById<wbr>With<wbr>Children<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
 						<a href="globals.html#findchildrenresults" class="tsd-kind-icon">Find<wbr>Children<wbr>Results</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
@@ -477,6 +480,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-is-external">
 						<a href="globals.html#findbyid" class="tsd-kind-icon">find<wbr>ById</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#findbyidwithchildren" class="tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children</a>
 					</li>
 					<li class=" tsd-kind-function tsd-is-external">
 						<a href="globals.html#findchildbyid" class="tsd-kind-icon">find<wbr>Child<wbr>ById</a>

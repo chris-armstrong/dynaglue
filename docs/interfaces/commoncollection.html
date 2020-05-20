@@ -90,6 +90,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="commoncollection.html#accesspatterns" class="tsd-kind-icon">access<wbr>Patterns</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="commoncollection.html#layout" class="tsd-kind-icon">layout</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="commoncollection.html#name" class="tsd-kind-icon">name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="commoncollection.html#ttlkeypath" class="tsd-kind-icon">ttl<wbr>Key<wbr>Path</a></li>
 							</ul>
 						</section>
 					</div>
@@ -103,7 +104,7 @@
 					<div class="tsd-signature tsd-kind-icon">access<wbr>Patterns<span class="tsd-signature-symbol">:</span> <a href="accesspattern.html" class="tsd-signature-type">AccessPattern</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/collection.ts#L22">base/collection.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L22">base/collection.ts:22</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -120,7 +121,7 @@
 					<div class="tsd-signature tsd-kind-icon">layout<span class="tsd-signature-symbol">:</span> <a href="collectionlayout.html" class="tsd-signature-type">CollectionLayout</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/collection.ts#L16">base/collection.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L16">base/collection.ts:16</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -138,7 +139,7 @@
 					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/collection.ts#L9">base/collection.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L9">base/collection.ts:9</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -146,6 +147,34 @@
 							<p>The name of the collection. Use this
 							when creating, updating or retrieving values.</p>
 						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+					<a name="ttlkeypath" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> ttl<wbr>Key<wbr>Path</h3>
+					<div class="tsd-signature tsd-kind-icon">ttl<wbr>Key<wbr>Path<span class="tsd-signature-symbol">:</span> <a href="../globals.html#keypath" class="tsd-signature-type">KeyPath</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L40">base/collection.ts:40</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The optional key path of an attribute
+								that will be copied to the TTL attribute
+							on collection documents.</p>
+						</div>
+						<p>The value must be either:</p>
+						<ul>
+							<li>a Date object</li>
+							<li>a string in ISO8601 format</li>
+							<li>a number, in milliseconds since the Epoch</li>
+						</ul>
+						<p>(any other value will be ignored)</p>
+						<p>The layout must also define <code>ttlAttribute</code> when you
+							specify <code>ttlKeyPath</code>, otherwise
+							an exception will be thrown when you create
+						the context.</p>
 					</div>
 				</section>
 			</section>
@@ -173,6 +202,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
 								<a href="commoncollection.html#name" class="tsd-kind-icon">name</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+								<a href="commoncollection.html#ttlkeypath" class="tsd-kind-icon">ttl<wbr>Key<wbr>Path</a>
 							</li>
 						</ul>
 					</li>

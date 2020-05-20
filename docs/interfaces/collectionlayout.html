@@ -91,6 +91,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="collectionlayout.html#findkeys" class="tsd-kind-icon">find<wbr>Keys</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="collectionlayout.html#primarykey" class="tsd-kind-icon">primary<wbr>Key</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="collectionlayout.html#tablename" class="tsd-kind-icon">table<wbr>Name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="collectionlayout.html#ttlattribute" class="tsd-kind-icon">ttl<wbr>Attribute</a></li>
 							</ul>
 						</section>
 					</div>
@@ -104,7 +105,7 @@
 					<div class="tsd-signature tsd-kind-icon">find<wbr>Keys<span class="tsd-signature-symbol">:</span> <a href="../globals.html#secondaryindexlayout" class="tsd-signature-type">SecondaryIndexLayout</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/layout.ts#L50">base/layout.ts:50</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/layout.ts#L50">base/layout.ts:50</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -119,7 +120,7 @@
 					<div class="tsd-signature tsd-kind-icon">primary<wbr>Key<span class="tsd-signature-symbol">:</span> <a href="../globals.html#primaryindexlayout" class="tsd-signature-type">PrimaryIndexLayout</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/layout.ts#L46">base/layout.ts:46</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/layout.ts#L46">base/layout.ts:46</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -134,12 +135,28 @@
 					<div class="tsd-signature tsd-kind-icon">table<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/291daa3/base/layout.ts#L44">base/layout.ts:44</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/layout.ts#L44">base/layout.ts:44</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Name of the table</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+					<a name="ttlattribute" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> ttl<wbr>Attribute</h3>
+					<div class="tsd-signature tsd-kind-icon">ttl<wbr>Attribute<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/layout.ts#L56">base/layout.ts:56</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The name of the attribute configured as the
+							TimeToLiveSpecification attribute</p>
 						</div>
 					</div>
 				</section>
@@ -168,6 +185,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
 								<a href="collectionlayout.html#tablename" class="tsd-kind-icon">table<wbr>Name</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+								<a href="collectionlayout.html#ttlattribute" class="tsd-kind-icon">ttl<wbr>Attribute</a>
 							</li>
 						</ul>
 					</li>
