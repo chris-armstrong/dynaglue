@@ -30,11 +30,11 @@ also contains useful information about the operations and types you need to use 
 
 ## Status
 
-This project is currently in in progress (alpha). **Its API is unstable and is undergoing change**,
-so take care and keep an eye on updates for now.
+This project is currently in progress (alpha). **Its API may change during this period**, so take care and keep an eye on updates for now.
 
-Please try it out, report bugs, suggest improvements or submit sensible code
-changes.
+It's quite feature complete, barring some specific items (like batch read/write, transacions, projection expressions, capacity numbers).
+
+Please try it out, report bugs, suggest improvements or submit a PR.
 
 ## Usage Example
 
@@ -112,7 +112,7 @@ const updatedItem = await updateById(ctx, 'users', user4._id, {
 
 ## Prerequisite Knowledge
 
-This library assumes you have a solid understanding of DynamoDB partition and sort keys, primary and secondary indexes,
+This library assumes you have a good understanding of DynamoDB partition and sort keys, primary and secondary indexes,
 and assumes you understand how single-table designs work in theory.
 
 If you're unsure what any of this means, first learn how to build applications using DynamoDB:
@@ -122,13 +122,13 @@ If you're unsure what any of this means, first learn how to build applications u
 
 more advanced DynamoDB modelling:
 
+* [The DynamoDB Book](https://www.dynamodbbook.com/) **HIGHLY RECOMMENDED**
 * [Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan](https://www.youtube.com/watch?v=HaEPXoXVf2k)
-* [The DynamoDB Book](https://www.dynamodbbook.com/)
 * [DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
 * [How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly](https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/)
 * [From relational DB to single DynamoDB table: a step-by-step exploration](https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/)
 
-and on the merits of single table vs multi table design (this library is agnostic):
+and on the merits of single table vs multi table design (this library is mostly agnostic):
 
 * [Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail](https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/)
 * [Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie](https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices)
@@ -145,7 +145,7 @@ which will print out the queries it executes.
 
 ## Motivation
 
-In order to leverage DynamoDB properly, you must first:
+I've learnt that in order to leverage DynamoDB properly, you must first:
 
 * purge yourself of any sensible knowledge of database design such as normalisation
 * know exactly how your application will access its data for now and all time (in
@@ -155,16 +155,16 @@ In order to leverage DynamoDB properly, you must first:
 * mix multiple data structures together in the same table, distinguished only by
   prefixes and values
 
-Once you've accepted all that is horrible as best practice, you may then build highly
+Once you've accepted all that is horrible as best practice, only then you may then build highly
 performant and scalable web applications.
 
-The next stumbling block is an API that does not make this easy. Combining multiple
+The next stumbling block is DynamoDB's API: it does not make this easy. Combining multiple
 records from different data types sharing indexes in the same logical table requires
-great discipline and attention to detail.
+discipline and attention to detail.
 
 Most DynamoDB applications will attempt to avoid this by using separate tables
 for each type of data, using secondary indexes liberally and by naming their keys
-intuitively based on the data being modelled. This is actually fine: it makes working
+intuitively based on the data being modelled. **This is actually fine**: it makes working
 with the API less painful but it makes it harder to optimise for cost and performance.
 
 This library is an attempt at a compromise - it presents a Mongo-like
@@ -188,14 +188,21 @@ This is a list of current limitations:
   applications is going to require a data migration at the very least (there
   are plans to add some flexibility around separators and important attribute
   names)
-* *It is impossible to use projected attributes on GSIs with the current data layout*
+* *It is not possible to use projected attributes on GSIs with the current data layout*
   *to control index storage and return value size.* 
 * *Only string types for values used to build indexes.* Obviously numbers
   and dates are useful for sort key expressions, but they require more
   sophisticated handling than the library currently supports
-* *Incomplete adjacency list support* - there is basic adjacency list support now - see
-  the new `ChildCollection` type and `*ChildById` APIs :-) in the `basic_children.ts`
-  example. This will be improved.
+* *Basic adjacency list support*
+  see the new APIs: 
+    * [`ChildCollection` type](https://chris-armstrong.github.io/dynaglue/interfaces/childcollection.html)
+    * [`findChildren`](https://chris-armstrong.github.io/dynaglue/globals.html#findchildren) 
+    * [`findChildById`](https://chris-armstrong.github.io/dynaglue/globals.html#findchildbyid) 
+    * [`findByIdWithChildren`](https://chris-armstrong.github.io/dynaglue/globals.html#findbyidwithchildren) 
+    * [`updateChildById`](https://chris-armstrong.github.io/dynaglue/globals.html#updatechildbyid) 
+  and examples:
+    * [`basic_children.ts` example](https://github.com/chris-armstrong/dynaglue/blob/master/examples/basic_children.ts)
+    * [`adjacency_list.ts` example](https://github.com/chris-armstrong/dynaglue/blob/master/examples/adjacency_list.ts)
 * *Batch Read/Write and Transaction Support is still to be done*
 * *No write sharding support for low-variance partition keys.* (NOTE: This isn't important for most use cases)
   If you have hot partition keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
@@ -203,13 +210,9 @@ This is a list of current limitations:
   hot partition. The normal solution is to add a suffix spread between a given
   set of values (e.g. 0-19) so that when it is queried on status the query can
   be split over 20 partitions instead of one.
-* *This library may not reflect "best practice"* All effort has been
-  made to ensure this aligns with the current accepted best practice for
-  storing typical object models in DynamoDB for a single-table design, but
+* *This library may not reflect "best practice"* 
 
 ## Contributing
-
-There isn't formal contribution guidelines at this time.
 
 Open an Issue (**especially before you write any code**) and share your
 thoughts / plans / ideas before you do anything substantial.
