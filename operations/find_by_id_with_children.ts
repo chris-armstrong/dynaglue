@@ -1,4 +1,5 @@
 import { Key, Converter, QueryInput } from 'aws-sdk/clients/dynamodb';
+import fromPairs from 'lodash/fromPairs';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { Context } from '../context';
 import { unwrap, getCollection, getChildCollection, SEPARATOR, assemblePrimaryKeyValue } from '../base/util';
@@ -194,7 +195,8 @@ export const findByIdWithChildren = async (
       .filter(collection => collection.parentCollectionName === rootCollectionName);
   }
 
-  const allCollectionNames = [rootCollectionName, ...childCollections.map(collection => collection.name)].sort();
+  const allChildCollectionNames = childCollections.map(collection => collection.name);
+  const allCollectionNames = [rootCollectionName, ...allChildCollectionNames].sort();
 
   const firstCollection = allCollectionNames[0];
   const lastCollection = allCollectionNames[allCollectionNames.length - 1];
@@ -225,7 +227,9 @@ export const findByIdWithChildren = async (
   const { Items = [], LastEvaluatedKey } = await ctx.ddb.query(request).promise();
 
   let root: DocumentWithId | undefined;
-  const children: { [collection: string]: DocumentWithId[] } = {};
+  const children: { [collection: string]: DocumentWithId[] } = fromPairs(
+    allChildCollectionNames.map(name => [name, []]),
+  );
   for (const item of Items) {
     const attributes = Converter.unmarshall(item) as WrappedDocument;
     if (attributes.type === rootCollectionName) {
