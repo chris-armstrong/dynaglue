@@ -44,7 +44,7 @@ export interface CommonCollection {
    * generate IDs when the id property
    * is blank
    */
-  idGenerator?: () => string,
+  idGenerator?: () => string;
 }
 
 /**
