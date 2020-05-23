@@ -60,5 +60,21 @@ describe('deleteById', () => {
       ReturnValues: 'ALL_OLD',
     });
     expect(result).toEqual(value);
-  })
+  });
+
+  test('works with custom separators', async () => {
+    const mock = createDynamoMock('deleteItem', {});
+    const customCollection = { ...collection, layout: { ...layout, indexKeySeparator: '#' } };
+    const context = createContext(mock as unknown as DynamoDB, [customCollection]);
+    await deleteById(context, 'test-collection', 'idvalue');
+
+    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+      TableName: 'testtable',
+      Key: {
+        id: { S: 'test-collection#idvalue' },
+        collection: { S: 'test-collection#idvalue' },
+      },
+      ReturnValues: 'ALL_OLD',
+    });
+  });
 });

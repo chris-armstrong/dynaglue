@@ -102,7 +102,8 @@ export const assembleQueryValue = (
   collectionName: string,
   query: FindQuery,
   options: AccessPatternOptions,
-  paths?: KeyPath[]
+  paths?: KeyPath[],
+  separator?: string,
 ): IndexedValue => {
   if (paths) {
     const values: IndexedValue[] = [];
@@ -112,7 +113,7 @@ export const assembleQueryValue = (
       const transformedValue = options.stringNormalizer ? options.stringNormalizer(path, pathValue) : pathValue;
       values.push(transformedValue);
     }
-    return assembleIndexedValue(type, collectionName, values);
+    return assembleIndexedValue(type, collectionName, values, separator);
   }
   return undefined;
 };
@@ -218,8 +219,8 @@ export async function find(
     );
   }
 
-  const partitionKeyValue = assembleQueryValue('partition', collection.name, query, ap.options || {}, ap.partitionKeys);
-  const sortKeyValue = assembleQueryValue('sort', collection.name, query, ap.options || {}, ap.sortKeys);
+  const partitionKeyValue = assembleQueryValue('partition', collection.name, query, ap.options || {}, ap.partitionKeys, collection.layout.indexKeySeparator);
+  const sortKeyValue = assembleQueryValue('sort', collection.name, query, ap.options || {}, ap.sortKeys, collection.layout.indexKeySeparator);
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();

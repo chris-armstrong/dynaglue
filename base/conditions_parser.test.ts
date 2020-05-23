@@ -3,7 +3,7 @@ import { createNameMapper, createValueMapper } from './mappers';
 import { BetweenCondition, KeyPathsAndClause } from './conditions';
 
 describe('parseCompositeCondition', () => {
-  const nc = () => ({ nameMapper: createNameMapper(), valueMapper: createValueMapper(), parsePath: [] });
+  const nc = () => ({ nameMapper: createNameMapper(), valueMapper: createValueMapper(), parsePath: [] }); // eslint-ignore @typescript-eslint/explicit-function-return-type
   
   describe('operators', () => {
 

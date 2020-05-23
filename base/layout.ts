@@ -54,4 +54,9 @@ export interface CollectionLayout {
    * TimeToLiveSpecification attribute
    */
   ttlAttribute?: string;
+
+  /**
+   * The separator to use in index keys (defaults to `|-|`)
+   */
+  indexKeySeparator?: string;
 };

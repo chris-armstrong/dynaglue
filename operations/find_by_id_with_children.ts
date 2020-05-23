@@ -2,7 +2,7 @@ import { Key, Converter, QueryInput } from 'aws-sdk/clients/dynamodb';
 import fromPairs from 'lodash/fromPairs';
 import { WrappedDocument, DocumentWithId } from '../base/common';
 import { Context } from '../context';
-import { unwrap, getCollection, getChildCollection, SEPARATOR, assemblePrimaryKeyValue } from '../base/util';
+import { unwrap, getCollection, getChildCollection, assemblePrimaryKeyValue } from '../base/util';
 import { CollectionNotFoundException } from '../base/exceptions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import debugDynamo from '../debug/debugDynamo';
@@ -200,15 +200,15 @@ export const findByIdWithChildren = async (
 
   const firstCollection = allCollectionNames[0];
   const lastCollection = allCollectionNames[allCollectionNames.length - 1];
-  const lastCollectionBound = lastCollection + SEPARATOR + '\uFFFF'
+  const lastCollectionBound = assemblePrimaryKeyValue(lastCollection, '\uFFFF', collection.layout.indexKeySeparator);
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
 
   const { partitionKey, sortKey } = collection.layout.primaryKey;
 
-  const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(assemblePrimaryKeyValue(rootCollectionName, rootObjectId))} ` + 
-    `AND ${nameMapper.map(sortKey)} BETWEEN ${valueMapper.map(firstCollection + SEPARATOR)} AND ${valueMapper.map(lastCollectionBound)}`;
+  const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(assemblePrimaryKeyValue(rootCollectionName, rootObjectId, collection.layout.indexKeySeparator))} ` + 
+    `AND ${nameMapper.map(sortKey)} BETWEEN ${valueMapper.map(assemblePrimaryKeyValue(firstCollection, '', collection.layout.indexKeySeparator))} AND ${valueMapper.map(lastCollectionBound)}`;
 
   const filterExpression = `${nameMapper.map('type')} IN (${allCollectionNames.map(c => valueMapper.map(c)).join(',')})`;
   const request: QueryInput = {

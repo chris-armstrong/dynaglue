@@ -43,6 +43,22 @@ describe('insert', () => {
     expect(request.ExpressionAttributeNames['#idAttribute']).toBe('users|-|test-id')
   });
 
+  test('should work with custom separators', async () => {
+    const ddb = createDynamoMock('putItem', {});
+    const rootCollection = { ...collection, layout: { ...layout, indexKeySeparator: '#' } };
+    const context = createContext((ddb as unknown) as DynamoDB, [rootCollection]);
+
+    const value = { name: 'Chris', email: 'chris@example.com' };
+    const result = await insert(context, 'users', value);
+    expect(result).toHaveProperty('_id');
+
+    const request = ddb.putItem.mock.calls[0][0];
+    expect(request.TableName).toBe('my-objects');
+    expect(request.Item).toBeDefined();
+    expect(request.ConditionExpression).toMatch('attribute_not_exists');
+    expect(request.ExpressionAttributeNames['#idAttribute']).toBe('users#test-id')
+  });
+
   test('should insert a child item conditionally', async () => {
     const ddb = createDynamoMock('putItem', {});
     const context = createContext((ddb as unknown) as DynamoDB, [collection, childCollection]);

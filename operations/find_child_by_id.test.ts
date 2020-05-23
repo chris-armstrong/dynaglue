@@ -65,4 +65,22 @@ describe('findChildById', () => {
       },
     });
   });
+
+  test('works with a custom layout index key separator correctly', async () => {
+    const getItemReturnValue = {};
+    const ddb = createDynamoMock('getItem', getItemReturnValue);
+    const customLayout = { ...layout, indexKeySeparator: '#' };
+    const customRootCollection = { ...rootCollection, layout: customLayout };
+    const customChildCollection = { ...childCollection, layout: customLayout };
+    const context = createContext((ddb as unknown) as DynamoDB, [customRootCollection, customChildCollection]);
+    expect(await findChildById(context, 'test-collection', 'test-id1', 'root-id-1')).toBeUndefined();
+
+    expect(ddb.getItem.mock.calls[0][0]).toEqual({
+      TableName: 'testtable',
+      Key: {
+        id: { S: 'root-collection#root-id-1' },
+        collection: { S: 'test-collection#test-id1' },
+      },
+    });
+  });
 });

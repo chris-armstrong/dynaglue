@@ -12,8 +12,9 @@ import { createDynamoMock } from '../testutil/dynamo_mock';
 import newId from '../base/new_id';
 import { Converter, UpdateItemOutput, UpdateItemInput } from 'aws-sdk/clients/dynamodb';
 import { createNameMapper, createValueMapper } from '../base/mappers';
+import { SecondaryIndexLayout } from '../base/layout';
 
-const layoutForIndex = (index: number) => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` });
+const layoutForIndex = (index: number): SecondaryIndexLayout => ({ indexName: `index${index}`, partitionKey: `pk${index}`, sortKey: `sk${index}` });
 const layout = {
   tableName: 'general',
   primaryKey: {
@@ -108,6 +109,14 @@ describe('createUpdateActionForKey', () => {
         value: `${collectionName}|-|AAA|-|123456`,
       });
   });
+  it('should correctly work with custom separators', () => {
+    const updates = { 'profile.name': 'Chris Armstrong', 'profile.phoneNumber': '123456', userType: 'AAA' };
+    expect(createUpdateActionForKey(collectionName, 'partition', partitionKPs, indexLayout, updates, '#'))
+      .toEqual({
+        attributeName: 'pk1',
+        value: `${collectionName}#AAA#123456`,
+      });
+  });
 });
 
 describe('createUpdateActionForTTLKey', () => {
@@ -178,6 +187,21 @@ describe('mapAccessPatterns', () => {
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
+    });
+  });
+  it('should handle custom separators', () => {
+    const mappers = { nameMapper: createNameMapper(), valueMapper: createValueMapper() };
+    const updates = {
+      'name': 'a new name',
+      'x.y': 8
+    };
+    const customCollectionWithAPs = { ...collectionWithAPs, layout: { ...layout, indexKeySeparator: '#' } };
+    const { setActions, deleteActions } = mapAccessPatterns(customCollectionWithAPs, mappers, updates);
+    expect(setActions).toEqual(['sk1 = :value0']);
+    expect(deleteActions).toEqual([]);
+    expect(mappers.nameMapper.get()).toBeUndefined();
+    expect(mappers.valueMapper.get()).toEqual({
+      ':value0': { S: 'test-collection#a new name' },
     });
   });
 
@@ -294,8 +318,9 @@ describe('updateById', () => {
         value: createdValue, 
       } as UpdateItemOutput),
     });
-    const context = createContext(ddbMock, [collectionWithAPs]);
-    const results = await updateById(context, collectionWithNoAPs.name, testId, {
+    const customCollectionWithAPs = { ...collectionWithAPs, layout: { ...layout, indexKeySeparator: '**' } };
+    const context = createContext(ddbMock, [customCollectionWithAPs]);
+    const results = await updateById(context, customCollectionWithAPs.name, testId, {
       name: 'new name',
       profile: {
         email: 'email@email.com',
@@ -308,8 +333,8 @@ describe('updateById', () => {
       TableName: layout.tableName,
       UpdateExpression: 'SET #value.#attr0 = :value0, #value.profile = :value1, #value.department = :value2, sk1 = :value3, pk2 = :value4, sk3 = :value5 REMOVE sk2',
       Key: {
-        'pk0': { S: `test-collection|-|${testId}` },
-        'sk0': { S: `test-collection|-|${testId}` },
+        'pk0': { S: `test-collection**${testId}` },
+        'sk0': { S: `test-collection**${testId}` },
       },
       ExpressionAttributeNames: {
         '#value': 'value',
@@ -319,9 +344,9 @@ describe('updateById', () => {
         ':value0': { S: 'new name' },
         ':value1': Converter.input({ email: 'email@email.com', enabled: true }),
         ':value2': { S: 'department 2' },
-        ':value3': { S: `test-collection|-|new name` },
-        ':value4': { S: `test-collection|-|department 2` },
-        ':value5': { S: `test-collection|-|email@email.com` },
+        ':value3': { S: `test-collection**new name` },
+        ':value4': { S: `test-collection**department 2` },
+        ':value5': { S: `test-collection**email@email.com` },
       },
       ReturnValues: 'ALL_NEW',
     } as UpdateItemInput);

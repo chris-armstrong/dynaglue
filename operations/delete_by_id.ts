@@ -34,8 +34,8 @@ export async function deleteById(
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collectionName, id),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id),
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
     }),
     ReturnValues: 'ALL_OLD',
     ConditionExpression: conditionExpression,

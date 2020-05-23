@@ -103,4 +103,40 @@ describe('findChildren', () => {
       ExclusiveStartKey: { field: { S: 'address-2' } },
     }));
   });
+
+  it('should issue a query correctly and return the results when the layout has a custom separator', async () => {
+    const item1 = Converter.marshall({ value: address1 })
+    const item2 = Converter.marshall({ value: address2 })
+    const dynamoMock = createDynamoMock('query', {
+      Items: [item1, item2],
+      LastEvaluatedKey: {
+        S: 'address-2',
+      },
+    });
+    const customRootCollection = { ...rootCollection, layout: { ...layout, indexKeySeparator: '#' } };
+    const customChildCollection = { ...childCollection, layout: { ...layout, indexKeySeparator: '#' } };
+    const context = createContext(dynamoMock as unknown as DynamoDB, [customRootCollection, customChildCollection]);
+    const result = await findChildren(context, 'addresses', 'user-1');
+    expect(result).toEqual({
+      items: [address1, address2],
+      nextToken: {
+        S: 'address-2',
+      },
+    });
+
+    expect(dynamoMock.query).toBeCalledTimes(1);
+    expect(dynamoMock.query).toBeCalledWith(jasmine.objectContaining({
+      TableName: layout.tableName,
+      ExpressionAttributeNames: undefined,
+      ExpressionAttributeValues: {
+        ':value0': {
+          S: 'users#user-1',
+        },
+        ':value1': {
+          S: 'addresses#',
+        },
+      },
+    }));
+  });
+
 });

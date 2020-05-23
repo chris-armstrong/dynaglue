@@ -37,8 +37,8 @@ export async function deleteChildById(
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collection.parentCollectionName, rootObjectId),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id),
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collection.parentCollectionName, rootObjectId, collection.layout.indexKeySeparator),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
     }),
     ReturnValues: 'ALL_OLD',
     ConditionExpression: conditionExpression,

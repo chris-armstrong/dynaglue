@@ -32,8 +32,8 @@ export async function insert(
       ReturnValues: 'NONE',
       ConditionExpression: 'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
       ExpressionAttributeNames: {
-        '#parentIdAttribute': assemblePrimaryKeyValue(collection.parentCollectionName, get(value, collection.foreignKeyPath)),
-        '#childIdAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id),
+        '#parentIdAttribute': assemblePrimaryKeyValue(collection.parentCollectionName, get(value, collection.foreignKeyPath), collection.layout.indexKeySeparator),
+        '#childIdAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id, collection.layout.indexKeySeparator),
       },
     };
   } else {
@@ -43,7 +43,7 @@ export async function insert(
       ReturnValues: 'NONE',
       ConditionExpression: 'attribute_not_exists(#idAttribute)',
       ExpressionAttributeNames: {
-        '#idAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id),
+        '#idAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id, collection.layout.indexKeySeparator),
       },
     };
   }

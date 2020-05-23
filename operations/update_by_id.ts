@@ -60,6 +60,7 @@ export const createUpdateActionForKey = (
   keyPaths: KeyPath[],
   indexLayout: SecondaryIndexLayout,
   updates: Updates,
+  separator?: string,
 ): { attributeName: string; value?: string } | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePaths = keyPaths.map(partitionKey => findMatchingPath(updateKeyPaths, partitionKey));
@@ -83,7 +84,7 @@ export const createUpdateActionForKey = (
 
   return {
     attributeName,
-    value: assembleIndexedValue(keyType, collectionName, updateValues),
+    value: assembleIndexedValue(keyType, collectionName, updateValues, separator),
   };
 }
 
@@ -151,7 +152,7 @@ export const mapAccessPatterns = (
   for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
     if (partitionKeys.length > 0) {
       const layout = findCollectionIndex(collection, indexName);
-      const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates);
+      const update = createUpdateActionForKey(collection.name, 'partition', partitionKeys, layout, updates, collection.layout.indexKeySeparator);
       if (update) {
         debug('mapAccessPatterns: adding set action for partition key in collection %s: %o', collection.name, update);
         const nameMapping = nameMapper.map(update.attributeName);
@@ -161,7 +162,7 @@ export const mapAccessPatterns = (
     }
     if (sortKeys && sortKeys.length > 0) {
       const layout = findCollectionIndex(collection, indexName);
-      const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates);
+      const update = createUpdateActionForKey(collection.name, 'sort', sortKeys, layout, updates, collection.layout.indexKeySeparator);
       if (update) {
         debug('mapAccessPatterns: adding set/delete action for sort key in collection %s: %o', collection.name, update);
         if (typeof update.value !== 'undefined') {
@@ -292,8 +293,8 @@ export async function updateById(
   const collection = getRootCollection(ctx, collectionName);
 
   const key = {
-    [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
-    [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
+    [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, objectId, collection.layout.indexKeySeparator) },
+    [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId, collection.layout.indexKeySeparator) },
   };
   return updateInternal(ctx, collection, key, updates, options);
 };

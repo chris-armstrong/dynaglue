@@ -39,8 +39,8 @@ export async function updateChildById(
   const collection = getChildCollection(context, collectionName);
 
   const key = {
-    [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, parentObjectId) },
-    [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId) },
+    [collection.layout.primaryKey.partitionKey]: { S: assemblePrimaryKeyValue(collectionName, parentObjectId, collection.layout.indexKeySeparator) },
+    [collection.layout.primaryKey.sortKey]: { S: assemblePrimaryKeyValue(collectionName, objectId, collection.layout.indexKeySeparator) },
   };
   return updateInternal(context, collection, key, updates, options);
 }

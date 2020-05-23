@@ -1,5 +1,5 @@
 import './new_id';
-import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap, invertMap, isSubsetOfKeyPath, findMatchingPath, transformTTLValue } from "./util";
+import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap, invertMap, isSubsetOfKeyPath, findMatchingPath, transformTTLValue, SEPARATOR } from "./util";
 import { PersistenceException, InvalidIdException, InvalidParentIdException } from "./exceptions";
 import { KeyPath } from "./access_pattern";
 import { ChildCollectionDefinition, RootCollectionDefinition } from "./collection_definition";
@@ -30,6 +30,15 @@ describe('assembleIndexedValue', () => {
     expect(assembleIndexedValue('sort', 'collection-name', ['something', 'else', undefined]))
       .toBe('collection-name|-|something|-|else|-|');
   });
+
+  test('works with a custom separator', () => {
+    expect(assembleIndexedValue('partition', 'collection-name', ['value1'], '#'))
+      .toBe('collection-name#value1');
+    expect(assembleIndexedValue('partition', 'collection-name', ['value1', 'value22'], '!'))
+      .toBe('collection-name!value1!value22');
+    expect(assembleIndexedValue('partition', 'collection-name', [undefined, 'value22'], 'oOo'))
+      .toBe('collection-nameoOooOovalue22');
+  });
 });
 
 describe('constructKeyValue', () => {
@@ -45,7 +54,7 @@ describe('constructKeyValue', () => {
       nested: { value2: 13 },
     };
 
-    expect(() => constructKeyValue('partition', 'test-collection', valuePaths, {}, testValue))
+    expect(() => constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, {}, testValue))
       .toThrow(PersistenceException);
   });
 
@@ -60,8 +69,23 @@ describe('constructKeyValue', () => {
       topLevel1: 'test',
     };
 
-    expect(constructKeyValue('partition', 'test-collection', valuePaths, {}, testValue))
+    expect(constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, {}, testValue))
       .toBe('test-collection|-|test|-|');
+  });
+
+  test('works with custom separators', () => {
+    const valuePaths = [
+      ['topLevel1'],
+      ['nested', 'value2']
+    ];
+
+    const testValue = {
+      _id: 'id-1',
+      topLevel1: 'test',
+    };
+
+    expect(constructKeyValue('partition', 'test-collection', '##', valuePaths, {}, testValue))
+      .toBe('test-collection##test##');
   });
 
   test('applies string normalisers as expected', () => {
@@ -81,14 +105,14 @@ describe('constructKeyValue', () => {
     };
 
     const options = {
-      stringNormalizer: (path: KeyPath, value: string): string => value.trim().toLowerCase(),
+      stringNormalizer: (_: KeyPath, value: string): string => value.trim().toLowerCase(),
     };
-    expect(constructKeyValue('partition', 'test-collection', valuePaths, options, testValue))
+    expect(constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, options, testValue))
       .toBe('test-collection|-|au|-|nsw|-|sydney');
   });
 
   test('should construct TTL types correctly', () => {
-    expect(constructKeyValue('ttl', 'test-collection', [['options', 'expiry']], {}, { options: { expiry: new Date() }, _id: undefined }))
+    expect(constructKeyValue('ttl', 'test-collection', SEPARATOR, [['options', 'expiry']], {}, { options: { expiry: new Date() }, _id: undefined }))
       .toBe(Math.ceil(Date.now() / 1000));
   });
 });
@@ -178,6 +202,32 @@ describe('toWrapped', () => {
         type: 'locations',
       });
     });
+
+    test('generates a wrapped value with a custom separator correctly', () => {
+      const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      const customCollection = { ...rootCollection, layout: { ...layout, indexKeySeparator: '#' } };
+      expect(toWrapped(customCollection, value)).toEqual({
+        id: 'locations#better-id',
+        sid: 'locations#better-id',
+        gs1part: 'locations#AU',
+        gs1sort: 'locations#NSW#Sydney',
+        value: { ...value, _id: 'better-id' },
+        type: 'locations',
+      });
+    });
+
+    test('generates a wrapped value with a custom ID generator for a collection value', () => { 
+      const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      const customCollection: RootCollectionDefinition = { ...rootCollection, idGenerator: () => String(Math.ceil(Math.random() * 1000)) };
+      expect(toWrapped(customCollection, value)).toEqual({
+        id: expect.stringMatching(/^locations|-|\d{1,4}$/),
+        sid: expect.stringMatching(/^locations|-|\d{1,4}$/),
+        gs1part: 'locations|-|AU',
+        gs1sort: 'locations|-|NSW|-|Sydney',
+        value: { ...value, _id: expect.stringMatching(/\d{1,4}/)},
+        type: 'locations',
+      });
+    });
   });
 
   describe('with child collections', () => {
@@ -229,6 +279,7 @@ describe('unwrap', () => {
   test('should just return the value', () => {
     expect(unwrap({
       value: { _id: 'test-id', name: 'Sydney' },
+      type: 'test',
     })).toEqual({ _id: 'test-id', name: 'Sydney' });
   });
 });

@@ -1,4 +1,4 @@
-import { getChildCollection, assemblePrimaryKeyValue, SEPARATOR, unwrap } from '../base/util';
+import { getChildCollection, assemblePrimaryKeyValue, unwrap } from '../base/util';
 import { QueryInput, Key, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../base/common';
@@ -57,8 +57,8 @@ export async function findChildren(
     layout: { primaryKey: { partitionKey, sortKey } }, 
   } = childCollection;
 
-  const parentId = assemblePrimaryKeyValue(parentCollectionName, rootObjectId)
-  const childCollectionPrefix = `${childCollectionName}${SEPARATOR}`;
+  const parentId = assemblePrimaryKeyValue(parentCollectionName, rootObjectId, childCollection.layout.indexKeySeparator);
+  const childCollectionPrefix = assemblePrimaryKeyValue(childCollectionName, '', childCollection.layout.indexKeySeparator);
 
   const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(parentId)} ` + 
     `AND begins_with(${nameMapper.map(sortKey)}, ${valueMapper.map(childCollectionPrefix)})`;

@@ -29,7 +29,7 @@ type ConditionParseContext = {
   parsePath: ParseElement[];
 };
 
-const printParsePath = (parsePath: ParseElement[]) => {
+const printParsePath = (parsePath: ParseElement[]): string => {
   return parsePath.map(e => {
     if (e.type === 'array') return e.index === 0 ? `[` : `[...@${e.index}:`;
     return `{ ${e.key}: `;
@@ -53,14 +53,14 @@ export class InvalidCompositeConditionException extends VError {
  * @internal
  * Is one of the keys in the object a condition operator
  */
-const isConditionKey = (key: string) => ['$or', '$and', '$eq', '$neq', '$gt', '$gte', '$lt', '$lte', '$between', '$in', '$exists', '$type', '$beginsWith', '$contains']
+const isConditionKey = (key: string): boolean => ['$or', '$and', '$eq', '$neq', '$gt', '$gte', '$lt', '$lte', '$between', '$in', '$exists', '$type', '$beginsWith', '$contains']
   .includes(key);
 
 /**
  * @internal
  * Convert a string to a key path, adding the `value` object prefix.
  */
-const mapKeyPath = (key: string, nameMapper: NameMapper) =>
+const mapKeyPath = (key: string, nameMapper: NameMapper): string =>
   [nameMapper.map('value', '#value'), ...key.split('.').map(pathElement => nameMapper.map(pathElement))].join('.');
 
 /**
@@ -143,7 +143,7 @@ const parseKeyPathsAndClause = (clause: KeyPathsAndClause, context: ConditionPar
   Object.entries(clause).forEach(([path, condition]) => {
     const keyParsePath: ParseElement[] = [...parsePath, { type: 'object', key: path }];
     let clauseString;
-    const simpleClause = (operator: string, value: ConditionValue) => {
+    const simpleClause = (operator: string, value: ConditionValue): string => {
       const valueName = valueMapper.map(value);
       return `${mapKeyPath(path, nameMapper)} ${operator} ${valueName}`;
     };

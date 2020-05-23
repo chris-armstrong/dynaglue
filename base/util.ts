@@ -23,8 +23,8 @@ export type IndexedValue = string | undefined;
   * 
   * Assemble an _id value into its indexed primary key field
   */
-export const assemblePrimaryKeyValue = (collectionName: string, _id: string): string =>
-  `${collectionName}${SEPARATOR}${_id}`;
+export const assemblePrimaryKeyValue = (collectionName: string, _id: string, separator: string = SEPARATOR): string =>
+  `${collectionName}${separator}${_id}`;
 
 // FIXME: distinguish correctly between:
 //  - sparse keys - a value is not always written to the all the key fields (from DynamoDB's persective, not optional sort
@@ -37,7 +37,7 @@ export const assemblePrimaryKeyValue = (collectionName: string, _id: string): st
   *
   * Assemble extracted key paths into their indexed value
   */
-export const assembleIndexedValue = (_: 'partition' | 'sort', collectionName: string, values: (string | undefined)[]): IndexedValue => {
+export const assembleIndexedValue = (_: 'partition' | 'sort', collectionName: string, values: (string | undefined)[], separator: string = SEPARATOR): IndexedValue => {
   if (values.length === 0) {
     // empty key value
     return collectionName;
@@ -45,7 +45,7 @@ export const assembleIndexedValue = (_: 'partition' | 'sort', collectionName: st
     // sparse key? - keep the value blank to avoid showing up in searches
     return undefined;
   }
-  return `${collectionName}${SEPARATOR}${values.map(x => typeof x === 'string' ? x : '').join(SEPARATOR)}`;
+  return `${collectionName}${separator}${values.map(x => typeof x === 'string' ? x : '').join(separator)}`;
 };
 
 /**
@@ -112,6 +112,7 @@ export const extractTransformedTTLValue = (value: DocumentWithId, valuePath: Key
 export const constructKeyValue = (
   type: 'partition' | 'sort' | 'ttl',
   collectionName: string,
+  separator: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
   value: DocumentWithId
@@ -131,7 +132,7 @@ export const constructKeyValue = (
     return transformedValue;
   });
 
-  return assembleIndexedValue(type, collectionName, values);
+  return assembleIndexedValue(type, collectionName, values, separator);
 };
 
 /**
@@ -156,7 +157,7 @@ export const toWrapped = (
 
   const extractedKeys = collection.wrapperExtractKeys
     .map(({ type, key, valuePaths, options }) => {
-      const keyValue = constructKeyValue(type, collection.name, valuePaths, options, updatedValue);
+      const keyValue = constructKeyValue(type, collection.name, collection.layout.indexKeySeparator ?? SEPARATOR, valuePaths, options, updatedValue);
       if (typeof keyValue !== undefined) {
         return { [key]: keyValue };
       }
@@ -170,10 +171,10 @@ export const toWrapped = (
     if (typeof parentId !== 'string') {
       throw new InvalidParentIdException(parentId, collection.name, collection.parentCollectionName);
     }
-    partitionKeyValue = assemblePrimaryKeyValue(collection.parentCollectionName, parentId);
-    sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id);
+    partitionKeyValue = assemblePrimaryKeyValue(collection.parentCollectionName, parentId, collection.layout.indexKeySeparator);
+    sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id, collection.layout.indexKeySeparator);
   } else {
-    partitionKeyValue = sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id);
+    partitionKeyValue = sortKeyValue = assemblePrimaryKeyValue(collection.name, updatedValue._id, collection.layout.indexKeySeparator);
   }
 
   const wrapped = Object.assign({
