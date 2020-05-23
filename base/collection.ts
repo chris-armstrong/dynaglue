@@ -38,6 +38,13 @@ export interface CommonCollection {
    * the context.
    */
   ttlKeyPath?: KeyPath;
+
+  /**
+   * An optional function that is used to
+   * generate IDs when the id property
+   * is blank
+   */
+  idGenerator?: () => string,
 }
 
 /**

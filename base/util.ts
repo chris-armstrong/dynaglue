@@ -150,7 +150,8 @@ export const toWrapped = (
     }
     updatedValue = value as DocumentWithId;
   } else {
-    updatedValue = { ...value, _id: newId() };
+    const _id = collection.idGenerator ? collection.idGenerator() : newId();
+    updatedValue = { ...value, _id };
   }
 
   const extractedKeys = collection.wrapperExtractKeys
