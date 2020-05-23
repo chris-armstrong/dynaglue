@@ -88,10 +88,9 @@
 				<a href="#status" id="status" style="color: inherit; text-decoration: none;">
 					<h2>Status</h2>
 				</a>
-				<p>This project is currently in in progress (alpha). <strong>Its API is unstable and is undergoing change</strong>,
-				so take care and keep an eye on updates for now.</p>
-				<p>Please try it out, report bugs, suggest improvements or submit sensible code
-				changes.</p>
+				<p>This project is currently in progress (alpha). <strong>Its API may change during this period</strong>, so take care and keep an eye on updates for now.</p>
+				<p>It&#39;s quite feature complete, barring some specific items (like batch read/write, transacions, projection expressions, capacity numbers).</p>
+				<p>Please try it out, report bugs, suggest improvements or submit a PR.</p>
 				<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
 					<h2>Usage Example</h2>
 				</a>
@@ -167,7 +166,7 @@
 				<a href="#prerequisite-knowledge" id="prerequisite-knowledge" style="color: inherit; text-decoration: none;">
 					<h2>Prerequisite Knowledge</h2>
 				</a>
-				<p>This library assumes you have a solid understanding of DynamoDB partition and sort keys, primary and secondary indexes,
+				<p>This library assumes you have a good understanding of DynamoDB partition and sort keys, primary and secondary indexes,
 				and assumes you understand how single-table designs work in theory.</p>
 				<p>If you&#39;re unsure what any of this means, first learn how to build applications using DynamoDB:</p>
 				<ul>
@@ -176,13 +175,13 @@
 				</ul>
 				<p>more advanced DynamoDB modelling:</p>
 				<ul>
+					<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a> <strong>HIGHLY RECOMMENDED</strong></li>
 					<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
-					<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a></li>
 					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html">DynamoDB Best Practices</a></li>
 					<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
 					<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
 				</ul>
-				<p>and on the merits of single table vs multi table design (this library is agnostic):</p>
+				<p>and on the merits of single table vs multi table design (this library is mostly agnostic):</p>
 				<ul>
 					<li><a href="https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/">Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail</a></li>
 					<li><a href="https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices">Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie</a></li>
@@ -196,7 +195,7 @@
 				<a href="#motivation" id="motivation" style="color: inherit; text-decoration: none;">
 					<h2>Motivation</h2>
 				</a>
-				<p>In order to leverage DynamoDB properly, you must first:</p>
+				<p>I&#39;ve learnt that in order to leverage DynamoDB properly, you must first:</p>
 				<ul>
 					<li>purge yourself of any sensible knowledge of database design such as normalisation</li>
 					<li>know exactly how your application will access its data for now and all time (in
@@ -206,14 +205,14 @@
 					<li>mix multiple data structures together in the same table, distinguished only by
 					prefixes and values</li>
 				</ul>
-				<p>Once you&#39;ve accepted all that is horrible as best practice, you may then build highly
+				<p>Once you&#39;ve accepted all that is horrible as best practice, only then you may then build highly
 				performant and scalable web applications.</p>
-				<p>The next stumbling block is an API that does not make this easy. Combining multiple
+				<p>The next stumbling block is DynamoDB&#39;s API: it does not make this easy. Combining multiple
 					records from different data types sharing indexes in the same logical table requires
-				great discipline and attention to detail.</p>
+				discipline and attention to detail.</p>
 				<p>Most DynamoDB applications will attempt to avoid this by using separate tables
 					for each type of data, using secondary indexes liberally and by naming their keys
-					intuitively based on the data being modelled. This is actually fine: it makes working
+					intuitively based on the data being modelled. <strong>This is actually fine</strong>: it makes working
 				with the API less painful but it makes it harder to optimise for cost and performance.</p>
 				<p>This library is an attempt at a compromise - it presents a Mongo-like
 					API for looking up data, but still relies on you to identify and declare your access
@@ -234,14 +233,23 @@
 						applications is going to require a data migration at the very least (there
 						are plans to add some flexibility around separators and important attribute
 					names)</li>
-					<li><em>It is impossible to use projected attributes on GSIs with the current data layout</em>
+					<li><em>It is not possible to use projected attributes on GSIs with the current data layout</em>
 					<em>to control index storage and return value size.</em> </li>
 					<li><em>Only string types for values used to build indexes.</em> Obviously numbers
 						and dates are useful for sort key expressions, but they require more
 					sophisticated handling than the library currently supports</li>
-					<li><em>Incomplete adjacency list support</em> - there is basic adjacency list support now - see
-						the new <code>ChildCollection</code> type and <code>*ChildById</code> APIs :-) in the <code>basic_children.ts</code>
-					example. This will be improved.</li>
+					<li><em>Basic adjacency list support</em>
+						see the new APIs: <ul>
+							<li><a href="https://chris-armstrong.github.io/dynaglue/interfaces/childcollection.html"><code>ChildCollection</code> type</a></li>
+							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findchildren"><code>findChildren</code></a> </li>
+							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findchildbyid"><code>findChildById</code></a> </li>
+							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findbyidwithchildren"><code>findByIdWithChildren</code></a> </li>
+							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#updatechildbyid"><code>updateChildById</code></a>
+							and examples:</li>
+							<li><a href="https://github.com/chris-armstrong/dynaglue/blob/master/examples/basic_children.ts"><code>basic_children.ts</code> example</a></li>
+							<li><a href="https://github.com/chris-armstrong/dynaglue/blob/master/examples/adjacency_list.ts"><code>adjacency_list.ts</code> example</a></li>
+						</ul>
+					</li>
 					<li><em>Batch Read/Write and Transaction Support is still to be done</em></li>
 					<li><em>No write sharding support for low-variance partition keys.</em> (NOTE: This isn&#39;t important for most use cases)
 						If you have hot partition keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
@@ -249,14 +257,11 @@
 						hot partition. The normal solution is to add a suffix spread between a given
 						set of values (e.g. 0-19) so that when it is queried on status the query can
 					be split over 20 partitions instead of one.</li>
-					<li><em>This library may not reflect &quot;best practice&quot;</em> All effort has been
-						made to ensure this aligns with the current accepted best practice for
-					storing typical object models in DynamoDB for a single-table design, but</li>
+					<li><em>This library may not reflect &quot;best practice&quot;</em> </li>
 				</ul>
 				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
 					<h2>Contributing</h2>
 				</a>
-				<p>There isn&#39;t formal contribution guidelines at this time.</p>
 				<p>Open an Issue (<strong>especially before you write any code</strong>) and share your
 				thoughts / plans / ideas before you do anything substantial.</p>
 				<p>Abuse, harrassment, and anything else that is becoming unproductive will be closed

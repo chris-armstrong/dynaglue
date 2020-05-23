@@ -96,6 +96,7 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external"><a href="rootcollection.html#accesspatterns" class="tsd-kind-icon">access<wbr>Patterns</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external"><a href="rootcollection.html#idgenerator" class="tsd-kind-icon">id<wbr>Generator</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external"><a href="rootcollection.html#layout" class="tsd-kind-icon">layout</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external"><a href="rootcollection.html#name" class="tsd-kind-icon">name</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external"><a href="rootcollection.html#ttlkeypath" class="tsd-kind-icon">ttl<wbr>Key<wbr>Path</a></li>
@@ -114,7 +115,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="commoncollection.html">CommonCollection</a>.<a href="commoncollection.html#accesspatterns">accessPatterns</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L22">base/collection.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L22">base/collection.ts:22</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -126,13 +127,31 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external">
+					<a name="idgenerator" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> id<wbr>Generator</h3>
+					<div class="tsd-signature tsd-kind-icon">id<wbr>Generator<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="commoncollection.html">CommonCollection</a>.<a href="commoncollection.html#idgenerator">idGenerator</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L47">base/collection.ts:47</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>An optional function that is used to
+								generate IDs when the id property
+							is blank</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external">
 					<a name="layout" class="tsd-anchor"></a>
 					<h3>layout</h3>
 					<div class="tsd-signature tsd-kind-icon">layout<span class="tsd-signature-symbol">:</span> <a href="collectionlayout.html" class="tsd-signature-type">CollectionLayout</a></div>
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="commoncollection.html">CommonCollection</a>.<a href="commoncollection.html#layout">layout</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L16">base/collection.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L16">base/collection.ts:16</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -151,7 +170,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="commoncollection.html">CommonCollection</a>.<a href="commoncollection.html#name">name</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L9">base/collection.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L9">base/collection.ts:9</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -168,7 +187,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="commoncollection.html">CommonCollection</a>.<a href="commoncollection.html#ttlkeypath">ttlKeyPath</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L40">base/collection.ts:40</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L40">base/collection.ts:40</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -196,7 +215,7 @@
 					<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"root"</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d22d4d0/base/collection.ts#L56">base/collection.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/70b7ec5/base/collection.ts#L63">base/collection.ts:63</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -226,6 +245,9 @@
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external">
 								<a href="rootcollection.html#accesspatterns" class="tsd-kind-icon">access<wbr>Patterns</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external">
+								<a href="rootcollection.html#idgenerator" class="tsd-kind-icon">id<wbr>Generator</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited tsd-is-external">
 								<a href="rootcollection.html#layout" class="tsd-kind-icon">layout</a>
