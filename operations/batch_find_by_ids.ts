@@ -23,7 +23,7 @@ type TableKeyTuple = [string, Key];
 
 export type BatchFindByIdsResponse = {
   documentsByCollection: {
-    [collection: string]: DocumentWithId[],
+    [collection: string]: DocumentWithId[];
   };
 
   unprocessedDescriptors: BatchFindByIdDescriptor[];
@@ -50,7 +50,7 @@ export const batchFindByIds = async (
   ctx: Context,
   items: BatchFindByIdDescriptor[],
   options?: {
-    consistentReadTableNames?: string[]
+    consistentReadTableNames?: string[];
   },
 ): Promise<BatchFindByIdsResponse> => {
   if (items.length === 0) {
