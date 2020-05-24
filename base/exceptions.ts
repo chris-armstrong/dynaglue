@@ -120,3 +120,26 @@ export class InvalidUpdateValueException extends VError {
     );
   }
 }
+
+/**
+ * Throw when the find descriptor for a transactFindByIds or 
+ * batchFindByIds is invalid.
+ */
+export class InvalidFindDescriptorException extends VError {
+  constructor(message: string) {
+    super({
+      name: 'invalid_find_descriptor',
+    }, message);
+  }
+}
+
+/**
+ * Thrown when something from DynamoDB doesn't match
+ * the context configuration during response processing
+ */
+export class InternalProcessingException extends VError {
+  constructor(message: string) {
+    super({ name: 'internal_processing' }, message);
+  }
+}
+
