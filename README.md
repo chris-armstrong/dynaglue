@@ -1,5 +1,7 @@
 # Dynaglue
 
+[![Join the chat at https://gitter.im/dynaglue/community](https://badges.gitter.im/dynaglue/community.svg)](https://gitter.im/dynaglue/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 *dynaglue* is an opinionated JavaScript library that makes single-table designs in DynamoDB easier
 to query and update.
 
