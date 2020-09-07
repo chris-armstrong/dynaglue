@@ -1,10 +1,11 @@
-import { Context } from "../context";
-import { Converter, KeysAndAttributes, Key } from "aws-sdk/clients/dynamodb";
-import { InvalidFindDescriptorException, InternalProcessingException } from "../base/exceptions";
-import { getChildCollection, getRootCollection, assemblePrimaryKeyValue, unwrap, getCollection, SEPARATOR } from "../base/util";
-import { DocumentWithId, WrappedDocument } from "../base/common";
+import { Context } from '../context';
+import { Converter, KeysAndAttributes, Key } from 'aws-sdk/clients/dynamodb';
+import { InvalidFindDescriptorException, InternalProcessingException } from '../base/exceptions';
+import { getChildCollection, getRootCollection, assemblePrimaryKeyValue, unwrap, getCollection } from '../base/util';
+import { DocumentWithId, WrappedDocument } from '../base/common';
 import { CollectionLayout } from '../base/layout';
-import debugDynamo from "../debug/debugDynamo";
+import debugDynamo from '../debug/debugDynamo';
+import { parseKey } from './batch_utils';
 
 /**
  * The collection and ID of a root or child
@@ -16,34 +17,27 @@ export type BatchFindByIdDescriptor = {
   /* The ID of the item */
   id: string;
   /* The parent ID of the item (if a child item) */
-  rootId?: string;
+  parentId?: string;
 };
 
-type TableKeyTuple = [string, Key];
+/** @internal */
+export type TableKeyTuple = [string, Key];
 
+/**
+ * The response to a [[batchFindByIds]] request. The
+ * retrieved documents are stored in a map, organised by
+ * collection name.
+ *
+ * Any unprocessed request keys are included in the
+ * unprocessedDescriptors list. You will need to submit
+ * another request to obtain these.
+ */
 export type BatchFindByIdsResponse = {
   documentsByCollection: {
     [collection: string]: DocumentWithId[];
   };
 
   unprocessedDescriptors: BatchFindByIdDescriptor[];
-};
-
-const parseKey = (layout: CollectionLayout, key: Key): BatchFindByIdDescriptor => {
-  const partitionKey = Converter.output(key[layout.primaryKey.partitionKey]);
-  const sortKey = Converter.output(key[layout.primaryKey.sortKey]);
-  // The following checks are for sanity and should not occur in any real application that
-  // has setup the layout correctly
-  if (!partitionKey || !sortKey) throw new InternalProcessingException(`Selected layout could not find key names ${JSON.stringify(key)} for table ${layout.tableName}`);
-  if (typeof partitionKey !== 'string') throw new InternalProcessingException(`Partition key ${layout.primaryKey.partitionKey} for table ${layout.tableName} is not a string`);
-  if (typeof sortKey !== 'string') throw new InternalProcessingException(`Sort key ${layout.primaryKey.sortKey} for table ${layout.tableName} is not a string`);
-  const [, rootId] = partitionKey.split(layout.indexKeySeparator ?? SEPARATOR, 2);
-  const [childCollection, id] = sortKey.split(layout.indexKeySeparator ?? SEPARATOR, 2);
-  return {
-    collection: childCollection,
-    rootId: rootId !== id ? rootId : undefined,
-    id: id,
-  };
 };
 
 export const batchFindByIds = async (
@@ -69,14 +63,14 @@ export const batchFindByIds = async (
   // UnprocessedKeys map.
   const tableLayoutMapping = new Map<string, CollectionLayout>();
 
-  const tableRequestItemTuples: TableKeyTuple[] = items.map(({ collection, id, rootId }) => {
-    const collectionDefinition = rootId ? getChildCollection(ctx, collection) : getRootCollection(ctx, collection);
+  const tableRequestItemTuples: TableKeyTuple[] = items.map(({ collection, id, parentId }) => {
+    const collectionDefinition = parentId ? getChildCollection(ctx, collection) : getRootCollection(ctx, collection);
     tableLayoutMapping.set(collectionDefinition.layout.tableName, collectionDefinition.layout);
     const { layout: { tableName, primaryKey, indexKeySeparator } } = collectionDefinition;
     return [
       tableName,
       {
-        [primaryKey.partitionKey]: Converter.input(assemblePrimaryKeyValue(collection, rootId ? rootId : id, indexKeySeparator)),
+        [primaryKey.partitionKey]: Converter.input(assemblePrimaryKeyValue(collection, parentId ? parentId : id, indexKeySeparator)),
         [primaryKey.sortKey]: Converter.input(assemblePrimaryKeyValue(collection, id, indexKeySeparator)),
       }
     ];
