@@ -10,6 +10,8 @@ export {
   updateById,
   updateChildById,
   findByIdWithChildren,
+  batchFindByIds,
+  batchReplaceDelete,
 } from './operations';
 export { createContext } from './context';
 export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';

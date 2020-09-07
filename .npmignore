@@ -9,6 +9,7 @@ tsconfig.*
 .prettierrc
 coverage/
 .vscode/
+*.test.ts
 *.test.js
 .travis.yml
 docs/
