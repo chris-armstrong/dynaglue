@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import isISOString from 'validator/lib/isISO8601';
 import { Context } from '../context';
-import { CollectionNotFoundException, InvalidIdException, PersistenceException, InvalidParentIdException } from './exceptions';
+import { CollectionNotFoundException, InvalidIdException, InvalidIndexedFieldValueException, InvalidParentIdException } from './exceptions';
 import { DocumentWithId, WrappedDocument } from './common';
 import newId from './new_id';
 import { KeyPath, describeKeyPath, AccessPatternOptions } from './access_pattern';
@@ -123,8 +123,9 @@ export const constructKeyValue = (
   const values = valuePaths.map(valuePath => {
     const extractedValue = get(value, valuePath);
     if (typeof extractedValue !== 'undefined' && typeof extractedValue !== 'string') {
-      throw new PersistenceException(
-        `Indexed value at path ${describeKeyPath(valuePath)} was not a string for collection ${collectionName}`
+      throw new InvalidIndexedFieldValueException(
+        `Indexed value at path ${describeKeyPath(valuePath)} was not a string for collection ${collectionName}`,
+        { keyPath: valuePath, collection: collectionName },
       );
     }
     const transformedValue = options.stringNormalizer && extractedValue ?

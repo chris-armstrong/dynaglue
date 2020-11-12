@@ -1,12 +1,18 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-/* The DynamoDB `Set` type */
+/**
+ * The DynamoDB `Set` type 
+ */
 export type DynamoDBSet = DocumentClient.DynamoDbSet;
 
-/* The value for a condition expression */
+/**
+ * The value for a condition expression
+ */
 export type ConditionValue = any; 
 
-/* A DynamoDB type, for the $type condition operator (see [[TypeCondition]]) */
+/**
+ * A DynamoDB type, for the $type condition operator (see [[TypeCondition]]) 
+ */
 export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL' | 'L' | 'M';
 
 /**
