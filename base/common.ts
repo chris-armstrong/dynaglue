@@ -1,7 +1,7 @@
 /**
  * A document stored in a collection. If an _id field
  * is not provided, one will be generated on insert.
-*/
+ */
 export type DocumentWithId = {
   [key: string]: any;
   _id: string;

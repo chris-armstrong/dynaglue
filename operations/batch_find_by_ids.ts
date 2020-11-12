@@ -1,7 +1,16 @@
 import { Context } from '../context';
 import { Converter, KeysAndAttributes, Key } from 'aws-sdk/clients/dynamodb';
-import { InvalidFindDescriptorException, InternalProcessingException } from '../base/exceptions';
-import { getChildCollection, getRootCollection, assemblePrimaryKeyValue, unwrap, getCollection } from '../base/util';
+import {
+  InvalidFindDescriptorException,
+  InternalProcessingException,
+} from '../base/exceptions';
+import {
+  getChildCollection,
+  getRootCollection,
+  assemblePrimaryKeyValue,
+  unwrap,
+  getCollection,
+} from '../base/util';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import { CollectionLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
@@ -45,12 +54,16 @@ export const batchFindByIds = async (
   items: BatchFindByIdDescriptor[],
   options?: {
     consistentReadTableNames?: string[];
-  },
+  }
 ): Promise<BatchFindByIdsResponse> => {
   if (items.length === 0) {
-    throw new InvalidFindDescriptorException('At least one find descriptor must be specified');
+    throw new InvalidFindDescriptorException(
+      'At least one find descriptor must be specified'
+    );
   } else if (items.length > 100) {
-    throw new InvalidFindDescriptorException('No more than 100 find descriptors can be specified to batchFindByIds');
+    throw new InvalidFindDescriptorException(
+      'No more than 100 find descriptors can be specified to batchFindByIds'
+    );
   }
 
   // Map tables to their 'predicted' layouts - this is needed
@@ -63,23 +76,42 @@ export const batchFindByIds = async (
   // UnprocessedKeys map.
   const tableLayoutMapping = new Map<string, CollectionLayout>();
 
-  const tableRequestItemTuples: TableKeyTuple[] = items.map(({ collection, id, parentId }) => {
-    const collectionDefinition = parentId ? getChildCollection(ctx, collection) : getRootCollection(ctx, collection);
-    tableLayoutMapping.set(collectionDefinition.layout.tableName, collectionDefinition.layout);
-    const { layout: { tableName, primaryKey, indexKeySeparator } } = collectionDefinition;
-    return [
-      tableName,
-      {
-        [primaryKey.partitionKey]: Converter.input(assemblePrimaryKeyValue(collection, parentId ? parentId : id, indexKeySeparator)),
-        [primaryKey.sortKey]: Converter.input(assemblePrimaryKeyValue(collection, id, indexKeySeparator)),
-      }
-    ];
-  });
+  const tableRequestItemTuples: TableKeyTuple[] = items.map(
+    ({ collection, id, parentId }) => {
+      const collectionDefinition = parentId
+        ? getChildCollection(ctx, collection)
+        : getRootCollection(ctx, collection);
+      tableLayoutMapping.set(
+        collectionDefinition.layout.tableName,
+        collectionDefinition.layout
+      );
+      const {
+        layout: { tableName, primaryKey, indexKeySeparator },
+      } = collectionDefinition;
+      return [
+        tableName,
+        {
+          [primaryKey.partitionKey]: Converter.input(
+            assemblePrimaryKeyValue(
+              collection,
+              parentId ? parentId : id,
+              indexKeySeparator
+            )
+          ),
+          [primaryKey.sortKey]: Converter.input(
+            assemblePrimaryKeyValue(collection, id, indexKeySeparator)
+          ),
+        },
+      ];
+    }
+  );
 
   const requestItems = tableRequestItemTuples.reduce((req, tuple) => {
     const keyAndsAttrs = req[tuple[0]] ?? {
-      ConsistentRead: (options?.consistentReadTableNames ?? []).includes(tuple[0]),
-      Keys: [], 
+      ConsistentRead: (options?.consistentReadTableNames ?? []).includes(
+        tuple[0]
+      ),
+      Keys: [],
     };
     req[tuple[0]] = keyAndsAttrs;
     keyAndsAttrs.Keys.push(tuple[1]);
@@ -88,7 +120,9 @@ export const batchFindByIds = async (
 
   const request = { RequestItems: requestItems };
   debugDynamo('batchGetItem', request);
-  const { Responses = {}, UnprocessedKeys = {} } = await ctx.ddb.batchGetItem(request).promise();
+  const { Responses = {}, UnprocessedKeys = {} } = await ctx.ddb
+    .batchGetItem(request)
+    .promise();
 
   const response: BatchFindByIdsResponse = {
     documentsByCollection: {},
@@ -99,7 +133,8 @@ export const batchFindByIds = async (
       const unmarshalled = Converter.unmarshall(item) as WrappedDocument;
       const collection = getCollection(ctx, unmarshalled.type);
       const document = unwrap(unmarshalled);
-      const collectionMap = response.documentsByCollection[collection.name] ?? [];
+      const collectionMap =
+        response.documentsByCollection[collection.name] ?? [];
       response.documentsByCollection[collection.name] = collectionMap;
       collectionMap.push(document);
     }
@@ -108,7 +143,9 @@ export const batchFindByIds = async (
   for (const [tableName, unprocessed] of Object.entries(UnprocessedKeys)) {
     const tableMapping = tableLayoutMapping.get(tableName);
     if (!tableMapping) {
-      throw new InternalProcessingException(`Could not find table mapping for ${tableName} while parsing UnprocessedKeys`);
+      throw new InternalProcessingException(
+        `Could not find table mapping for ${tableName} while parsing UnprocessedKeys`
+      );
     }
     for (const key of unprocessed.Keys) {
       const descriptor = parseKey(tableMapping, key);
@@ -117,4 +154,3 @@ export const batchFindByIds = async (
   }
   return response;
 };
-

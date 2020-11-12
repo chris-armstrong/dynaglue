@@ -14,8 +14,16 @@ export {
   batchReplaceDelete,
 } from './operations';
 export { createContext, Context } from './context';
-export { PrimaryIndexLayout, SecondaryIndexLayout, CollectionLayout } from './base/layout';
-export { AccessPattern, KeyPath, NormaliserFunction } from './base/access_pattern';
+export {
+  PrimaryIndexLayout,
+  SecondaryIndexLayout,
+  CollectionLayout,
+} from './base/layout';
+export {
+  AccessPattern,
+  KeyPath,
+  NormaliserFunction,
+} from './base/access_pattern';
 export { Collection, RootCollection, ChildCollection } from './base/collection';
 export {
   CollectionNotFoundException,
@@ -30,11 +38,5 @@ export {
   InvalidUpdateValueException,
   InvalidUpdatesException,
 } from './base/exceptions';
-export {
-  WrappedDocument,
-  DocumentWithId,
-} from './base/common';
-export {
-  SetValuesDocument,
-  Updates,
-} from './operations/update_by_id';
+export { WrappedDocument, DocumentWithId } from './base/common';
+export { SetValuesDocument, Updates } from './operations/update_by_id';

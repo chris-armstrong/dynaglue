@@ -1,7 +1,16 @@
 import { DynamoDB } from 'aws-sdk';
-import { Collection, createContext, insert, findById, find, deleteById, replace } from '../../dist';
+import {
+  Collection,
+  createContext,
+  insert,
+  findById,
+  find,
+  deleteById,
+  replace,
+} from '../../dist';
 
-const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
+const DYNAMODB_ENDPOINT =
+  process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 const REGION = process.env.REGION || 'fake';
 
 /**
@@ -49,8 +58,12 @@ const usersCollection: Collection = {
   layout: globalTableLayout,
   accessPatterns: [
     { indexName: 'gs2', partitionKeys: [], sortKeys: [['email']] },
-    { indexName: 'gs3', partitionKeys: [['team', 'id']], sortKeys: [['team', 'employeeCode']] }
-  ]
+    {
+      indexName: 'gs3',
+      partitionKeys: [['team', 'id']],
+      sortKeys: [['team', 'employeeCode']],
+    },
+  ],
 };
 
 const postsCollection: Collection = {
@@ -58,8 +71,8 @@ const postsCollection: Collection = {
   layout: globalTableLayout,
   accessPatterns: [
     { indexName: 'gs2', partitionKeys: [['userId']], sortKeys: [] },
-  ]
-}
+  ],
+};
 
 async function main(): Promise<void> {
   const ddb = new DynamoDB({ endpoint: DYNAMODB_ENDPOINT, region: REGION });
@@ -94,12 +107,12 @@ async function main(): Promise<void> {
 
   const post1 = await insert(ctx, 'posts', {
     userId: user1._id,
-    title: 'How to cook an apple pie'
+    title: 'How to cook an apple pie',
   });
 
   const post2 = await insert(ctx, 'posts', {
     userId: user1._id,
-    title: 'Cooking for a dinner party'
+    title: 'Cooking for a dinner party',
   });
 
   const post3 = await insert(ctx, 'posts', {
@@ -127,9 +140,17 @@ async function main(): Promise<void> {
   });
   console.log('updated post #3', updatedPost);
 
-  console.log('posts by user 2', await find(ctx, 'posts', { userId: user2._id }));
+  console.log(
+    'posts by user 2',
+    await find(ctx, 'posts', { userId: user2._id })
+  );
 
-  const emailSearch = await find(ctx, 'users', { email: 'anayah' }, undefined, { filter: { 'team.employeeCode': { $beginsWith: 'AC' }, 'profile': { $exists: false } } });
+  const emailSearch = await find(ctx, 'users', { email: 'anayah' }, undefined, {
+    filter: {
+      'team.employeeCode': { $beginsWith: 'AC' },
+      profile: { $exists: false },
+    },
+  });
   console.log('email search results', emailSearch);
 
   // Find all users in a team (access pattern 2)
@@ -137,9 +158,11 @@ async function main(): Promise<void> {
   console.log('team 2 users', usersInTeam2);
 
   // Find user by teamId and employeeCode (access pattern 2)
-  const userByEmployeeCode = await find(ctx, 'users', { 'team.id': 'team-code-1', 'team.employeeCode': 'AC-2' });
+  const userByEmployeeCode = await find(ctx, 'users', {
+    'team.id': 'team-code-1',
+    'team.employeeCode': 'AC-2',
+  });
   console.log('user by employee code', userByEmployeeCode);
 }
 
-main()
-  .catch(err => console.error('error during execution', err));
+main().catch((err) => console.error('error during execution', err));

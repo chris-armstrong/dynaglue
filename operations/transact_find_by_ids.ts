@@ -1,9 +1,14 @@
-import { Context } from "../context";
-import { TransactGetItem, Converter } from "aws-sdk/clients/dynamodb";
-import { InvalidFindDescriptorException } from "../base/exceptions";
-import { getChildCollection, getRootCollection, assemblePrimaryKeyValue, unwrap } from "../base/util";
-import { DocumentWithId, WrappedDocument } from "../base/common";
-import debugDynamo from "../debug/debugDynamo";
+import { Context } from '../context';
+import { TransactGetItem, Converter } from 'aws-sdk/clients/dynamodb';
+import { InvalidFindDescriptorException } from '../base/exceptions';
+import {
+  getChildCollection,
+  getRootCollection,
+  assemblePrimaryKeyValue,
+  unwrap,
+} from '../base/util';
+import { DocumentWithId, WrappedDocument } from '../base/common';
+import debugDynamo from '../debug/debugDynamo';
 
 /**
  * The collection and ID of a root or child
@@ -20,26 +25,44 @@ export type TransactFindByIdDescriptor = {
 
 export const transactFindByIds = async (
   ctx: Context,
-  items: TransactFindByIdDescriptor[],
-): Promise<(DocumentWithId|null)[]> => {
+  items: TransactFindByIdDescriptor[]
+): Promise<(DocumentWithId | null)[]> => {
   if (items.length === 0) {
-    throw new InvalidFindDescriptorException('At least one find descriptor must be specified');
+    throw new InvalidFindDescriptorException(
+      'At least one find descriptor must be specified'
+    );
   } else if (items.length > 25) {
-    throw new InvalidFindDescriptorException('No more than 25 find descriptors can be specified to transactFindByIds');
+    throw new InvalidFindDescriptorException(
+      'No more than 25 find descriptors can be specified to transactFindByIds'
+    );
   }
-  const transactGetItems: TransactGetItem[] = items.map(({ collection, id, rootId })=> {
-    const collectionDefinition = rootId ? getChildCollection(ctx, collection) : getRootCollection(ctx, collection);
-    const { layout: { tableName, primaryKey, indexKeySeparator } } = collectionDefinition;
-    return {
-      Get: {
-        TableName: tableName,
-        Key: {
-          [primaryKey.partitionKey]: Converter.input(assemblePrimaryKeyValue(collection, rootId ? rootId : id, indexKeySeparator)),
-          [primaryKey.sortKey]: Converter.input(assemblePrimaryKeyValue(collection, id, indexKeySeparator)),
+  const transactGetItems: TransactGetItem[] = items.map(
+    ({ collection, id, rootId }) => {
+      const collectionDefinition = rootId
+        ? getChildCollection(ctx, collection)
+        : getRootCollection(ctx, collection);
+      const {
+        layout: { tableName, primaryKey, indexKeySeparator },
+      } = collectionDefinition;
+      return {
+        Get: {
+          TableName: tableName,
+          Key: {
+            [primaryKey.partitionKey]: Converter.input(
+              assemblePrimaryKeyValue(
+                collection,
+                rootId ? rootId : id,
+                indexKeySeparator
+              )
+            ),
+            [primaryKey.sortKey]: Converter.input(
+              assemblePrimaryKeyValue(collection, id, indexKeySeparator)
+            ),
+          },
         },
-      },
-    };
-  });
+      };
+    }
+  );
 
   const request = { TransactItems: transactGetItems };
   debugDynamo('transactGetItems', request);
@@ -56,4 +79,3 @@ export const transactFindByIds = async (
   }
   return returnedItems;
 };
-

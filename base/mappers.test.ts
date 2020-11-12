@@ -6,7 +6,6 @@ describe('createNameMapper', () => {
     expect(createNameMapper()).toHaveProperty('map');
   });
 
-
   it('should use the mappedName value when provided if not already mapped', () => {
     const mapper = createNameMapper();
     expect(mapper.map('1unsafe', '#attrx')).toBe('#attrx');
@@ -47,8 +46,13 @@ describe('createValueMapper', () => {
     // Remember that .map() calls are mutating the mapper internally
     // i.e. it has side-effects internally.
     expect(mapper.map('a string value')).toBe(':value0');
-    expect(mapper.map(1234)).toBe(':value1')
-    expect(mapper.map([{ name: '1', value: 1}, { name: '2', value: null}])).toBe(':value2');
+    expect(mapper.map(1234)).toBe(':value1');
+    expect(
+      mapper.map([
+        { name: '1', value: 1 },
+        { name: '2', value: null },
+      ])
+    ).toBe(':value2');
     expect(mapper.map({ anObject: true })).toBe(':value3');
 
     // repeated values are mapped again
@@ -60,8 +64,8 @@ describe('createValueMapper', () => {
       ':value1': { N: '1234' },
       ':value2': {
         L: [
-          { M: { name: { S: '1'}, value: { N: '1' } } },
-          { M: { name: { S: '2'}, value: { NULL: true } } },
+          { M: { name: { S: '1' }, value: { N: '1' } } },
+          { M: { name: { S: '2' }, value: { NULL: true } } },
         ],
       },
       ':value3': {
@@ -73,4 +77,3 @@ describe('createValueMapper', () => {
     });
   });
 });
-

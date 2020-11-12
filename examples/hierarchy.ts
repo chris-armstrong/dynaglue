@@ -2,7 +2,8 @@ import { DynamoDB } from 'aws-sdk';
 import { Collection, createContext, insert, find } from '../dist';
 import { Context } from '../dist/context';
 
-const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
+const DYNAMODB_ENDPOINT =
+  process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 
 /**
  *  in order to use this layout, you will need to start up DynamoDB local
@@ -48,7 +49,8 @@ const globalTableLayout = {
   ],
 };
 
-const lowercaseNormaliser = (keyPath: string[], value: string) => value.toLowerCase();
+const lowercaseNormaliser = (keyPath: string[], value: string) =>
+  value.toLowerCase();
 
 const locationsCollection: Collection = {
   name: 'locations',
@@ -80,7 +82,8 @@ type Location = {
   street: string;
 };
 
-const addLocation = (ctx: Context, location: Location) => insert(ctx, 'locations', location);
+const addLocation = (ctx: Context, location: Location) =>
+  insert(ctx, 'locations', location);
 
 const createLocation = (
   country: string,
@@ -101,22 +104,109 @@ const createLocation = (
 });
 
 const populateLocations = (ctx: Context) => {
-  addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Sydney', 'Bennelong Point', 'Sydney Opera House'));
-  addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Bondi', 'Campbell Parade', 'Bondi Beach'));
-  addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Sydney', 'Wheat Road', 'Darling Harbour'));
-  addLocation(ctx, createLocation('AU', 'NSW', 'Sydney', 'Manly', 'The Corso', 'The Corso'));
   addLocation(
     ctx,
-    createLocation('AU', 'NSW', 'Byron Bay', 'Byron Bay', 'Cape Byron Walking Track', 'Smokey Cape Lighthouse')
+    createLocation(
+      'AU',
+      'NSW',
+      'Sydney',
+      'Sydney',
+      'Bennelong Point',
+      'Sydney Opera House'
+    )
   );
-  addLocation(ctx, createLocation('AU', 'NSW', 'Clifton', 'Clifton', 'Lawrence Hargrave Dr', 'Seacliff Bridge'));
-  addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Melbourne', 'Queen Street', 'Queen Victoria Market'));
-  addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Melbourne', 'Flinders Street', 'Federation Square'));
   addLocation(
     ctx,
-    createLocation('AU', 'VIC', 'Melbourne', 'South Yarra', 'Birdwood Avenue', 'Royal Botanic Gardens Victoria')
+    createLocation(
+      'AU',
+      'NSW',
+      'Sydney',
+      'Bondi',
+      'Campbell Parade',
+      'Bondi Beach'
+    )
   );
-  addLocation(ctx, createLocation('AU', 'VIC', 'Melbourne', 'Belgrave', 'Old Monbulk Road', 'Puffing Billy Railway'));
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'NSW',
+      'Sydney',
+      'Sydney',
+      'Wheat Road',
+      'Darling Harbour'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation('AU', 'NSW', 'Sydney', 'Manly', 'The Corso', 'The Corso')
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'NSW',
+      'Byron Bay',
+      'Byron Bay',
+      'Cape Byron Walking Track',
+      'Smokey Cape Lighthouse'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'NSW',
+      'Clifton',
+      'Clifton',
+      'Lawrence Hargrave Dr',
+      'Seacliff Bridge'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'VIC',
+      'Melbourne',
+      'Melbourne',
+      'Queen Street',
+      'Queen Victoria Market'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'VIC',
+      'Melbourne',
+      'Melbourne',
+      'Flinders Street',
+      'Federation Square'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'VIC',
+      'Melbourne',
+      'South Yarra',
+      'Birdwood Avenue',
+      'Royal Botanic Gardens Victoria'
+    )
+  );
+  addLocation(
+    ctx,
+    createLocation(
+      'AU',
+      'VIC',
+      'Melbourne',
+      'Belgrave',
+      'Old Monbulk Road',
+      'Puffing Billy Railway'
+    )
+  );
 };
 
 async function main() {
@@ -128,13 +218,22 @@ async function main() {
 
   await populateLocations(ctx);
 
-  const allSydneyLocations = await find(ctx, 'locations', { country: 'AU', state: 'NSW', city: 'SYDNEY' });
+  const allSydneyLocations = await find(ctx, 'locations', {
+    country: 'AU',
+    state: 'NSW',
+    city: 'SYDNEY',
+  });
   console.log('All Sydney locations', allSydneyLocations.items);
 
-  const allVictoriaLocations = await find(ctx, 'locations', { country: 'AU', state: 'VIC' });
+  const allVictoriaLocations = await find(ctx, 'locations', {
+    country: 'AU',
+    state: 'VIC',
+  });
   console.log('All Victoria locations', allVictoriaLocations.items);
 
-  const findSLocations = await find(ctx, 'locations', { 'description.name': 'S' });
+  const findSLocations = await find(ctx, 'locations', {
+    'description.name': 'S',
+  });
   console.log("locations beginning with 'S':", findSLocations.items);
 }
 

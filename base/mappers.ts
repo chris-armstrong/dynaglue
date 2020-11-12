@@ -27,7 +27,7 @@ export const createNameMapper = (): NameMapper => {
 
   return {
     /**
-     * Generate an expression attribute name for 
+     * Generate an expression attribute name for
      * `name` (if necessary - values not requiring
      * escaping will be returned as-is)
      */
@@ -50,7 +50,7 @@ export const createNameMapper = (): NameMapper => {
       const result = invertMap(attributeNameMap);
       if (Object.keys(result).length === 0) return undefined;
       return result;
-    }
+    },
   };
 };
 
@@ -99,6 +99,6 @@ export const createValueMapper = (): ValueMapper => {
         obj[key] = value;
         return obj;
       }, {} as { [key: string]: AttributeValue });
-    }
+    },
   };
 };

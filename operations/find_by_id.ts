@@ -1,6 +1,10 @@
 import { Converter, GetItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
+import {
+  unwrap,
+  assemblePrimaryKeyValue,
+  getRootCollection,
+} from '../base/util';
 import { WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 
@@ -22,8 +26,16 @@ export async function findById(
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
+        collectionName,
+        id,
+        collection.layout.indexKeySeparator
+      ),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
+        collectionName,
+        id,
+        collection.layout.indexKeySeparator
+      ),
     }),
   };
   debugDynamo('GetItem', request);

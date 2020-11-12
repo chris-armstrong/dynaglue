@@ -7,7 +7,6 @@ describe('isSafeAttributeName', () => {
     expect(isSafeAttributeName('Comment')).toBe(false);
   });
 
-
   it('should return false on attribute names that are not safe to use unescaped', () => {
     expect(isSafeAttributeName('not safe')).toBe(false);
     expect(isSafeAttributeName('a.dotted.Value')).toBe(false);

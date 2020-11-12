@@ -3,10 +3,22 @@ import { Key, QueryInput, Converter } from 'aws-sdk/clients/dynamodb';
 
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../base/common';
-import { getCollection, unwrap, assembleIndexedValue, IndexedValue } from '../base/util';
+import {
+  getCollection,
+  unwrap,
+  assembleIndexedValue,
+  IndexedValue,
+} from '../base/util';
 import { Collection } from '../base/collection';
-import { InvalidQueryException, ConfigurationException } from '../base/exceptions';
-import { KeyPath, AccessPattern, AccessPatternOptions } from '../base/access_pattern';
+import {
+  InvalidQueryException,
+  ConfigurationException,
+} from '../base/exceptions';
+import {
+  KeyPath,
+  AccessPattern,
+  AccessPatternOptions,
+} from '../base/access_pattern';
 import { SecondaryIndexLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
 import { CompositeCondition } from '../base/conditions';
@@ -14,40 +26,43 @@ import { createNameMapper, createValueMapper } from '../base/mappers';
 import { parseCompositeCondition } from '../base/conditions_parser';
 
 /**
-  * The query operator to use in the `KeyConditionExpression` to `QueryItem`
-  * as called by [[find]]
-  */
+ * The query operator to use in the `KeyConditionExpression` to `QueryItem`
+ * as called by [[find]]
+ */
 export type QueryOperator = 'match' | 'equals';
 
 /**
-  * A find query. This is a map of key paths (specified dot-separated)
-  * to values to match.
-  *
-  * The query you specify must match an access pattern on the collection,
-  * otherwise an [[IndexNotFoundException]] will be thrown by [[find]]
-  */
+ * A find query. This is a map of key paths (specified dot-separated)
+ * to values to match.
+ *
+ * The query you specify must match an access pattern on the collection,
+ * otherwise an [[IndexNotFoundException]] will be thrown by [[find]]
+ */
 export type FindQuery = { [matchKey: string]: string };
 
 /**
-  * The results of a [[find]] operation.
-  */
+ * The results of a [[find]] operation.
+ */
 export type FindResults = {
   /** The items in this batch of results */
   items: DocumentWithId[];
   /** The pagination token. This value is specified when
-    * there are more results to fetch; pass it to another [[find]] call
-    * to get the next batch. It will be `undefined` when there is no
-    * more results.
-    */
+   * there are more results to fetch; pass it to another [[find]] call
+   * to get the next batch. It will be `undefined` when there is no
+   * more results.
+   */
   nextToken?: Key;
 };
 
 /**
-  * @internal
-  * 
-  * Compare key paths and return if they are equal.
-  */
-export const isEqualKey = (lhs: string[] | string, rhs: string[] | string): boolean => {
+ * @internal
+ *
+ * Compare key paths and return if they are equal.
+ */
+export const isEqualKey = (
+  lhs: string[] | string,
+  rhs: string[] | string
+): boolean => {
   const normalisedLhs = typeof lhs === 'string' ? lhs.split('.') : lhs;
   const normalisedRhs = typeof rhs === 'string' ? rhs.split('.') : rhs;
   return isEqual(normalisedLhs, normalisedRhs);
@@ -58,11 +73,16 @@ export const isEqualKey = (lhs: string[] | string, rhs: string[] | string): bool
  *
  * Find the access pattern for the specified query.
  */
-export const findAccessPattern = (collection: Collection, query: FindQuery): AccessPattern | undefined => {
-  return (collection.accessPatterns || []).find(ap => {
+export const findAccessPattern = (
+  collection: Collection,
+  query: FindQuery
+): AccessPattern | undefined => {
+  return (collection.accessPatterns || []).find((ap) => {
     const unmatchedQueryKeys = [...Object.keys(query)];
     for (const apKey of ap.partitionKeys) {
-      const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey => isEqualKey(apKey, queryKey));
+      const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex((queryKey) =>
+        isEqualKey(apKey, queryKey)
+      );
       if (matchingQueryKeyIndex >= 0) {
         unmatchedQueryKeys.splice(matchingQueryKeyIndex, 1);
       } else {
@@ -72,7 +92,9 @@ export const findAccessPattern = (collection: Collection, query: FindQuery): Acc
 
     if (ap.sortKeys) {
       for (const apKey of ap.sortKeys) {
-        const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex(queryKey => isEqualKey(apKey, queryKey));
+        const matchingQueryKeyIndex = unmatchedQueryKeys.findIndex((queryKey) =>
+          isEqualKey(apKey, queryKey)
+        );
         if (matchingQueryKeyIndex >= 0) {
           unmatchedQueryKeys.splice(matchingQueryKeyIndex, 1);
         } else {
@@ -86,31 +108,36 @@ export const findAccessPattern = (collection: Collection, query: FindQuery): Acc
 
 /**
  * @internal
- * 
+ *
  * Find the access pattern layout for the specified access pattern
  */
-export const findAccessPatternLayout = (findKeys: SecondaryIndexLayout[], ap: AccessPattern): SecondaryIndexLayout | undefined =>
-  findKeys.find(fk => fk.indexName === ap.indexName);
+export const findAccessPatternLayout = (
+  findKeys: SecondaryIndexLayout[],
+  ap: AccessPattern
+): SecondaryIndexLayout | undefined =>
+  findKeys.find((fk) => fk.indexName === ap.indexName);
 
 /**
-  * @internal
-  *
-  * Assemble a value into the query, taking into account string normalizer options. 
-  */
+ * @internal
+ *
+ * Assemble a value into the query, taking into account string normalizer options.
+ */
 export const assembleQueryValue = (
   type: 'partition' | 'sort',
   collectionName: string,
   query: FindQuery,
   options: AccessPatternOptions,
   paths?: KeyPath[],
-  separator?: string,
+  separator?: string
 ): IndexedValue => {
   if (paths) {
     const values: IndexedValue[] = [];
     for (const path of paths) {
       const pathValue = query[path.join('.')];
       if (!pathValue) break;
-      const transformedValue = options.stringNormalizer ? options.stringNormalizer(path, pathValue) : pathValue;
+      const transformedValue = options.stringNormalizer
+        ? options.stringNormalizer(path, pathValue)
+        : pathValue;
       values.push(transformedValue);
     }
     return assembleIndexedValue(type, collectionName, values, separator);
@@ -121,19 +148,22 @@ export const assembleQueryValue = (
 // FIXME: distinguish `=` and `begins_with` based on specified sort keys
 
 /**
-  * @internal
-  */
-const getQueryOperator = (sortKeyName: string, sortValueName: string, qo?: QueryOperator): string => {
+ * @internal
+ */
+const getQueryOperator = (
+  sortKeyName: string,
+  sortValueName: string,
+  qo?: QueryOperator
+): string => {
   switch (qo) {
-  case 'equals': return `${sortKeyName} = ${sortValueName}`;
-  default:
-  case 'match':
-    return `begins_with(${sortKeyName}, ${sortValueName})`;
+    case 'equals':
+      return `${sortKeyName} = ${sortValueName}`;
+    default:
+    case 'match':
+      return `begins_with(${sortKeyName}, ${sortValueName})`;
   }
   throw new Error('unreachable');
-}
-  ;
-
+};
 /**
  * Find an item using one of its collection's access patterns
  *
@@ -206,35 +236,65 @@ export async function find(
 
   const ap = findAccessPattern(collection, query);
   if (!ap) {
-    throw new InvalidQueryException('Unable to find access pattern matching query', {
-      collection: collectionName,
-      query,
-    });
+    throw new InvalidQueryException(
+      'Unable to find access pattern matching query',
+      {
+        collection: collectionName,
+        query,
+      }
+    );
   }
   const layout = findAccessPatternLayout(collection.layout?.findKeys ?? [], ap);
   if (!layout) {
     throw new ConfigurationException(
       `Unable to find layout for index specified in access pattern`,
-      { info: { collectionName, indexName: ap.indexName } },
+      {
+        info: { collectionName, indexName: ap.indexName },
+      }
     );
   }
 
-  const partitionKeyValue = assembleQueryValue('partition', collection.name, query, ap.options || {}, ap.partitionKeys, collection.layout.indexKeySeparator);
-  const sortKeyValue = assembleQueryValue('sort', collection.name, query, ap.options || {}, ap.sortKeys, collection.layout.indexKeySeparator);
+  const partitionKeyValue = assembleQueryValue(
+    'partition',
+    collection.name,
+    query,
+    ap.options || {},
+    ap.partitionKeys,
+    collection.layout.indexKeySeparator
+  );
+  const sortKeyValue = assembleQueryValue(
+    'sort',
+    collection.name,
+    query,
+    ap.options || {},
+    ap.sortKeys,
+    collection.layout.indexKeySeparator
+  );
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
 
-  const sortKeyOp = sortKeyValue && getQueryOperator(
-    nameMapper.map(layout.sortKey!, '#indexSortKey'), 
-    valueMapper.map(sortKeyValue), 
-    options?.queryOperator,
-  );
-  const keyConditionExpression = `${nameMapper.map(layout.partitionKey, '#indexPartitionKey')} = ${valueMapper.map(partitionKeyValue)}${sortKeyValue ? ` AND ${sortKeyOp}` : ''}`;
+  const sortKeyOp =
+    sortKeyValue &&
+    getQueryOperator(
+      nameMapper.map(layout.sortKey!, '#indexSortKey'),
+      valueMapper.map(sortKeyValue),
+      options?.queryOperator
+    );
+  const keyConditionExpression = `${nameMapper.map(
+    layout.partitionKey,
+    '#indexPartitionKey'
+  )} = ${valueMapper.map(partitionKeyValue)}${
+    sortKeyValue ? ` AND ${sortKeyOp}` : ''
+  }`;
 
   let filterExpression;
   if (options?.filter) {
-    filterExpression = parseCompositeCondition(options.filter, { nameMapper, valueMapper, parsePath: [] });
+    filterExpression = parseCompositeCondition(options.filter, {
+      nameMapper,
+      valueMapper,
+      parsePath: [],
+    });
   }
 
   const queryRequest: QueryInput = {
@@ -249,8 +309,13 @@ export async function find(
     FilterExpression: filterExpression,
   };
   debugDynamo('Query', queryRequest);
-  const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb.query(queryRequest).promise();
-  const unwrappedItems = items ? items.map(item => unwrap(Converter.unmarshall(item) as WrappedDocument)) : [];
+  const {
+    Items: items,
+    LastEvaluatedKey: lastEvaluatedKey,
+  } = await ctx.ddb.query(queryRequest).promise();
+  const unwrappedItems = items
+    ? items.map((item) => unwrap(Converter.unmarshall(item) as WrappedDocument))
+    : [];
   return {
     items: unwrappedItems,
     nextToken: lastEvaluatedKey,

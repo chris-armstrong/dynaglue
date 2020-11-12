@@ -1,5 +1,5 @@
-import { KeyPath, AccessPatternOptions } from "./access_pattern";
-import { Collection, ChildCollection, RootCollection } from "./collection";
+import { KeyPath, AccessPatternOptions } from './access_pattern';
+import { Collection, ChildCollection, RootCollection } from './collection';
 
 /**
  *
@@ -14,22 +14,22 @@ export type ExtractKey = {
 };
 
 /**
- * 
+ *
  * Collection mapping (used internally)
  */
 export type CollectionDefinition = Collection & {
   wrapperExtractKeys: ExtractKey[];
 };
 
-/** 
-  * Root collection definition (used internally)
-  */
+/**
+ * Root collection definition (used internally)
+ */
 export type RootCollectionDefinition = RootCollection & {
   wrapperExtractKeys: ExtractKey[];
 };
 /**
-  * Child collection definition (used internally)
-  */
+ * Child collection definition (used internally)
+ */
 export type ChildCollectionDefinition = ChildCollection & {
   wrapperExtractKeys: ExtractKey[];
 };

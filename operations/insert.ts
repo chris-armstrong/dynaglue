@@ -1,6 +1,10 @@
 import { PutItemInput, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { getCollection, toWrapped, assemblePrimaryKeyValue } from '../base/util';
+import {
+  getCollection,
+  toWrapped,
+  assemblePrimaryKeyValue,
+} from '../base/util';
 import { ConflictException } from '../base/exceptions';
 import get from 'lodash/get';
 import { DocumentWithId } from '../base/common';
@@ -20,7 +24,7 @@ import debugDynamo from '../debug/debugDynamo';
 export async function insert(
   context: Context,
   collectionName: string,
-  value: object,
+  value: object
 ): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped(collection, value);
@@ -30,10 +34,19 @@ export async function insert(
       TableName: collection.layout.tableName,
       Item: Converter.marshall(wrapped),
       ReturnValues: 'NONE',
-      ConditionExpression: 'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
+      ConditionExpression:
+        'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
       ExpressionAttributeNames: {
-        '#parentIdAttribute': assemblePrimaryKeyValue(collection.parentCollectionName, get(value, collection.foreignKeyPath), collection.layout.indexKeySeparator),
-        '#childIdAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id, collection.layout.indexKeySeparator),
+        '#parentIdAttribute': assemblePrimaryKeyValue(
+          collection.parentCollectionName,
+          get(value, collection.foreignKeyPath),
+          collection.layout.indexKeySeparator
+        ),
+        '#childIdAttribute': assemblePrimaryKeyValue(
+          collection.name,
+          wrapped.value._id,
+          collection.layout.indexKeySeparator
+        ),
       },
     };
   } else {
@@ -43,7 +56,11 @@ export async function insert(
       ReturnValues: 'NONE',
       ConditionExpression: 'attribute_not_exists(#idAttribute)',
       ExpressionAttributeNames: {
-        '#idAttribute': assemblePrimaryKeyValue(collection.name, wrapped.value._id, collection.layout.indexKeySeparator),
+        '#idAttribute': assemblePrimaryKeyValue(
+          collection.name,
+          wrapped.value._id,
+          collection.layout.indexKeySeparator
+        ),
       },
     };
   }
