@@ -4,7 +4,7 @@
   "description": "dynaglue",
   "main": "dist/dynaglue.cjs.js",
   "module": "dist/dynaglue.esm.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/dynaglue.cjs.d.ts",
   "scripts": {
     "build": "preconstruct build",
     "compile": "tsc",
@@ -22,10 +22,7 @@
     "@babel/plugin-proposal-optional-chaining": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
-    "@types/debug": "^4.1.5",
-    "@types/jest": "^24.9.1",
-    "@types/lodash": "^4.14.165",
-    "@types/node": "^12.19.4",
+    "@preconstruct/cli": "^1.1.34",
     "@typescript-eslint/eslint-plugin": "^2.34.0",
     "@typescript-eslint/parser": "^2.34.0",
     "aws-sdk": "^2.791.0",
@@ -41,7 +38,10 @@
     "aws-sdk": "^2.562.0"
   },
   "dependencies": {
-    "@preconstruct/cli": "^1.1.34",
+    "@types/debug": "^4.1.5",
+    "@types/jest": "^24.9.1",
+    "@types/lodash": "^4.14.165",
+    "@types/node": "^12.19.4",
     "@types/validator": "^13.1.0",
     "@types/verror": "^1.10.4",
     "debug": "^4.2.0",
