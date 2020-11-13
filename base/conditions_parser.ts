@@ -1,4 +1,3 @@
-import VError from 'verror';
 import { NameMapper, ValueMapper } from './mappers';
 import {
   CompositeCondition,
@@ -8,46 +7,8 @@ import {
   NotCondition,
   KeyPathsAndClause,
 } from './conditions';
-
-/**
- * @internal
- * An element in the expression parse tree, used
- * to assist error messaging.
- */
-type ParseElement = { type: 'array'; index: number } | { type: 'object'; key: string }; 
-
-/**
- * @internal
- *
- * A context object passed between
- * parse functions to track value and name
- * mapping and current parse context.
- */
-type ConditionParseContext = {
-  nameMapper: NameMapper;
-  valueMapper: ValueMapper;
-  parsePath: ParseElement[];
-};
-
-const printParsePath = (parsePath: ParseElement[]): string => {
-  return parsePath.map(e => {
-    if (e.type === 'array') return e.index === 0 ? `[` : `[...@${e.index}:`;
-    return `{ ${e.key}: `;
-  }).join('');
-};
-
-/**
- * Thrown when there is a problem with the expression given
- * as a `FilterExpression` or `ConditionExpression`.
- */
-export class InvalidCompositeConditionException extends VError {
-  constructor(message: string, parsePath: ParseElement[]) {
-    super({
-      name: 'invalid_composite_condition',
-      info: { parsePath },
-    }, `Condition parse exception: ${message} at ${printParsePath(parsePath)}`);
-  }
-}
+import { InvalidCompositeConditionException } from './exceptions';
+import { ParseElement, ConditionParseContext } from './conditions_types';
 
 /**
  * @internal
@@ -125,6 +86,8 @@ const parseNotCondition = (clause: NotCondition, context: ConditionParseContext)
 };
 
 /**
+ * @internal 
+ *
  * Parse a key paths object (one that has key paths as keys and
  * operators as values.
  */

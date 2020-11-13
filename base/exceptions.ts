@@ -1,4 +1,5 @@
 import { VError, Options as VErrorOptions } from 'verror';
+import { ParseElement } from './conditions_types';
 
 /**
   * Thrown when insert() is called with a specified _id
@@ -73,7 +74,17 @@ export class ConfigurationException extends VError {
   * Thrown on invalid field values that are provided during
   * persistence (insert/update/replace).
   */
-export class PersistenceException extends VError {}
+export class InvalidIndexedFieldValueException extends VError {
+  constructor(message: string, { collection, keyPath }: { collection: string; keyPath: string[] }) {
+    super({
+      info: {
+        collection,
+        keyPath,
+      },
+      name: 'invalid_indexed_field_value.error',
+    }, message);
+  }
+}
 
 /**
   * Thrown on an invalidly specified query provided to a
@@ -105,7 +116,7 @@ export class InvalidUpdatesException extends VError {
 
 /**
   * Thrown when the update values provided in an `update()` operation
-  * are an invalid type for an indexed field.
+  * are invalid (e.g. `undefined`)
   */
 export class InvalidUpdateValueException extends VError {
   constructor(path: string, message: string) {
@@ -140,6 +151,31 @@ export class InvalidFindDescriptorException extends VError {
 export class InternalProcessingException extends VError {
   constructor(message: string) {
     super({ name: 'internal_processing' }, message);
+  }
+}
+
+/** 
+ * @internal 
+ *
+ * Print out a condition parser path for debugging / error handling
+ * */
+const printParsePath = (parsePath: ParseElement[]): string => {
+  return parsePath.map(e => {
+    if (e.type === 'array') return e.index === 0 ? `[` : `[...@${e.index}:`;
+    return `{ ${e.key}: `;
+  }).join('');
+};
+
+/**
+ * Thrown when there is a problem with the expression given
+ * as a `FilterExpression` or `ConditionExpression`.
+ */
+export class InvalidCompositeConditionException extends VError {
+  constructor(message: string, parsePath: ParseElement[]) {
+    super({
+      name: 'invalid_composite_condition',
+      info: { parsePath },
+    }, `Condition parse exception: ${message} at ${printParsePath(parsePath)}`);
   }
 }
 
