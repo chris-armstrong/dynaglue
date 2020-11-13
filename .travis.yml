@@ -6,4 +6,5 @@ node_js:
 script:
   - npm run compile
   - npm test
+  - npm run prettier:check
   - npm run lint

@@ -8,7 +8,9 @@
     "compile": "tsc",
     "doc": "typedoc index.ts",
     "lint": "eslint '**/*.ts'",
-    "test": "jest"
+    "test": "jest",
+    "prettier:check": "prettier -c **/*.ts",
+    "prettier:write": "prettier --write **/*.ts"
   },
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
