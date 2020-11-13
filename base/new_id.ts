@@ -11,9 +11,9 @@ let IdIndex = ~~(Math.random() * 0xffffff);
 const getInc = (): number => (IdIndex = (IdIndex + 1) % 0xffffff);
 
 /**
-  * @internal
-  * Generate a new ID. Uses the Mongo BSON ID generation algorithm.
-  */
+ * @internal
+ * Generate a new ID. Uses the Mongo BSON ID generation algorithm.
+ */
 const newId = (): string => {
   const time = ~~(Date.now() / 1000);
 
@@ -39,6 +39,6 @@ const newId = (): string => {
   buffer[9] = (inc >> 16) & 0xff;
 
   return buffer.toString('hex');
-}
+};
 
 export default newId;

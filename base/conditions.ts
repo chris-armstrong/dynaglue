@@ -1,19 +1,29 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
 /**
- * The DynamoDB `Set` type 
+ * The DynamoDB `Set` type
  */
 export type DynamoDBSet = DocumentClient.DynamoDbSet;
 
 /**
  * The value for a condition expression
  */
-export type ConditionValue = any; 
+export type ConditionValue = any;
 
 /**
- * A DynamoDB type, for the $type condition operator (see [[TypeCondition]]) 
+ * A DynamoDB type, for the $type condition operator (see [[TypeCondition]])
  */
-export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL' | 'L' | 'M';
+export type DynamoDBType =
+  | 'S'
+  | 'SS'
+  | 'N'
+  | 'NS'
+  | 'B'
+  | 'BS'
+  | 'BOOL'
+  | 'NULL'
+  | 'L'
+  | 'M';
 
 /**
  * A filter or condition expression. This type
@@ -53,13 +63,13 @@ export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL
  * ```
  * {
  *   $or: [
-   *   { $not: { 'location.value': { $lte: 0 } } },
-   *   { 
-   *      $and: [
-   *        { 'location.point.x': { $gt: 10 } },
-   *        { 'location.point.y': { $gt: 1.3 } },
-   *      ],
-   *   }
+ *   { $not: { 'location.value': { $lte: 0 } } },
+ *   {
+ *      $and: [
+ *        { 'location.point.x': { $gt: 10 } },
+ *        { 'location.point.y': { $gt: 1.3 } },
+ *      ],
+ *   }
  *   ],
  * };
  * ```
@@ -73,9 +83,13 @@ export type DynamoDBType = 'S' | 'SS' | 'N' | 'NS' | 'B' | 'BS' | 'BOOL' | 'NULL
  * * `:value0` is mapped to `0` (Expression Attribute Value)
  * * `:value1` is mapped to `10` (Expression Attribute Value)
  * * `:value2` is mapped to `1.3` (Expression Attribute Value)
- * 
+ *
  */
-export type CompositeCondition = AndCondition | OrCondition | NotCondition | KeyPathsAndClause;
+export type CompositeCondition =
+  | AndCondition
+  | OrCondition
+  | NotCondition
+  | KeyPathsAndClause;
 
 /**
  * An AND clause in a condition/filter expression. The `$and` array
@@ -83,7 +97,7 @@ export type CompositeCondition = AndCondition | OrCondition | NotCondition | Key
  * clause.
  *
  * Each clause will be connected by an `AND` keyword.
-*/
+ */
 export type AndCondition = {
   /* One or more conditions to apply the AND operator to */
   $and: CompositeCondition[];
@@ -95,7 +109,7 @@ export type AndCondition = {
  * clause.
  *
  * Each clause will be connected by an `OR` keyword.
-*/
+ */
 export type OrCondition = {
   /* One or more conditions to apply the OR operator to */
   $or: CompositeCondition[];
@@ -111,66 +125,66 @@ export type NotCondition = {
 };
 
 /**
- * A clause that translates to the $eq operator. The key path this 
+ * A clause that translates to the $eq operator. The key path this
  * appears on will be used in a `=` expression.
  *
  * e.g. `{ 'x.y': { $eq: 'once' } } => x.y = :value0 // (where :value0 is set to 'once')`
-*/
+ */
 export type EqCondition = {
   /* The $eq value */
   $eq: ConditionValue;
 };
 
 /**
- * A clause that translates to the $eq operator. The key path this 
+ * A clause that translates to the $eq operator. The key path this
  * appears on will be used in a `<>` expression.
  *
  * e.g. `{ 'x.y': { $neq: 5 } } => x.y <> :value0 // (where :value0 is set to 5)`
-*/
+ */
 export type NotEqCondition = {
   /* The $neq value */
   $neq: ConditionValue;
 };
 
 /**
- * A clause that translates to the $gt operator. The key path this 
+ * A clause that translates to the $gt operator. The key path this
  * appears on will be used in a `>` expression.
  *
  * e.g. `{ 'x.y': { $gt: 5 } } => x.y > :value0 // (where :value0 is set to 5)`
-*/
+ */
 export type GtCondition = {
   /* The $gt value */
   $gt: ConditionValue;
 };
 
 /**
- * A clause that translates to the $gte operator. The key path this 
+ * A clause that translates to the $gte operator. The key path this
  * appears on will be used in a `>=` expression.
  *
  * e.g. `{ 'x.y': { $gte: 5 } } => x.y >= :value0 // (where :value0 is set to 5)`
-*/
+ */
 export type GtEqCondition = {
   /* The $gte value */
   $gte: ConditionValue;
 };
 
 /**
- * A clause that translates to the $lt operator. The key path this 
+ * A clause that translates to the $lt operator. The key path this
  * appears on will be used in a `<` expression.
  *
  * e.g. `{ 'x.y': { $lt: 5 } } => x.y < :value0 // (where :value0 is set to 5)`
-*/
+ */
 export type LtCondition = {
   /* The $lt value */
   $lt: ConditionValue;
 };
 
 /**
- * A clause that translates to the $lte operator. The key path this 
+ * A clause that translates to the $lte operator. The key path this
  * appears on will be used in a `<=` expression.
  *
  * e.g. `{ 'x.y': { $lte: 5 } } => x.y <= :value0 // (where :value0 is set to 5)`
-*/
+ */
 export type LtEqCondition = {
   /* The $lte value */
   $lte: ConditionValue;
@@ -257,19 +271,19 @@ export type ContainsCondition = {
  * A comparison condition. These clauses are the right-hand
  * side of a key-path in a condition expression.
  */
-export type ComparisonCondition = 
-  EqCondition |
-  NotEqCondition |
-  GtCondition |
-  LtCondition |
-  GtEqCondition |
-  LtEqCondition |
-  BetweenCondition |
-  InCondition |
-  ExistsCondition |
-  TypeCondition |
-  BeginsWithCondition |
-  ContainsCondition;
+export type ComparisonCondition =
+  | EqCondition
+  | NotEqCondition
+  | GtCondition
+  | LtCondition
+  | GtEqCondition
+  | LtEqCondition
+  | BetweenCondition
+  | InCondition
+  | ExistsCondition
+  | TypeCondition
+  | BeginsWithCondition
+  | ContainsCondition;
 
 /**
  * A key path condition clause. The keys in this object are key-paths
@@ -285,7 +299,7 @@ export type ComparisonCondition =
  *
  * e.g.
  * ```
- * { 
+ * {
  *   'profile.username': { $eq: 'user@example.com' },
  *   'suburbs': { $in: ['Placeville', 'Townsburb'] },
  *   'point.x': { $gt: 10.3 },

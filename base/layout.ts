@@ -12,7 +12,7 @@ export type PrimaryIndexLayout = {
    * The name of the primary sort key
    */
   sortKey: string;
-}
+};
 
 /**
  * The structure of a Global Secondary Index
@@ -32,7 +32,7 @@ export type SecondaryIndexLayout = {
    * `undefined`
    */
   sortKey?: string;
-}
+};
 
 /**
  * The layout of a collection. Defines the structure
@@ -59,4 +59,4 @@ export interface CollectionLayout {
    * The separator to use in index keys (defaults to `|-|`)
    */
   indexKeySeparator?: string;
-};
+}

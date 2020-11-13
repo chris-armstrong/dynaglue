@@ -1,6 +1,10 @@
 import { Converter, GetItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { unwrap, assemblePrimaryKeyValue, getChildCollection } from '../base/util';
+import {
+  unwrap,
+  assemblePrimaryKeyValue,
+  getChildCollection,
+} from '../base/util';
 import { WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 
@@ -23,14 +27,22 @@ export async function findChildById(
   context: Context,
   collectionName: string,
   id: string,
-  rootObjectId: string,
+  rootObjectId: string
 ): Promise<any> {
   const collection = getChildCollection(context, collectionName);
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collection.parentCollectionName, rootObjectId, collection.layout.indexKeySeparator),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
+        collection.parentCollectionName,
+        rootObjectId,
+        collection.layout.indexKeySeparator
+      ),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
+        collectionName,
+        id,
+        collection.layout.indexKeySeparator
+      ),
     }),
   };
   debugDynamo('GetItem', request);

@@ -1,6 +1,10 @@
 import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { unwrap, assemblePrimaryKeyValue, getRootCollection } from '../base/util';
+import {
+  unwrap,
+  assemblePrimaryKeyValue,
+  getRootCollection,
+} from '../base/util';
 import { WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 import { CompositeCondition } from '../base/conditions';
@@ -22,20 +26,32 @@ export async function deleteById(
   context: Context,
   collectionName: string,
   id: string,
-  options: { condition?: CompositeCondition } = {},
+  options: { condition?: CompositeCondition } = {}
 ): Promise<any> {
   const collection = getRootCollection(context, collectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
   let conditionExpression;
   if (options.condition) {
-    conditionExpression = parseCompositeCondition(options.condition, { nameMapper, valueMapper, parsePath: [] });
+    conditionExpression = parseCompositeCondition(options.condition, {
+      nameMapper,
+      valueMapper,
+      parsePath: [],
+    });
   }
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
     Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(collectionName, id, collection.layout.indexKeySeparator),
+      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
+        collectionName,
+        id,
+        collection.layout.indexKeySeparator
+      ),
+      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
+        collectionName,
+        id,
+        collection.layout.indexKeySeparator
+      ),
     }),
     ReturnValues: 'ALL_OLD',
     ConditionExpression: conditionExpression,

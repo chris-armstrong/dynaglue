@@ -1,5 +1,5 @@
-import { CollectionLayout } from "./layout";
-import { AccessPattern, KeyPath } from "./access_pattern";
+import { CollectionLayout } from './layout';
+import { AccessPattern, KeyPath } from './access_pattern';
 
 export interface CommonCollection {
   /**
@@ -56,25 +56,25 @@ export interface CommonCollection {
  */
 export interface RootCollection extends CommonCollection {
   /**
-    * A fixed value that distinguishes this as a
-    * parent or 'root' collection (It is optional to
-    * specify this)
-    */
+   * A fixed value that distinguishes this as a
+   * parent or 'root' collection (It is optional to
+   * specify this)
+   */
   type?: 'root';
 }
 
 /**
-  * A child collection lets you store values related
-  * to a parent collection (defined by [[RootCollection]])
-  * 
-  * It's used to add data to an entity that is not always
-  * needed for every access pattern, and can only be referenced
-  * with regards to its parent.
-  */
+ * A child collection lets you store values related
+ * to a parent collection (defined by [[RootCollection]])
+ *
+ * It's used to add data to an entity that is not always
+ * needed for every access pattern, and can only be referenced
+ * with regards to its parent.
+ */
 export interface ChildCollection extends CommonCollection {
   /** A fixed value that must be defined to distinguish
-    * this collection as a child collection
-    */
+   * this collection as a child collection
+   */
   type: 'child';
 
   /**

@@ -1,8 +1,25 @@
 import './new_id';
-import { assembleIndexedValue, constructKeyValue, toWrapped, unwrap, invertMap, isSubsetOfKeyPath, findMatchingPath, transformTTLValue, SEPARATOR } from "./util";
-import { PersistenceException, InvalidIdException, InvalidParentIdException } from "./exceptions";
-import { KeyPath } from "./access_pattern";
-import { ChildCollectionDefinition, RootCollectionDefinition } from "./collection_definition";
+import {
+  assembleIndexedValue,
+  constructKeyValue,
+  toWrapped,
+  unwrap,
+  invertMap,
+  isSubsetOfKeyPath,
+  findMatchingPath,
+  transformTTLValue,
+  SEPARATOR,
+} from './util';
+import {
+  PersistenceException,
+  InvalidIdException,
+  InvalidParentIdException,
+} from './exceptions';
+import { KeyPath } from './access_pattern';
+import {
+  ChildCollectionDefinition,
+  RootCollectionDefinition,
+} from './collection_definition';
 
 jest.mock('./new_id', () => ({
   __esModule: true,
@@ -11,42 +28,72 @@ jest.mock('./new_id', () => ({
 
 describe('assembleIndexedValue', () => {
   test('returns just the collection name for an empty list of values', () => {
-    expect(assembleIndexedValue('partition', 'collection', [])).toBe('collection');
+    expect(assembleIndexedValue('partition', 'collection', [])).toBe(
+      'collection'
+    );
     expect(assembleIndexedValue('sort', 'collection', [])).toBe('collection');
   });
 
   test('returns undefined for a list of undefined values', () => {
-    expect(assembleIndexedValue('partition', 'collection', [undefined, undefined])).toBeUndefined();
-    expect(assembleIndexedValue('sort', 'collection', [undefined])).toBeUndefined();
+    expect(
+      assembleIndexedValue('partition', 'collection', [undefined, undefined])
+    ).toBeUndefined();
+    expect(
+      assembleIndexedValue('sort', 'collection', [undefined])
+    ).toBeUndefined();
   });
 
   test('returns a separated list of index values when present', () => {
-    expect(assembleIndexedValue('partition', 'collection-name', ['value1']))
-      .toBe('collection-name|-|value1');
-    expect(assembleIndexedValue('partition', 'collection-name', ['value1', 'value22']))
-      .toBe('collection-name|-|value1|-|value22');
-    expect(assembleIndexedValue('partition', 'collection-name', [undefined, 'value22']))
-      .toBe('collection-name|-||-|value22');
-    expect(assembleIndexedValue('sort', 'collection-name', ['something', 'else', undefined]))
-      .toBe('collection-name|-|something|-|else|-|');
+    expect(
+      assembleIndexedValue('partition', 'collection-name', ['value1'])
+    ).toBe('collection-name|-|value1');
+    expect(
+      assembleIndexedValue('partition', 'collection-name', [
+        'value1',
+        'value22',
+      ])
+    ).toBe('collection-name|-|value1|-|value22');
+    expect(
+      assembleIndexedValue('partition', 'collection-name', [
+        undefined,
+        'value22',
+      ])
+    ).toBe('collection-name|-||-|value22');
+    expect(
+      assembleIndexedValue('sort', 'collection-name', [
+        'something',
+        'else',
+        undefined,
+      ])
+    ).toBe('collection-name|-|something|-|else|-|');
   });
 
   test('works with a custom separator', () => {
-    expect(assembleIndexedValue('partition', 'collection-name', ['value1'], '#'))
-      .toBe('collection-name#value1');
-    expect(assembleIndexedValue('partition', 'collection-name', ['value1', 'value22'], '!'))
-      .toBe('collection-name!value1!value22');
-    expect(assembleIndexedValue('partition', 'collection-name', [undefined, 'value22'], 'oOo'))
-      .toBe('collection-nameoOooOovalue22');
+    expect(
+      assembleIndexedValue('partition', 'collection-name', ['value1'], '#')
+    ).toBe('collection-name#value1');
+    expect(
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        ['value1', 'value22'],
+        '!'
+      )
+    ).toBe('collection-name!value1!value22');
+    expect(
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        [undefined, 'value22'],
+        'oOo'
+      )
+    ).toBe('collection-nameoOooOovalue22');
   });
 });
 
 describe('constructKeyValue', () => {
   test('throws when a value path is not a string', () => {
-    const valuePaths = [
-      ['topLevel1'],
-      ['nested', 'value2']
-    ];
+    const valuePaths = [['topLevel1'], ['nested', 'value2']];
 
     const testValue = {
       _id: 'id-1',
@@ -54,38 +101,56 @@ describe('constructKeyValue', () => {
       nested: { value2: 13 },
     };
 
-    expect(() => constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, {}, testValue))
-      .toThrow(PersistenceException);
+    expect(() =>
+      constructKeyValue(
+        'partition',
+        'test-collection',
+        SEPARATOR,
+        valuePaths,
+        {},
+        testValue
+      )
+    ).toThrow(PersistenceException);
   });
 
   test('extracts and transforms key paths correctly', () => {
-    const valuePaths = [
-      ['topLevel1'],
-      ['nested', 'value2']
-    ];
+    const valuePaths = [['topLevel1'], ['nested', 'value2']];
 
     const testValue = {
       _id: 'id-1',
       topLevel1: 'test',
     };
 
-    expect(constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, {}, testValue))
-      .toBe('test-collection|-|test|-|');
+    expect(
+      constructKeyValue(
+        'partition',
+        'test-collection',
+        SEPARATOR,
+        valuePaths,
+        {},
+        testValue
+      )
+    ).toBe('test-collection|-|test|-|');
   });
 
   test('works with custom separators', () => {
-    const valuePaths = [
-      ['topLevel1'],
-      ['nested', 'value2']
-    ];
+    const valuePaths = [['topLevel1'], ['nested', 'value2']];
 
     const testValue = {
       _id: 'id-1',
       topLevel1: 'test',
     };
 
-    expect(constructKeyValue('partition', 'test-collection', '##', valuePaths, {}, testValue))
-      .toBe('test-collection##test##');
+    expect(
+      constructKeyValue(
+        'partition',
+        'test-collection',
+        '##',
+        valuePaths,
+        {},
+        testValue
+      )
+    ).toBe('test-collection##test##');
   });
 
   test('applies string normalisers as expected', () => {
@@ -105,15 +170,32 @@ describe('constructKeyValue', () => {
     };
 
     const options = {
-      stringNormalizer: (_: KeyPath, value: string): string => value.trim().toLowerCase(),
+      stringNormalizer: (_: KeyPath, value: string): string =>
+        value.trim().toLowerCase(),
     };
-    expect(constructKeyValue('partition', 'test-collection', SEPARATOR, valuePaths, options, testValue))
-      .toBe('test-collection|-|au|-|nsw|-|sydney');
+    expect(
+      constructKeyValue(
+        'partition',
+        'test-collection',
+        SEPARATOR,
+        valuePaths,
+        options,
+        testValue
+      )
+    ).toBe('test-collection|-|au|-|nsw|-|sydney');
   });
 
   test('should construct TTL types correctly', () => {
-    expect(constructKeyValue('ttl', 'test-collection', SEPARATOR, [['options', 'expiry']], {}, { options: { expiry: new Date() }, _id: undefined }))
-      .toBe(Math.ceil(Date.now() / 1000));
+    expect(
+      constructKeyValue(
+        'ttl',
+        'test-collection',
+        SEPARATOR,
+        [['options', 'expiry']],
+        {},
+        { options: { expiry: new Date() }, _id: undefined }
+      )
+    ).toBe(Math.ceil(Date.now() / 1000));
   });
 });
 
@@ -132,17 +214,23 @@ describe('transformTTLValue', () => {
 
   test('should return a UNIX date (seconds) for a Date object', () => {
     const currentDate = new Date();
-    expect(transformTTLValue(currentDate)).toEqual(Math.ceil(currentDate.getTime() / 1000));
+    expect(transformTTLValue(currentDate)).toEqual(
+      Math.ceil(currentDate.getTime() / 1000)
+    );
   });
 
   test('should return a UNIX date (seconds) for a number object', () => {
     const currentDate = new Date();
-    expect(transformTTLValue(currentDate.getTime())).toEqual(Math.ceil(currentDate.getTime() / 1000));
+    expect(transformTTLValue(currentDate.getTime())).toEqual(
+      Math.ceil(currentDate.getTime() / 1000)
+    );
   });
 
   test('should return a UNIX date (seconds) for a string in ISO format', () => {
     const currentDate = new Date();
-    expect(transformTTLValue(currentDate.toISOString())).toEqual(Math.ceil(currentDate.getTime() / 1000));
+    expect(transformTTLValue(currentDate.toISOString())).toEqual(
+      Math.ceil(currentDate.getTime() / 1000)
+    );
   });
 });
 
@@ -155,17 +243,31 @@ describe('toWrapped', () => {
     primaryKey: { partitionKey: 'id', sortKey: 'sid' },
     findKeys: [
       { indexName: 'gs1', partitionKey: 'gs1part', sortKey: 'gs1sort' },
-    ]
+    ],
   };
   const rootCollection: RootCollectionDefinition = {
     name: 'locations',
     layout,
     accessPatterns: [
-      { indexName: 'gs1', partitionKeys: [countryValuePath], sortKeys: [stateValuePath, cityValuePath] },
+      {
+        indexName: 'gs1',
+        partitionKeys: [countryValuePath],
+        sortKeys: [stateValuePath, cityValuePath],
+      },
     ],
     wrapperExtractKeys: [
-      { key: 'gs1part', type: 'partition', valuePaths: [countryValuePath], options: {} },
-      { key: 'gs1sort', type: 'sort', valuePaths: [stateValuePath, cityValuePath], options: {} },
+      {
+        key: 'gs1part',
+        type: 'partition',
+        valuePaths: [countryValuePath],
+        options: {},
+      },
+      {
+        key: 'gs1sort',
+        type: 'sort',
+        valuePaths: [stateValuePath, cityValuePath],
+        options: {},
+      },
     ],
   };
 
@@ -180,7 +282,10 @@ describe('toWrapped', () => {
 
   describe('with top-level collections', () => {
     test('generates a wrapped value with a generated ID for a collection value', () => {
-      const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      const value = {
+        name: 'Sydney City',
+        address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+      };
       expect(toWrapped(rootCollection, value)).toEqual({
         id: 'locations|-|test-id',
         sid: 'locations|-|test-id',
@@ -192,7 +297,11 @@ describe('toWrapped', () => {
     });
 
     test('generates a wrapped value with a provided ID for a collection value', () => {
-      const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
+      const value = {
+        _id: 'better-id',
+        name: 'Sydney City',
+        address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+      };
       expect(toWrapped(rootCollection, value)).toEqual({
         id: 'locations|-|better-id',
         sid: 'locations|-|better-id',
@@ -204,8 +313,15 @@ describe('toWrapped', () => {
     });
 
     test('generates a wrapped value with a custom separator correctly', () => {
-      const value = { _id: 'better-id', name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-      const customCollection = { ...rootCollection, layout: { ...layout, indexKeySeparator: '#' } };
+      const value = {
+        _id: 'better-id',
+        name: 'Sydney City',
+        address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+      };
+      const customCollection = {
+        ...rootCollection,
+        layout: { ...layout, indexKeySeparator: '#' },
+      };
       expect(toWrapped(customCollection, value)).toEqual({
         id: 'locations#better-id',
         sid: 'locations#better-id',
@@ -216,15 +332,21 @@ describe('toWrapped', () => {
       });
     });
 
-    test('generates a wrapped value with a custom ID generator for a collection value', () => { 
-      const value = { name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-      const customCollection: RootCollectionDefinition = { ...rootCollection, idGenerator: () => String(Math.ceil(Math.random() * 1000)) };
+    test('generates a wrapped value with a custom ID generator for a collection value', () => {
+      const value = {
+        name: 'Sydney City',
+        address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+      };
+      const customCollection: RootCollectionDefinition = {
+        ...rootCollection,
+        idGenerator: () => String(Math.ceil(Math.random() * 1000)),
+      };
       expect(toWrapped(customCollection, value)).toEqual({
         id: expect.stringMatching(/^locations|-|\d{1,4}$/),
         sid: expect.stringMatching(/^locations|-|\d{1,4}$/),
         gs1part: 'locations|-|AU',
         gs1sort: 'locations|-|NSW|-|Sydney',
-        value: { ...value, _id: expect.stringMatching(/\d{1,4}/)},
+        value: { ...value, _id: expect.stringMatching(/\d{1,4}/) },
         type: 'locations',
       });
     });
@@ -243,11 +365,18 @@ describe('toWrapped', () => {
 
     test('throws an exception when the foreign key is missing', () => {
       const value = { lang: 'en', description: 'Sydney' };
-      expect(() => toWrapped(childCollection, value)).toThrowError(InvalidParentIdException);
+      expect(() => toWrapped(childCollection, value)).toThrowError(
+        InvalidParentIdException
+      );
     });
 
     test('uses the provided _id correctly when it is valid', () => {
-      const value = { _id: 'sydney-1-en', location: 'sydney-1', lang: 'en', description: 'Sydney' };
+      const value = {
+        _id: 'sydney-1-en',
+        location: 'sydney-1',
+        lang: 'en',
+        description: 'Sydney',
+      };
       expect(toWrapped(childCollection, value)).toEqual({
         id: 'locations|-|sydney-1',
         sid: 'locations_descriptors|-|sydney-1-en',
@@ -258,9 +387,12 @@ describe('toWrapped', () => {
   });
 
   test('throws an exception when an invalid ID is provided', () => {
-    const value = { _id: 234872, name: 'Sydney City', address: { country: 'AU', state: 'NSW', city: 'Sydney' } };
-    expect(() => toWrapped(rootCollection, value))
-      .toThrow(InvalidIdException);
+    const value = {
+      _id: 234872,
+      name: 'Sydney City',
+      address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+    };
+    expect(() => toWrapped(rootCollection, value)).toThrow(InvalidIdException);
   });
 
   test('generates a wrapped value when some of the extracted keys are all undefined', () => {
@@ -277,10 +409,12 @@ describe('toWrapped', () => {
 
 describe('unwrap', () => {
   test('should just return the value', () => {
-    expect(unwrap({
-      value: { _id: 'test-id', name: 'Sydney' },
-      type: 'test',
-    })).toEqual({ _id: 'test-id', name: 'Sydney' });
+    expect(
+      unwrap({
+        value: { _id: 'test-id', name: 'Sydney' },
+        type: 'test',
+      })
+    ).toEqual({ _id: 'test-id', name: 'Sydney' });
   });
 });
 
@@ -303,18 +437,24 @@ describe('invertMap', () => {
 describe('isSubsetOfKeyPath', () => {
   test('should identify an identical path as a subset', () => {
     expect(isSubsetOfKeyPath(['path'], ['path'])).toBe(true);
-    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0', 'values'])).toBe(true);
+    expect(
+      isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0', 'values'])
+    ).toBe(true);
   });
 
   test('should identify any subset path correctly', () => {
     expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items'])).toBe(true);
-    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0'])).toBe(true);
+    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', '0'])).toBe(
+      true
+    );
   });
 
   test('should fail on paths that are not a true subset', () => {
     expect(isSubsetOfKeyPath(['items'], ['values'])).toBe(false);
     expect(isSubsetOfKeyPath(['items', '0', 'values'], ['values'])).toBe(false);
-    expect(isSubsetOfKeyPath(['items', '0', 'values'], ['items', 'values'])).toBe(false);
+    expect(
+      isSubsetOfKeyPath(['items', '0', 'values'], ['items', 'values'])
+    ).toBe(false);
   });
 
   test('should identify the empty path as a subset', () => {
@@ -326,18 +466,23 @@ describe('isSubsetOfKeyPath', () => {
 
 describe('findMatchingPath', () => {
   const keyPath = ['profile', 'items', '1'];
-  
+
   test('should return undefined for a empty set of paths', () => {
     expect(findMatchingPath([], keyPath)).toBeUndefined();
   });
 
   test('should return undefined when there is no matching paths', () => {
-    expect(findMatchingPath([['items'], ['address', 'line1']], keyPath)).toBeUndefined();
+    expect(
+      findMatchingPath([['items'], ['address', 'line1']], keyPath)
+    ).toBeUndefined();
   });
 
   test('should return the matching path from the keyPaths list', () => {
-    expect(findMatchingPath([['items'], ['profile', 'items'], ['address', 'line1']], keyPath)).toEqual(['profile', 'items']);
+    expect(
+      findMatchingPath(
+        [['items'], ['profile', 'items'], ['address', 'line1']],
+        keyPath
+      )
+    ).toEqual(['profile', 'items']);
   });
 });
-
-

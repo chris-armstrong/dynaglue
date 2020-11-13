@@ -1,6 +1,6 @@
-import { CollectionLayout } from "../base/layout";
-import { buildAndValidateAccessPatterns } from "./extract_keys";
-import { Collection } from "../base/collection";
+import { CollectionLayout } from '../base/layout';
+import { buildAndValidateAccessPatterns } from './extract_keys';
+import { Collection } from '../base/collection';
 
 describe('buildAndValidateAccessPatterns', () => {
   const partitionKeyName = 'identifier';
@@ -36,7 +36,9 @@ describe('buildAndValidateAccessPatterns', () => {
         { indexName: 'index1', partitionKeys: [['department']] },
       ],
     };
-    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(/refers to index in use by another pattern/);
+    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(
+      /refers to index in use by another pattern/
+    );
   });
 
   test('throws when an non-existent index is referenced', () => {
@@ -48,7 +50,9 @@ describe('buildAndValidateAccessPatterns', () => {
         { indexName: 'index50', partitionKeys: [['department']] },
       ],
     };
-    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(/refers to index missing from layout/);
+    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(
+      /refers to index missing from layout/
+    );
   });
 
   test('throws when an access pattern defines sort keys but the referenced index does not', () => {
@@ -56,22 +60,28 @@ describe('buildAndValidateAccessPatterns', () => {
       name: 'staff',
       layout: multiIndexLayout,
       accessPatterns: [
-        { indexName: 'index1', partitionKeys: [['department']], sortKeys: [['discipline']] },
+        {
+          indexName: 'index1',
+          partitionKeys: [['department']],
+          sortKeys: [['discipline']],
+        },
         { indexName: 'index2', partitionKeys: [['email']] },
       ],
     };
-    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(/has sort keys but index .+ does not/);
+    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(
+      /has sort keys but index .+ does not/
+    );
   });
 
   test('throws when an access pattern has no sort keys but the referenced index defines a sort key', () => {
     const collection: Collection = {
       name: 'staff',
       layout: multiIndexLayout,
-      accessPatterns: [
-        { indexName: 'index2', partitionKeys: [['email']] },
-      ],
+      accessPatterns: [{ indexName: 'index2', partitionKeys: [['email']] }],
     };
-    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(/access pattern .+ does not have sort keys but index/);
+    expect(() => buildAndValidateAccessPatterns(collection)).toThrowError(
+      /access pattern .+ does not have sort keys but index/
+    );
   });
 
   test('builds extract keys properly from a correcty defined set of access patterns', () => {
@@ -80,14 +90,33 @@ describe('buildAndValidateAccessPatterns', () => {
       layout: multiIndexLayout,
       accessPatterns: [
         { indexName: 'index1', partitionKeys: [['email']] },
-        { indexName: 'index2', partitionKeys: [['department']], sortKeys: [['discipline']] },
+        {
+          indexName: 'index2',
+          partitionKeys: [['department']],
+          sortKeys: [['discipline']],
+        },
       ],
     };
 
     expect(buildAndValidateAccessPatterns(collection)).toEqual([
-      { type: 'partition', key: 'partkey1', valuePaths: [['email']], options: {} },
-      { type: 'partition', key: 'partkey2', valuePaths: [['department']], options: {} },
-      { type: 'sort', key: 'sortkey2', valuePaths: [['discipline']], options: {} },
+      {
+        type: 'partition',
+        key: 'partkey1',
+        valuePaths: [['email']],
+        options: {},
+      },
+      {
+        type: 'partition',
+        key: 'partkey2',
+        valuePaths: [['department']],
+        options: {},
+      },
+      {
+        type: 'sort',
+        key: 'sortkey2',
+        valuePaths: [['discipline']],
+        options: {},
+      },
     ]);
-  })
+  });
 });

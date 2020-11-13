@@ -1,4 +1,8 @@
-import { getChildCollection, assemblePrimaryKeyValue, unwrap } from '../base/util';
+import {
+  getChildCollection,
+  assemblePrimaryKeyValue,
+  unwrap,
+} from '../base/util';
 import { QueryInput, Key, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
 import { DocumentWithId, WrappedDocument } from '../base/common';
@@ -7,15 +11,15 @@ import { CompositeCondition } from '../base/conditions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 
 /**
-  * The results of a [[findChildren]] operation.
-  */
+ * The results of a [[findChildren]] operation.
+ */
 export type FindChildrenResults = {
   /** the items that were returned in this batch */
   items: DocumentWithId[];
   /** The pagination token. If this value is specified, it means
-    * there is more results for the query. Provide it to another
-    * call to `findChildren` to get the next set of results.
-    */
+   * there is more results for the query. Provide it to another
+   * call to `findChildren` to get the next set of results.
+   */
   nextToken?: Key;
 };
 
@@ -46,22 +50,39 @@ export async function findChildren(
   childCollectionName: string,
   rootObjectId: string,
   nextToken?: Key,
-  options: { limit?: number; scanForward?: boolean; filter?: CompositeCondition } = {},
+  options: {
+    limit?: number;
+    scanForward?: boolean;
+    filter?: CompositeCondition;
+  } = {}
 ): Promise<FindChildrenResults> {
   const childCollection = getChildCollection(ctx, childCollectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
 
-  const { 
-    parentCollectionName, 
-    layout: { primaryKey: { partitionKey, sortKey } }, 
+  const {
+    parentCollectionName,
+    layout: {
+      primaryKey: { partitionKey, sortKey },
+    },
   } = childCollection;
 
-  const parentId = assemblePrimaryKeyValue(parentCollectionName, rootObjectId, childCollection.layout.indexKeySeparator);
-  const childCollectionPrefix = assemblePrimaryKeyValue(childCollectionName, '', childCollection.layout.indexKeySeparator);
+  const parentId = assemblePrimaryKeyValue(
+    parentCollectionName,
+    rootObjectId,
+    childCollection.layout.indexKeySeparator
+  );
+  const childCollectionPrefix = assemblePrimaryKeyValue(
+    childCollectionName,
+    '',
+    childCollection.layout.indexKeySeparator
+  );
 
-  const keyConditionExpression = `${nameMapper.map(partitionKey)} = ${valueMapper.map(parentId)} ` + 
-    `AND begins_with(${nameMapper.map(sortKey)}, ${valueMapper.map(childCollectionPrefix)})`;
+  const keyConditionExpression =
+    `${nameMapper.map(partitionKey)} = ${valueMapper.map(parentId)} ` +
+    `AND begins_with(${nameMapper.map(sortKey)}, ${valueMapper.map(
+      childCollectionPrefix
+    )})`;
   const request: QueryInput = {
     TableName: childCollection.layout.tableName,
     KeyConditionExpression: keyConditionExpression,
@@ -69,13 +90,15 @@ export async function findChildren(
     ExpressionAttributeValues: valueMapper.get(),
     ExclusiveStartKey: nextToken,
     Limit: options?.limit,
-    ScanIndexForward: options?.scanForward ?? true, 
+    ScanIndexForward: options?.scanForward ?? true,
   };
 
   debugDynamo('Query', request);
   const results = await ctx.ddb.query(request).promise();
   return {
-    items: (results.Items||[]).map(item => unwrap(Converter.unmarshall(item) as WrappedDocument)),
+    items: (results.Items || []).map((item) =>
+      unwrap(Converter.unmarshall(item) as WrappedDocument)
+    ),
     nextToken: results.LastEvaluatedKey,
   };
 }

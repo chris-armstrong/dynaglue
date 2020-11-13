@@ -19,7 +19,9 @@ describe('findById', () => {
     const getItemReturnValue = {};
     const ddb = createDynamoMock('getItem', getItemReturnValue);
     const context = createContext((ddb as unknown) as DynamoDB, [collection]);
-    expect(await findById(context, 'test-collection', 'test-id1')).toBeUndefined();
+    expect(
+      await findById(context, 'test-collection', 'test-id1')
+    ).toBeUndefined();
 
     expect(ddb.getItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
@@ -46,7 +48,9 @@ describe('findById', () => {
     const ddb = createDynamoMock('getItem', getItemReturnValue);
     const context = createContext((ddb as unknown) as DynamoDB, [collection]);
 
-    expect(await findById(context, 'test-collection', 'test-id1')).toEqual(item.value);
+    expect(await findById(context, 'test-collection', 'test-id1')).toEqual(
+      item.value
+    );
 
     expect(ddb.getItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
@@ -60,8 +64,13 @@ describe('findById', () => {
   test('works with custom separators correctly', async () => {
     const getItemReturnValue = {};
     const ddb = createDynamoMock('getItem', getItemReturnValue);
-    const customCollection = { ...collection, layout: { ...layout, indexKeySeparator: '@' } };
-    const context = createContext((ddb as unknown) as DynamoDB, [customCollection]);
+    const customCollection = {
+      ...collection,
+      layout: { ...layout, indexKeySeparator: '@' },
+    };
+    const context = createContext((ddb as unknown) as DynamoDB, [
+      customCollection,
+    ]);
     await findById(context, 'test-collection', 'test-id1');
 
     expect(ddb.getItem.mock.calls[0][0]).toEqual({

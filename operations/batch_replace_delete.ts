@@ -1,7 +1,17 @@
-import { BatchWriteItemInput, WriteRequest, Converter, BatchWriteItemRequestMap } from 'aws-sdk/clients/dynamodb';
+import {
+  BatchWriteItemInput,
+  WriteRequest,
+  Converter,
+  BatchWriteItemRequestMap,
+} from 'aws-sdk/clients/dynamodb';
 import VError from 'verror';
 import { DocumentWithId, WrappedDocument } from '../base/common';
-import { getCollection, toWrapped, unwrap, assemblePrimaryKeyValue } from '../base/util';
+import {
+  getCollection,
+  toWrapped,
+  unwrap,
+  assemblePrimaryKeyValue,
+} from '../base/util';
 import { Context } from '../context';
 import debugDynamo from '../debug/debugDynamo';
 import { parseKey } from './batch_utils';
@@ -22,7 +32,7 @@ export type BatchReplaceDescriptor = {
   /** The operation to perform (always `'replace'`) */
   op: 'replace';
   /** The document of the item to be replaced */
-  replaceItem: DocumentWithId; 
+  replaceItem: DocumentWithId;
 };
 
 /**
@@ -39,8 +49,8 @@ export type BatchDeleteDescriptor = {
   op: 'delete';
   /** The item identifier */
   id: string;
-  /** 
-   * For child items, this is the parent object identifier 
+  /**
+   * For child items, this is the parent object identifier
    * (mandatory for root
    * items, left blank for child items).
    */
@@ -51,7 +61,9 @@ export type BatchDeleteDescriptor = {
  * A replace (PutItem) or delete (DeleteItem) request
  * to perform with [[batchReplaceDelete]]
  */
-export type BatchReplaceDeleteDescriptor = BatchReplaceDescriptor | BatchDeleteDescriptor;
+export type BatchReplaceDeleteDescriptor =
+  | BatchReplaceDescriptor
+  | BatchDeleteDescriptor;
 
 /**
  * An exception thrown when a bad set of
@@ -68,93 +80,114 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
 type TableRequestItemTuple = [string, WriteRequest];
 
 export type BatchReplaceDeleteResponse = {
-  unprocessedDescriptors: BatchReplaceDeleteDescriptor[],
+  unprocessedDescriptors: BatchReplaceDeleteDescriptor[];
 };
 
 export const batchReplaceDelete = async (
   ctx: Context,
-  descriptors: BatchReplaceDeleteDescriptor[],
+  descriptors: BatchReplaceDeleteDescriptor[]
 ): Promise<BatchReplaceDeleteResponse> => {
   if (descriptors.length === 0) {
-    throw new InvalidBatchReplaceDeleteDescriptorException('You must specify at least one replace or delete descriptor');
+    throw new InvalidBatchReplaceDeleteDescriptorException(
+      'You must specify at least one replace or delete descriptor'
+    );
   }
   // Because we could be accessing multiple tables, we need
   // the layout to discern the key names when parsing the
   // UnprocessedKeys map.
   const tableLayoutMapping = new Map<string, CollectionLayout>();
 
-  const tableRequestItemTuples: TableRequestItemTuple[] = descriptors.map(descriptor => {
-    const collection = getCollection(ctx, descriptor.collection);
-    tableLayoutMapping.set(collection.layout.tableName, collection.layout);
-    let request: WriteRequest;
-    if (descriptor.op === 'replace') {
-      // replace item
-      request = {
-        PutRequest: {
-          Item: Converter.marshall(toWrapped(collection, descriptor.replaceItem)),
-        },
-      };
-    } else {
-      if (collection.type === 'child' && !descriptor.parentId) {
-        throw new InvalidBatchReplaceDeleteDescriptorException(
-          'BatchDeleteDescriptor must specify parentId for child collections',
-          { collectionName: descriptor.collection, id: descriptor.id },
+  const tableRequestItemTuples: TableRequestItemTuple[] = descriptors.map(
+    (descriptor) => {
+      const collection = getCollection(ctx, descriptor.collection);
+      tableLayoutMapping.set(collection.layout.tableName, collection.layout);
+      let request: WriteRequest;
+      if (descriptor.op === 'replace') {
+        // replace item
+        request = {
+          PutRequest: {
+            Item: Converter.marshall(
+              toWrapped(collection, descriptor.replaceItem)
+            ),
+          },
+        };
+      } else {
+        if (collection.type === 'child' && !descriptor.parentId) {
+          throw new InvalidBatchReplaceDeleteDescriptorException(
+            'BatchDeleteDescriptor must specify parentId for child collections',
+            { collectionName: descriptor.collection, id: descriptor.id }
+          );
+        } else if (collection.type !== 'child' && descriptor.parentId) {
+          throw new InvalidBatchReplaceDeleteDescriptorException(
+            'BatchDeleteDescriptor must not specify parentId for root collections',
+            { collectionname: descriptor.collection, id: descriptor.id }
+          );
+        }
+        const partitionKeyValue = assemblePrimaryKeyValue(
+          collection.type === 'child'
+            ? collection.parentCollectionName
+            : collection.name,
+          descriptor.parentId ?? descriptor.id,
+          collection.layout.indexKeySeparator
         );
-      } else if (collection.type !== 'child' && descriptor.parentId) {
-        throw new InvalidBatchReplaceDeleteDescriptorException(
-          'BatchDeleteDescriptor must not specify parentId for root collections',
-          { collectionname: descriptor.collection, id: descriptor.id },
-        )
+        const sortKeyValue = assemblePrimaryKeyValue(
+          collection.name,
+          descriptor.id,
+          collection.layout.indexKeySeparator
+        );
+        request = {
+          DeleteRequest: {
+            Key: Converter.marshall({
+              [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
+              [collection.layout.primaryKey.sortKey]: sortKeyValue,
+            }),
+          },
+        };
       }
-      const partitionKeyValue = assemblePrimaryKeyValue(
-        collection.type === 'child' ? collection.parentCollectionName : collection.name, 
-        descriptor.parentId ?? descriptor.id, 
-        collection.layout.indexKeySeparator
-      ); 
-      const sortKeyValue = assemblePrimaryKeyValue(
-        collection.name,
-        descriptor.id,
-        collection.layout.indexKeySeparator,
-      );
-      request = {
-        DeleteRequest: {
-          Key: Converter.marshall({
-            [collection.layout.primaryKey.partitionKey]: partitionKeyValue, 
-            [collection.layout.primaryKey.sortKey]: sortKeyValue,
-          }),
-        },
-      };
+      return [collection.layout.tableName, request];
     }
-    return [collection.layout.tableName, request];
-  });
+  );
 
-  const requestItems: BatchWriteItemRequestMap = tableRequestItemTuples.reduce((riMap, [table, request]) => {
-    const items = riMap[table] ?? [];
-    riMap[table] = items;
-    items.push(request);
-    return riMap;
-  }, {} as BatchWriteItemRequestMap);
+  const requestItems: BatchWriteItemRequestMap = tableRequestItemTuples.reduce(
+    (riMap, [table, request]) => {
+      const items = riMap[table] ?? [];
+      riMap[table] = items;
+      items.push(request);
+      return riMap;
+    },
+    {} as BatchWriteItemRequestMap
+  );
 
   const request: BatchWriteItemInput = {
     RequestItems: requestItems,
   };
 
   debugDynamo('batchWriteItem', request);
-  const { UnprocessedItems = { } } = await ctx.ddb.batchWriteItem(request).promise();
+  const { UnprocessedItems = {} } = await ctx.ddb
+    .batchWriteItem(request)
+    .promise();
 
   const unprocessedDescriptors: BatchReplaceDeleteDescriptor[] = [];
   for (const [tableName, unprocessed] of Object.entries(UnprocessedItems)) {
     const tableMapping = tableLayoutMapping.get(tableName);
     if (!tableMapping) {
-      throw new InternalProcessingException(`Could not find table mapping for ${tableName} while parsing UnprocessedKeys`);
+      throw new InternalProcessingException(
+        `Could not find table mapping for ${tableName} while parsing UnprocessedKeys`
+      );
     }
     for (const item of unprocessed) {
       const { PutRequest, DeleteRequest } = item;
       if (PutRequest) {
         const key = parseKey(tableMapping, PutRequest.Item);
-        const wrapped = Converter.unmarshall(PutRequest.Item) as WrappedDocument;
+        const wrapped = Converter.unmarshall(
+          PutRequest.Item
+        ) as WrappedDocument;
         const document = unwrap(wrapped);
-        unprocessedDescriptors.push({ op: 'replace', replaceItem: document, collection: key.collection });
+        unprocessedDescriptors.push({
+          op: 'replace',
+          replaceItem: document,
+          collection: key.collection,
+        });
       } else if (DeleteRequest) {
         const key = parseKey(tableMapping, DeleteRequest.Key);
         unprocessedDescriptors.push({
@@ -167,5 +200,4 @@ export const batchReplaceDelete = async (
   return {
     unprocessedDescriptors,
   };
-}
-
+};

@@ -5,13 +5,14 @@ const DYNAMODB_RESERVED_WORDS = [ 'ABORT', 'ABSOLUTE', 'ACTION', 'ADD', 'AFTER',
 /* eslint-enable */
 
 /**
-  * @internal
-  */
-export const isReservedWord = (word: string): boolean => DYNAMODB_RESERVED_WORDS.includes(word.toUpperCase());
+ * @internal
+ */
+export const isReservedWord = (word: string): boolean =>
+  DYNAMODB_RESERVED_WORDS.includes(word.toUpperCase());
 
 /**
-  * @internal
-  */
+ * @internal
+ */
 export const isSafeAttributeName = (attributeName: string): boolean => {
   if (isReservedWord(attributeName)) {
     return false;

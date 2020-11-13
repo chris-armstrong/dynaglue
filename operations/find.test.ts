@@ -1,4 +1,10 @@
-import { isEqualKey, findAccessPattern, findAccessPatternLayout, assembleQueryValue, find } from './find';
+import {
+  isEqualKey,
+  findAccessPattern,
+  findAccessPatternLayout,
+  assembleQueryValue,
+  find,
+} from './find';
 import { AccessPattern, KeyPath } from '../base/access_pattern';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { createDynamoMock } from '../testutil/dynamo_mock';
@@ -29,7 +35,7 @@ describe('findAccessPattern', () => {
   const layout = {
     tableName: 'test-table',
     primaryKey: { partitionKey: 'part', sortKey: 'sort' },
-    findKeys: [{ indexName: 'index1', partitionKey: 'gsip1' }]
+    findKeys: [{ indexName: 'index1', partitionKey: 'gsip1' }],
   };
   const baseCollection = {
     name: 'test-collection',
@@ -37,53 +43,83 @@ describe('findAccessPattern', () => {
   };
 
   const collectionWithAPs = (...aps: AccessPattern[]): Collection => ({
-    ...baseCollection, accessPatterns: aps,
-  })
+    ...baseCollection,
+    accessPatterns: aps,
+  });
 
   test('when there is no access patterns to search', () => {
-    expect(findAccessPattern(baseCollection, { name: 'chris' })).toBeUndefined();
+    expect(
+      findAccessPattern(baseCollection, { name: 'chris' })
+    ).toBeUndefined();
   });
 
   test('when there is a partition-only key that matches', () => {
     const ap1 = { indexName: 'index1', partitionKeys: [['name']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { name: 'chris' }))
-      .toEqual(ap1);
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), { name: 'chris' })
+    ).toEqual(ap1);
   });
 
   test('when there is a partition-only key that does not match', () => {
     const ap1 = { indexName: 'index1', partitionKeys: [['name']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { email: 'chris@example.com' }))
-      .toBeUndefined();
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), { email: 'chris@example.com' })
+    ).toBeUndefined();
   });
 
   test('when there is a partition-only key that is a partial match', () => {
     const ap1 = { indexName: 'index1', partitionKeys: [['name']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { name: 'Chris', status: 'active' }))
-      .toBeUndefined();
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), {
+        name: 'Chris',
+        status: 'active',
+      })
+    ).toBeUndefined();
   });
 
   test('when there is a composite partition-only key that matches', () => {
     const ap1 = { indexName: 'index1', partitionKeys: [['name'], ['status']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { name: 'Chris', status: 'inactive' }))
-      .toEqual(ap1);
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), {
+        name: 'Chris',
+        status: 'inactive',
+      })
+    ).toEqual(ap1);
   });
 
   test('when there is a composite partition-only key that partial matches', () => {
     const ap1 = { indexName: 'index1', partitionKeys: [['name'], ['status']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { name: 'Chris', department: 'finance' }))
-      .toBeUndefined();
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), {
+        name: 'Chris',
+        department: 'finance',
+      })
+    ).toBeUndefined();
   });
 
   test('when there is a partition and sort key that fully matches', () => {
-    const ap1 = { indexName: 'index1', partitionKeys: [['email']], sortKeys: [['status']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { email: 'chris@example.com', status: 'active' }))
-      .toEqual(ap1);
+    const ap1 = {
+      indexName: 'index1',
+      partitionKeys: [['email']],
+      sortKeys: [['status']],
+    };
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), {
+        email: 'chris@example.com',
+        status: 'active',
+      })
+    ).toEqual(ap1);
   });
 
   test('when there is a partition and sort key that partially matches', () => {
-    const ap1 = { indexName: 'index1', partitionKeys: [['email']], sortKeys: [['status']] };
-    expect(findAccessPattern(collectionWithAPs(ap1), { email: 'chris@example.com' }))
-      .toEqual(ap1);
+    const ap1 = {
+      indexName: 'index1',
+      partitionKeys: [['email']],
+      sortKeys: [['status']],
+    };
+    expect(
+      findAccessPattern(collectionWithAPs(ap1), { email: 'chris@example.com' })
+    ).toEqual(ap1);
   });
 });
 
@@ -103,43 +139,84 @@ describe('findAccessPatternLayout', () => {
 describe('assembleQueryValue', () => {
   test('when there are no key paths it returns undefined', () => {
     const query = {};
-    expect(assembleQueryValue('partition', 'test-collection', query, {})).toBeUndefined();
-    expect(assembleQueryValue('sort', 'test-collection', query, {})).toBeUndefined();
+    expect(
+      assembleQueryValue('partition', 'test-collection', query, {})
+    ).toBeUndefined();
+    expect(
+      assembleQueryValue('sort', 'test-collection', query, {})
+    ).toBeUndefined();
   });
 
   test('when key paths is defined but there is no values to extract', () => {
     const query = {};
     const paths: KeyPath[] = [];
-    expect(assembleQueryValue('partition', 'test-collection', query, {}, paths))
-      .toBe('test-collection');
-    expect(assembleQueryValue('sort', 'test-collection', query, {}, paths))
-      .toBe('test-collection');
+    expect(
+      assembleQueryValue('partition', 'test-collection', query, {}, paths)
+    ).toBe('test-collection');
+    expect(
+      assembleQueryValue('sort', 'test-collection', query, {}, paths)
+    ).toBe('test-collection');
   });
 
   test('when key paths specifies multiple values to extract that exist', () => {
-    const query = { email: 'chris@example.com', 'location.country': 'AU', 'location.state': 'NSW' };
+    const query = {
+      email: 'chris@example.com',
+      'location.country': 'AU',
+      'location.state': 'NSW',
+    };
     const partitionPaths = [['location', 'country'], ['email']];
-    const partitionValue = assembleQueryValue('partition', 'test-collection', query, {}, partitionPaths);
+    const partitionValue = assembleQueryValue(
+      'partition',
+      'test-collection',
+      query,
+      {},
+      partitionPaths
+    );
     expect(partitionValue).toEqual('test-collection|-|AU|-|chris@example.com');
 
     const sortPaths = [['location', 'state']];
-    const sortValue = assembleQueryValue('sort', 'test-collection', query, {}, sortPaths);
+    const sortValue = assembleQueryValue(
+      'sort',
+      'test-collection',
+      query,
+      {},
+      sortPaths
+    );
     expect(sortValue).toEqual('test-collection|-|NSW');
   });
 
   test('when key paths specifies multiple values to extract but one does not exist', () => {
     const query = { 'location.country': 'AU', 'location.state': 'NSW' };
     const partitionPaths = [['location', 'country'], ['email']];
-    const partitionValue = assembleQueryValue('partition', 'test-collection', query, {}, partitionPaths);
+    const partitionValue = assembleQueryValue(
+      'partition',
+      'test-collection',
+      query,
+      {},
+      partitionPaths
+    );
     expect(partitionValue).toEqual('test-collection|-|AU');
   });
 
   test('when a string normaliser is given it applies it to the assembled value', () => {
-    const query = { email: 'chris@example.com', 'location.country': 'AU', 'location.state': 'NSW' };
+    const query = {
+      email: 'chris@example.com',
+      'location.country': 'AU',
+      'location.state': 'NSW',
+    };
 
-    const options = { stringNormalizer: (_: KeyPath, str: string): string => str.trim().toLowerCase() };
+    const options = {
+      stringNormalizer: (_: KeyPath, str: string): string =>
+        str.trim().toLowerCase(),
+    };
     const sortPaths = [['location', 'state']];
-    const sortValue = assembleQueryValue('sort', 'test-collection', query, options, sortPaths);
+    const sortValue = assembleQueryValue(
+      'sort',
+      'test-collection',
+      query,
+      options,
+      sortPaths
+    );
     expect(sortValue).toEqual('test-collection|-|nsw');
   });
 });
@@ -148,7 +225,9 @@ describe('find', () => {
   const layout = {
     tableName: 'test-table',
     primaryKey: { partitionKey: 'part', sortKey: 'sort' },
-    findKeys: [{ indexName: 'index1', partitionKey: 'gsi_p1', sortKey: 'gsi_s1' }]
+    findKeys: [
+      { indexName: 'index1', partitionKey: 'gsi_p1', sortKey: 'gsi_s1' },
+    ],
   };
 
   const collection = {
@@ -158,7 +237,10 @@ describe('find', () => {
       {
         indexName: 'index1',
         partitionKeys: [['location', 'country']],
-        sortKeys: [['location', 'state'], ['location', 'city']],
+        sortKeys: [
+          ['location', 'state'],
+          ['location', 'city'],
+        ],
       },
     ],
   };
@@ -167,8 +249,9 @@ describe('find', () => {
     const ddb = createDynamoMock('query', {});
     const context = createContext((ddb as unknown) as DynamoDB, [collection]);
 
-    expect(find(context, 'test-collection', { email: 'test@example.com'}))
-      .rejects.toThrowError(InvalidQueryException);
+    expect(
+      find(context, 'test-collection', { email: 'test@example.com' })
+    ).rejects.toThrowError(InvalidQueryException);
   });
 
   test('when an access pattern matches it runs the query correctly', async () => {
@@ -185,16 +268,22 @@ describe('find', () => {
 
     const result = await find(context, 'test-collection', query);
     expect(ddb.query).toHaveBeenCalled();
-    expect(ddb.query).lastCalledWith(expect.objectContaining({
-      TableName: layout.tableName,
-      IndexName: 'index1',
-      ExpressionAttributeNames: { '#indexPartitionKey': layout.findKeys[0].partitionKey, '#indexSortKey': layout.findKeys[0].sortKey },
-      ExpressionAttributeValues: {
-        ':value0': Converter.input('test-collection|-|NSW'),
-        ':value1': Converter.input('test-collection|-|AU'),
-      },
-      KeyConditionExpression: '#indexPartitionKey = :value1 AND begins_with(#indexSortKey, :value0)',
-    }));
+    expect(ddb.query).lastCalledWith(
+      expect.objectContaining({
+        TableName: layout.tableName,
+        IndexName: 'index1',
+        ExpressionAttributeNames: {
+          '#indexPartitionKey': layout.findKeys[0].partitionKey,
+          '#indexSortKey': layout.findKeys[0].sortKey,
+        },
+        ExpressionAttributeValues: {
+          ':value0': Converter.input('test-collection|-|NSW'),
+          ':value1': Converter.input('test-collection|-|AU'),
+        },
+        KeyConditionExpression:
+          '#indexPartitionKey = :value1 AND begins_with(#indexSortKey, :value0)',
+      })
+    );
     expect(result).toEqual({ items: [testItem1.value], nextToken: undefined });
 
     const params = ddb.query.mock.calls[0][0];
@@ -212,9 +301,14 @@ describe('find', () => {
       'location.country': 'AU',
       'location.state': 'NSW',
     };
-    const nextToken = { [layout.primaryKey.partitionKey]: { S: 'a'}, [layout.primaryKey.sortKey]: { S: 'b' } }
+    const nextToken = {
+      [layout.primaryKey.partitionKey]: { S: 'a' },
+      [layout.primaryKey.sortKey]: { S: 'b' },
+    };
     await find(context, 'test-collection', query, nextToken);
-    expect(ddb.query).lastCalledWith(expect.objectContaining({ ExclusiveStartKey: nextToken }));
+    expect(ddb.query).lastCalledWith(
+      expect.objectContaining({ ExclusiveStartKey: nextToken })
+    );
   });
 
   it('should pass on a limit parameter when specified', async () => {
@@ -247,15 +341,20 @@ describe('find', () => {
     const filterExpression = {
       'location.suburb': { $beginsWith: 'c' },
     };
-    await find(context, 'test-collection', query, undefined, { limit: 5, filter: filterExpression });
-    expect(ddb.query).lastCalledWith(expect.objectContaining({
-      FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
-      ExpressionAttributeNames: expect.objectContaining({
-        '#attr0': 'location',
-      }),
-      ExpressionAttributeValues: expect.objectContaining({
-        ':value2': Converter.input('c'),
-      }),
-    }));
+    await find(context, 'test-collection', query, undefined, {
+      limit: 5,
+      filter: filterExpression,
+    });
+    expect(ddb.query).lastCalledWith(
+      expect.objectContaining({
+        FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
+        ExpressionAttributeNames: expect.objectContaining({
+          '#attr0': 'location',
+        }),
+        ExpressionAttributeValues: expect.objectContaining({
+          ':value2': Converter.input('c'),
+        }),
+      })
+    );
   });
 });

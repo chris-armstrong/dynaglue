@@ -1,4 +1,4 @@
-import { NameMapper, ValueMapper } from './mappers';
+import { NameMapper } from './mappers';
 import {
   CompositeCondition,
   ConditionValue,
@@ -14,15 +14,33 @@ import { ParseElement, ConditionParseContext } from './conditions_types';
  * @internal
  * Is one of the keys in the object a condition operator
  */
-const isConditionKey = (key: string): boolean => ['$or', '$and', '$eq', '$neq', '$gt', '$gte', '$lt', '$lte', '$between', '$in', '$exists', '$type', '$beginsWith', '$contains']
-  .includes(key);
+const isConditionKey = (key: string): boolean =>
+  [
+    '$or',
+    '$and',
+    '$eq',
+    '$neq',
+    '$gt',
+    '$gte',
+    '$lt',
+    '$lte',
+    '$between',
+    '$in',
+    '$exists',
+    '$type',
+    '$beginsWith',
+    '$contains',
+  ].includes(key);
 
 /**
  * @internal
  * Convert a string to a key path, adding the `value` object prefix.
  */
 const mapKeyPath = (key: string, nameMapper: NameMapper): string =>
-  [nameMapper.map('value', '#value'), ...key.split('.').map(pathElement => nameMapper.map(pathElement))].join('.');
+  [
+    nameMapper.map('value', '#value'),
+    ...key.split('.').map((pathElement) => nameMapper.map(pathElement)),
+  ].join('.');
 
 /**
  * @internal
@@ -34,7 +52,10 @@ const mapKeyPath = (key: string, nameMapper: NameMapper): string =>
  * @param context a context - pass your current NameMapper and ValueMapper, which will be filled out with filter expression parts
  * @returns the condition/filter expression
  */
-export const parseCompositeCondition = (clause: CompositeCondition, context: ConditionParseContext): string => {
+export const parseCompositeCondition = (
+  clause: CompositeCondition,
+  context: ConditionParseContext
+): string => {
   /* eslint-disable @typescript-eslint/no-use-before-define */
   if (Object.keys(clause).length === 1) {
     if ('$and' in clause) {
@@ -53,58 +74,101 @@ export const parseCompositeCondition = (clause: CompositeCondition, context: Con
  * @internal
  * Parse an AND condition expression
  */
-const parseAndCondition = (clause: AndCondition, context: ConditionParseContext): string => {
-  const parsePath: ParseElement[] = [...context.parsePath, { type: 'object', key: '$and' }];
-  const updatedContextForIndex = (index: number): ConditionParseContext => ({ ...context, parsePath: [...parsePath, { type: 'array', index }] });
-  const subclauses = clause.$and.map((clause, index) => parseCompositeCondition(clause, updatedContextForIndex(index)));
+const parseAndCondition = (
+  clause: AndCondition,
+  context: ConditionParseContext
+): string => {
+  const parsePath: ParseElement[] = [
+    ...context.parsePath,
+    { type: 'object', key: '$and' },
+  ];
+  const updatedContextForIndex = (index: number): ConditionParseContext => ({
+    ...context,
+    parsePath: [...parsePath, { type: 'array', index }],
+  });
+  const subclauses = clause.$and.map((clause, index) =>
+    parseCompositeCondition(clause, updatedContextForIndex(index))
+  );
 
-  return subclauses.map(clause => `(${clause})`).join(' AND ');
+  return subclauses.map((clause) => `(${clause})`).join(' AND ');
 };
 
 /**
  * @internal
  * Parse an OR condition expression
  */
-const parseOrCondition = (clause: OrCondition, context: ConditionParseContext): string => {
-  const parsePath: ParseElement[] = [...context.parsePath, { type: 'object', key: '$or' }];
-  const updatedContextForIndex = (index: number): ConditionParseContext => ({ ...context, parsePath: [...parsePath, { type: 'array', index }] });
-  const subclauses = clause.$or.map((clause, index) => parseCompositeCondition(clause, updatedContextForIndex(index)));
+const parseOrCondition = (
+  clause: OrCondition,
+  context: ConditionParseContext
+): string => {
+  const parsePath: ParseElement[] = [
+    ...context.parsePath,
+    { type: 'object', key: '$or' },
+  ];
+  const updatedContextForIndex = (index: number): ConditionParseContext => ({
+    ...context,
+    parsePath: [...parsePath, { type: 'array', index }],
+  });
+  const subclauses = clause.$or.map((clause, index) =>
+    parseCompositeCondition(clause, updatedContextForIndex(index))
+  );
 
-  return subclauses.map(clause => `(${clause})`).join(' OR ');
+  return subclauses.map((clause) => `(${clause})`).join(' OR ');
 };
 
 /**
  * @internal
  * Parse an NOT condition expression.
  */
-const parseNotCondition = (clause: NotCondition, context: ConditionParseContext): string => {
-  const parsePath: ParseElement[] = [...context.parsePath, { type: 'object', key: '$not' }];
+const parseNotCondition = (
+  clause: NotCondition,
+  context: ConditionParseContext
+): string => {
+  const parsePath: ParseElement[] = [
+    ...context.parsePath,
+    { type: 'object', key: '$not' },
+  ];
   const updatedContext = { ...context, parsePath };
   const subclause = parseCompositeCondition(clause.$not, updatedContext);
 
-  return `NOT ${subclause}`; 
+  return `NOT ${subclause}`;
 };
 
 /**
- * @internal 
+ * @internal
  *
  * Parse a key paths object (one that has key paths as keys and
  * operators as values.
  */
-const parseKeyPathsAndClause = (clause: KeyPathsAndClause, context: ConditionParseContext): string => {
+const parseKeyPathsAndClause = (
+  clause: KeyPathsAndClause,
+  context: ConditionParseContext
+): string => {
   const { nameMapper, valueMapper, parsePath } = context;
   const paths = Object.keys(clause);
   if (paths.length < 1) {
-    throw new InvalidCompositeConditionException('expected at least one key path with operator', parsePath);
+    throw new InvalidCompositeConditionException(
+      'expected at least one key path with operator',
+      parsePath
+    );
   }
   const conditionKey = paths.find(isConditionKey);
   if (conditionKey) {
-    const keyParsePath: ParseElement[] = [...parsePath, { type: 'object', key: conditionKey }];
-    throw new InvalidCompositeConditionException(`unexpected condition key`, keyParsePath);
+    const keyParsePath: ParseElement[] = [
+      ...parsePath,
+      { type: 'object', key: conditionKey },
+    ];
+    throw new InvalidCompositeConditionException(
+      `unexpected condition key`,
+      keyParsePath
+    );
   }
   const clauses: string[] = [];
   Object.entries(clause).forEach(([path, condition]) => {
-    const keyParsePath: ParseElement[] = [...parsePath, { type: 'object', key: path }];
+    const keyParsePath: ParseElement[] = [
+      ...parsePath,
+      { type: 'object', key: path },
+    ];
     let clauseString;
     const simpleClause = (operator: string, value: ConditionValue): string => {
       const valueName = valueMapper.map(value);
@@ -130,43 +194,75 @@ const parseKeyPathsAndClause = (clause: KeyPathsAndClause, context: ConditionPar
       clauseString = simpleClause('<=', value);
     } else if ('$between' in condition) {
       const value = condition.$between;
-      if (!value || typeof value !== 'object' || typeof value.$lte === 'undefined' || typeof value.$gte === 'undefined') {
-        throw new InvalidCompositeConditionException('$between must be an object with values for $lte and $gte', keyParsePath);
+      if (
+        !value ||
+        typeof value !== 'object' ||
+        typeof value.$lte === 'undefined' ||
+        typeof value.$gte === 'undefined'
+      ) {
+        throw new InvalidCompositeConditionException(
+          '$between must be an object with values for $lte and $gte',
+          keyParsePath
+        );
       }
       const { $lte, $gte } = condition.$between;
       const value1 = valueMapper.map($gte);
       const value2 = valueMapper.map($lte);
-      clauseString = `${mapKeyPath(path, nameMapper)} BETWEEN ${value1} AND ${value2}`;
+      clauseString = `${mapKeyPath(
+        path,
+        nameMapper
+      )} BETWEEN ${value1} AND ${value2}`;
     } else if ('$in' in condition) {
       if (!Array.isArray(condition.$in)) {
-        throw new InvalidCompositeConditionException('$in must be an array of values', keyParsePath);
+        throw new InvalidCompositeConditionException(
+          '$in must be an array of values',
+          keyParsePath
+        );
       }
       const values = condition.$in;
       if (values.length > 100) {
-        throw new InvalidCompositeConditionException('$in condition has too many values', keyParsePath);
+        throw new InvalidCompositeConditionException(
+          '$in condition has too many values',
+          keyParsePath
+        );
       } else if (values.length === 0) {
-        throw new InvalidCompositeConditionException('$in condition must have at least one value', keyParsePath);
+        throw new InvalidCompositeConditionException(
+          '$in condition must have at least one value',
+          keyParsePath
+        );
       }
-      const valueNames = values.map(value => valueMapper.map(value));
-      clauseString = `${mapKeyPath(path, nameMapper)} IN (${valueNames.join(',')})`;
+      const valueNames = values.map((value) => valueMapper.map(value));
+      clauseString = `${mapKeyPath(path, nameMapper)} IN (${valueNames.join(
+        ','
+      )})`;
     } else if ('$exists' in condition) {
-      const fn = condition.$exists ? 'attribute_exists' : 'attribute_not_exists';
+      const fn = condition.$exists
+        ? 'attribute_exists'
+        : 'attribute_not_exists';
       clauseString = `${fn}(${mapKeyPath(path, nameMapper)})`;
     } else if ('$type' in condition) {
       const valueName = valueMapper.map(condition.$type);
-      clauseString = `attribute_type(${mapKeyPath(path, nameMapper)},${valueName})`;
+      clauseString = `attribute_type(${mapKeyPath(
+        path,
+        nameMapper
+      )},${valueName})`;
     } else if ('$beginsWith' in condition) {
       const valueName = valueMapper.map(condition.$beginsWith);
-      clauseString = `begins_with(${mapKeyPath(path, nameMapper)},${valueName})`;
+      clauseString = `begins_with(${mapKeyPath(
+        path,
+        nameMapper
+      )},${valueName})`;
     } else if ('$contains' in condition) {
       const valueName = valueMapper.map(condition.$contains);
       clauseString = `contains(${mapKeyPath(path, nameMapper)},${valueName})`;
-    } else throw new InvalidCompositeConditionException('unknown operator', keyParsePath);
+    } else
+      throw new InvalidCompositeConditionException(
+        'unknown operator',
+        keyParsePath
+      );
 
     clauses.push(clauseString);
   });
 
   return clauses.join(' AND ');
 };
-
-
