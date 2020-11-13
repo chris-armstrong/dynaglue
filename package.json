@@ -2,9 +2,11 @@
   "name": "dynaglue",
   "version": "0.1.0-alpha.17",
   "description": "dynaglue",
-  "main": "dist/index.js",
+  "main": "dist/dynaglue.cjs.js",
+  "module": "dist/dynaglue.esm.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "preconstruct build",
     "compile": "tsc",
     "doc": "typedoc index.ts",
     "lint": "eslint '**/*.ts'",
@@ -15,35 +17,36 @@
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "^7.7.4",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.7.4",
-    "@babel/plugin-proposal-optional-chaining": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
-    "@babel/preset-typescript": "^7.7.4",
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.12.1",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-typescript": "^7.12.1",
     "@types/debug": "^4.1.5",
     "@types/jest": "^24.9.1",
-    "@types/lodash": "^4.14.146",
-    "@types/node": "^12.12.7",
-    "@typescript-eslint/eslint-plugin": "^2.9.0",
-    "@typescript-eslint/parser": "^2.9.0",
-    "aws-sdk": "^2.663.0",
+    "@types/lodash": "^4.14.165",
+    "@types/node": "^12.19.4",
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "@typescript-eslint/parser": "^2.34.0",
+    "aws-sdk": "^2.791.0",
     "babel-jest": "^24.9.0",
-    "eslint": "^6.7.1",
+    "eslint": "^6.8.0",
     "jest": "^24.9.0",
     "prettier": "^2.1.2",
-    "ts-node": "^8.5.2",
-    "typedoc": "^0.16.8",
-    "typescript": "^3.7.2"
+    "ts-node": "^8.10.2",
+    "typedoc": "^0.16.11",
+    "typescript": "^4.0.5"
   },
   "peerDependencies": {
     "aws-sdk": "^2.562.0"
   },
   "dependencies": {
-    "@types/validator": "^13.0.0",
-    "@types/verror": "^1.10.3",
-    "debug": "^4.1.1",
-    "lodash": "^4.17.15",
-    "validator": "^13.0.0",
+    "@preconstruct/cli": "^1.1.34",
+    "@types/validator": "^13.1.0",
+    "@types/verror": "^1.10.4",
+    "debug": "^4.2.0",
+    "lodash": "^4.17.20",
+    "validator": "^13.1.17",
     "verror": "^1.10.0"
   },
   "repository": {
@@ -54,5 +57,8 @@
     "tabWidth": 2,
     "semi": true,
     "singleQuote": true
+  },
+  "preconstruct": {
+    "source": "index.ts"
   }
 }

@@ -12,7 +12,10 @@ import {
 import isEqual from 'lodash/isEqual';
 import { describeKeyPath } from '../base/access_pattern';
 
-type Opaque<K, T> = T & { __TYPE__: K };
+/**
+ * @internal
+ */
+export type Opaque<K, T> = T & { __TYPE__: K };
 
 /**
  * A dynaglue context. Use [[createContext]] to instantiate.

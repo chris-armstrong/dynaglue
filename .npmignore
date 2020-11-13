@@ -1,5 +1,6 @@
 base/
 context/
+debug/
 operations/
 testutil/
 index.ts
@@ -16,4 +17,6 @@ docs/
 .babelrc
 .eslintrc.js
 typedoc.json
-
+.eslintignore
+.prettierignore
+rollup.config.js
