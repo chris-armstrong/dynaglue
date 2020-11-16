@@ -13,7 +13,7 @@ import isEqual from 'lodash/isEqual';
 import { describeKeyPath } from '../base/access_pattern';
 
 /**
- * @internal
+ * An opaquely defined type
  */
 export type Opaque<K, T> = T & { __TYPE__: K };
 
