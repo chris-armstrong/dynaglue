@@ -18,7 +18,7 @@ export class ConflictException extends VError {
 export class InvalidIdException extends VError {
   constructor(id: any) {
     super(
-      { info: { id }, name: 'invaild_id.error' },
+      { info: { id }, name: 'invalid_id.error' },
       'The provided document has an invalid ID'
     );
   }
