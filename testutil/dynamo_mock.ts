@@ -7,7 +7,7 @@ export const createAWSError = (code: string, message: string): Error =>
 
 export function createDynamoMock(
   methodName: string,
-  returnValue: object
+  returnValue: Record<string, object>
 ): DynamoMock<typeof returnValue> {
   return {
     [methodName]: jest.fn().mockReturnValue({
@@ -19,7 +19,7 @@ export function createDynamoMock(
 export function createDynamoMockError(
   methodName: string,
   error: Error
-): DynamoMock<{}> {
+): DynamoMock<any> {
   return {
     [methodName]: jest.fn().mockReturnValue({
       promise: jest.fn().mockRejectedValue(error),

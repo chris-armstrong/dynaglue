@@ -4,7 +4,6 @@ import {
   Converter,
   BatchWriteItemRequestMap,
 } from 'aws-sdk/clients/dynamodb';
-import VError from 'verror';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import {
   getCollection,

@@ -8,7 +8,7 @@ const logger = debug('dynaglue:dynamodb');
  *
  * Helper for logging dynamo requests
  */
-function debugDynamo(operation: string, request: object): void {
+function debugDynamo(operation: string, request: Record<string, any>): void {
   logger('operation=%s request=%O', operation, request);
 }
 

@@ -24,7 +24,7 @@ import debugDynamo from '../debug/debugDynamo';
 export async function insert(
   context: Context,
   collectionName: string,
-  value: object
+  value: Record<string, any>
 ): Promise<DocumentWithId> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped(collection, value);

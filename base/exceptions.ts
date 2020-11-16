@@ -118,7 +118,7 @@ export class InvalidIndexedFieldValueException extends VError {
 export class InvalidQueryException extends VError {
   constructor(
     message: string,
-    { collection, query }: { collection: string; query: object }
+    { collection, query }: { collection: string; query: Record<string, any> }
   ) {
     super(
       {
@@ -227,7 +227,7 @@ export class InvalidCompositeConditionException extends VError {
  * [[batchReplaceDelete]]
  */
 export class InvalidBatchReplaceDeleteDescriptorException extends VError {
-  constructor(message: string, info?: object) {
+  constructor(message: string, info?: Record<string, any>) {
     super({ name: 'invalid_batch_replace_descriptor', info }, message);
   }
 }
