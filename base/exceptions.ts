@@ -220,3 +220,14 @@ export class InvalidCompositeConditionException extends VError {
     );
   }
 }
+
+/**
+ * An exception thrown when a bad set of
+ * [[BatchReplaceDeleteDescriptor]] is given to
+ * [[batchReplaceDelete]]
+ */
+export class InvalidBatchReplaceDeleteDescriptorException extends VError {
+  constructor(message: string, info?: object) {
+    super({ name: 'invalid_batch_replace_descriptor', info }, message);
+  }
+}

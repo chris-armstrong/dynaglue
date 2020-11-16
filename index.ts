@@ -33,6 +33,7 @@ export {
   ConfigurationException,
   ConflictException,
   IndexNotFoundException,
+  InvalidBatchReplaceDeleteDescriptorException,
   InvalidCompositeConditionException,
   InvalidIdException,
   InvalidIndexedFieldValueException,
@@ -43,3 +44,5 @@ export {
 } from './base/exceptions';
 export type { WrappedDocument, DocumentWithId } from './base/common';
 export type { SetValuesDocument, Updates } from './operations/update_by_id';
+export type { FindQuery, FindOptions, FindResults } from './operations/find';
+export type { FindChildrenOptions, FindChildrenResults } from './operations/find_children';

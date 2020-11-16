@@ -164,6 +164,30 @@ const getQueryOperator = (
   }
   throw new Error('unreachable');
 };
+
+/**
+ * The options for a [[find]] operation
+ */
+export type FindOptions = {
+  /**
+   * The sort key condition to use
+   */
+  queryOperator?: QueryOperator;
+  /*
+   * The item limit to pass to DynamoDB
+   */
+  limit?: number;
+  /**
+   * `true` (default) to scan the index forward, `false` to scan it backward
+   */
+  scanForward?: boolean;
+  /**
+   * An optional filter expression for the
+   * find operation
+   */
+  filter?: CompositeCondition;
+};
+
 /**
  * Find an item using one of its collection's access patterns
  *
@@ -225,12 +249,7 @@ export async function find(
   collectionName: string,
   query: FindQuery,
   nextToken?: Key,
-  options: {
-    queryOperator?: QueryOperator;
-    limit?: number;
-    scanForward?: boolean;
-    filter?: CompositeCondition;
-  } = {}
+  options: FindOptions = {}
 ): Promise<FindResults> {
   const collection = getCollection(ctx, collectionName);
 

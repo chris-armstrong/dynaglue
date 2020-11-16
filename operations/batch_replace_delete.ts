@@ -16,7 +16,10 @@ import { Context } from '../context';
 import debugDynamo from '../debug/debugDynamo';
 import { parseKey } from './batch_utils';
 import { CollectionLayout } from '../base/layout';
-import { InternalProcessingException } from '../base/exceptions';
+import {
+  InternalProcessingException,
+  InvalidBatchReplaceDeleteDescriptorException,
+} from '../base/exceptions';
 
 /**
  * A replace (PutItem) request to perform with
@@ -64,17 +67,6 @@ export type BatchDeleteDescriptor = {
 export type BatchReplaceDeleteDescriptor =
   | BatchReplaceDescriptor
   | BatchDeleteDescriptor;
-
-/**
- * An exception thrown when a bad set of
- * [[BatchReplaceDeleteDescriptor]] is given to
- * [[batchReplaceDelete]]
- */
-export class InvalidBatchReplaceDeleteDescriptorException extends VError {
-  constructor(message: string, info?: object) {
-    super({ name: 'invalid_batch_replace_descriptor', info }, message);
-  }
-}
 
 /** @internal */
 type TableRequestItemTuple = [string, WriteRequest];

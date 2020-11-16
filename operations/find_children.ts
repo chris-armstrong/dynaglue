@@ -24,6 +24,25 @@ export type FindChildrenResults = {
 };
 
 /**
+ * The options to a [[findChildren]] operation
+ */
+export type FindChildrenOptions = {
+  /*
+   * The item limit to pass to DynamoDB
+   */
+  limit?: number;
+  /**
+   * `true` (default) to scan the index forward, `false` to scan it backward
+   */
+  scanForward?: boolean;
+  /**
+   * An optional filter expression for the
+   * find operation
+   */
+  filter?: CompositeCondition;
+};
+
+/**
  * Find all the child objects of a root (top-level) object.
  *
  * The parent collection is determined by the reference in the
@@ -50,11 +69,7 @@ export async function findChildren(
   childCollectionName: string,
   rootObjectId: string,
   nextToken?: Key,
-  options: {
-    limit?: number;
-    scanForward?: boolean;
-    filter?: CompositeCondition;
-  } = {}
+  options: FindChildrenOptions = {}
 ): Promise<FindChildrenResults> {
   const childCollection = getChildCollection(ctx, childCollectionName);
   const nameMapper = createNameMapper();
