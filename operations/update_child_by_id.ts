@@ -41,7 +41,7 @@ export async function updateChildById(
   const key = {
     [collection.layout.primaryKey.partitionKey]: {
       S: assemblePrimaryKeyValue(
-        collectionName,
+        collection.parentCollectionName,
         parentObjectId,
         collection.layout.indexKeySeparator
       ),
