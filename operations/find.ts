@@ -43,9 +43,9 @@ export type FindQuery = { [matchKey: string]: string };
 /**
  * The results of a [[find]] operation.
  */
-export type FindResults = {
+export type FindResults<DocumentType extends DocumentWithId> = {
   /** The items in this batch of results */
-  items: DocumentWithId[];
+  items: DocumentType[];
   /** The pagination token. This value is specified when
    * there are more results to fetch; pass it to another [[find]] call
    * to get the next batch. It will be `undefined` when there is no
@@ -244,13 +244,13 @@ export type FindOptions = {
  * @throws [[`CollectionNotFoundException`]] when the collection is not found in the context
  * @throws [[`InvalidQueryException`]] when the access pattern cannot be found for the specfied combination of query key paths
  */
-export async function find(
+export async function find<DocumentType extends DocumentWithId>(
   ctx: Context,
   collectionName: string,
   query: FindQuery,
   nextToken?: Key,
   options: FindOptions = {}
-): Promise<FindResults> {
+): Promise<FindResults<DocumentType>> {
   const collection = getCollection(ctx, collectionName);
 
   const ap = findAccessPattern(collection, query);
@@ -333,7 +333,9 @@ export async function find(
     LastEvaluatedKey: lastEvaluatedKey,
   } = await ctx.ddb.query(queryRequest).promise();
   const unwrappedItems = items
-    ? items.map((item) => unwrap(Converter.unmarshall(item) as WrappedDocument))
+    ? items.map((item) =>
+        unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)
+      )
     : [];
   return {
     items: unwrappedItems,

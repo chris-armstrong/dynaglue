@@ -21,14 +21,14 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * @returns the inserted / replaced value
  * @throws {CollectionNotFoundException} when the collection is not found
  */
-export async function replace(
+export async function replace<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   value: Record<string, any>,
   options: { condition?: CompositeCondition } = {}
-): Promise<DocumentWithId> {
+): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
-  const wrapped = toWrapped(collection, value);
+  const wrapped = toWrapped<DocumentType>(collection, value);
 
   let conditionExpression;
   const nameMapper = createNameMapper();

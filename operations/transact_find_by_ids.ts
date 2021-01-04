@@ -23,10 +23,10 @@ export type TransactFindByIdDescriptor = {
   rootId?: string;
 };
 
-export const transactFindByIds = async (
+export const transactFindByIds = async <DocumentType extends DocumentWithId>(
   ctx: Context,
   items: TransactFindByIdDescriptor[]
-): Promise<(DocumentWithId | null)[]> => {
+): Promise<(DocumentType | null)[]> => {
   if (items.length === 0) {
     throw new InvalidFindDescriptorException(
       'At least one find descriptor must be specified'
@@ -73,7 +73,7 @@ export const transactFindByIds = async (
     let item = null;
     if (response.Item) {
       const unmarshalled = Converter.unmarshall(response.Item);
-      item = unwrap(unmarshalled as WrappedDocument);
+      item = unwrap(unmarshalled as WrappedDocument<DocumentType>);
     }
     returnedItems.push(item);
   }

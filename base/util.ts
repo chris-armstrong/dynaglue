@@ -130,8 +130,8 @@ export const transformTTLValue = (ttlValue: any): number | undefined => {
  *
  * Extract a transformed TTL value from a document
  */
-export const extractTransformedTTLValue = (
-  value: DocumentWithId,
+export const extractTransformedTTLValue = <DocumentType extends DocumentWithId>(
+  value: DocumentType,
   valuePath: KeyPath
 ): number | undefined => {
   const ttlValue = get(value, valuePath);
@@ -144,13 +144,13 @@ export const extractTransformedTTLValue = (
  * Given a collection, and set of key paths from an access pattern, create a value that can be used
  * to look up an index attribute. This is used to generate the value to store in the indexed attribute.
  */
-export const constructKeyValue = (
+export const constructKeyValue = <DocumentType extends DocumentWithId>(
   type: 'partition' | 'sort' | 'ttl',
   collectionName: string,
   separator: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
-  value: DocumentWithId
+  value: DocumentType
 ): string | number | undefined => {
   if (type === 'ttl') {
     return extractTransformedTTLValue(value, valuePaths[0]);
@@ -183,19 +183,19 @@ export const constructKeyValue = (
  *
  * Generate the wrapped value of a document to store in a table for a collection.
  */
-export const toWrapped = (
+export const toWrapped = <DocumentType extends DocumentWithId>(
   collection: CollectionDefinition,
   value: { [key: string]: any }
-): WrappedDocument => {
-  let updatedValue: DocumentWithId;
+): WrappedDocument<DocumentType> => {
+  let updatedValue: DocumentType;
   if (typeof value._id !== 'undefined') {
     if (typeof value._id !== 'string') {
       throw new InvalidIdException(value._id);
     }
-    updatedValue = value as DocumentWithId;
+    updatedValue = value as DocumentType;
   } else {
     const _id = collection.idGenerator ? collection.idGenerator() : newId();
-    updatedValue = { ...value, _id };
+    updatedValue = { ...value, _id } as DocumentType;
   }
 
   const extractedKeys = collection.wrapperExtractKeys
@@ -258,7 +258,9 @@ export const toWrapped = (
 /**
  * @internal
  */
-export const unwrap = (document: WrappedDocument): DocumentWithId => {
+export const unwrap = <DocumentType extends DocumentWithId>(
+  document: WrappedDocument<DocumentType>
+): DocumentType => {
   return document.value;
 };
 

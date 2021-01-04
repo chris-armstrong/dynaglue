@@ -27,7 +27,11 @@ export type {
   KeyPath,
   NormaliserFunction,
 } from './base/access_pattern';
-export type { Collection, RootCollection, ChildCollection } from './base/collection';
+export type {
+  Collection,
+  RootCollection,
+  ChildCollection,
+} from './base/collection';
 export {
   CollectionNotFoundException,
   ConfigurationException,
@@ -45,5 +49,8 @@ export {
 export type { WrappedDocument, DocumentWithId } from './base/common';
 export type { SetValuesDocument, Updates } from './operations/update_by_id';
 export type { FindQuery, FindOptions, FindResults } from './operations/find';
-export type { FindChildrenOptions, FindChildrenResults } from './operations/find_children';
+export type {
+  FindChildrenOptions,
+  FindChildrenResults,
+} from './operations/find_children';
 export type { CompositeCondition } from './base/conditions';

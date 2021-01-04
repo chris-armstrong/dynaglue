@@ -172,7 +172,7 @@ export const batchReplaceDelete = async (
         const key = parseKey(tableMapping, PutRequest.Item);
         const wrapped = Converter.unmarshall(
           PutRequest.Item
-        ) as WrappedDocument;
+        ) as WrappedDocument<DocumentWithId>;
         const document = unwrap(wrapped);
         unprocessedDescriptors.push({
           op: 'replace',

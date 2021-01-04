@@ -5,7 +5,7 @@ import {
   assemblePrimaryKeyValue,
   getRootCollection,
 } from '../base/util';
-import { WrappedDocument } from '../base/common';
+import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 import { CompositeCondition } from '../base/conditions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
@@ -22,12 +22,12 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * `undefined` if not found
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
-export async function deleteById(
+export async function deleteById<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   id: string,
   options: { condition?: CompositeCondition } = {}
-): Promise<any> {
+): Promise<DocumentType | undefined> {
   const collection = getRootCollection(context, collectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
@@ -62,7 +62,7 @@ export async function deleteById(
   const result = await context.ddb.deleteItem(request).promise();
   if (result.Attributes) {
     const wrapped = Converter.unmarshall(result.Attributes);
-    return unwrap(wrapped as WrappedDocument);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;
 }

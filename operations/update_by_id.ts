@@ -263,7 +263,7 @@ export const mapAccessPatterns = (
   }
   if (ttlKeyPath) {
     const updateAction = createUpdateActionForTTLKey(
-      collection.layout.ttlAttribute!,
+      collection.layout.ttlAttribute!, // we've already asserted this in context creation
       ttlKeyPath,
       updates
     );
@@ -290,13 +290,13 @@ export const mapAccessPatterns = (
  * value. Shares most of the code between updateById and updateChildById
  *
  */
-export async function updateInternal(
+export async function updateInternal<DocumentType extends DocumentWithId>(
   ctx: Context,
   collection: Collection,
   key: Key,
   updates: Updates,
   options: { condition?: CompositeCondition }
-): Promise<DocumentWithId> {
+): Promise<DocumentType> {
   const updatePaths: string[] = Object.keys(updates);
   if (updatePaths.length === 0) {
     throw new InvalidUpdatesException(
@@ -375,7 +375,9 @@ export async function updateInternal(
   const unmarshalledAttributes = Converter.unmarshall(
     result.Attributes as AttributeMap
   );
-  const updatedDocument = unwrap(unmarshalledAttributes as WrappedDocument);
+  const updatedDocument = unwrap(
+    unmarshalledAttributes as WrappedDocument<DocumentType>
+  );
   return updatedDocument;
 }
 
@@ -400,13 +402,13 @@ export async function updateInternal(
  * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
  * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
  */
-export async function updateById(
+export async function updateById<DocumentType extends DocumentWithId>(
   ctx: Context,
   collectionName: string,
   objectId: string,
   updates: Updates,
   options: { condition?: CompositeCondition } = {}
-): Promise<DocumentWithId> {
+): Promise<DocumentType> {
   const collection = getRootCollection(ctx, collectionName);
 
   const key = {

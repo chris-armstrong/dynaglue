@@ -28,14 +28,14 @@ import { CompositeCondition } from '../base/conditions';
  * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
  * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
  */
-export async function updateChildById(
+export async function updateChildById<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   objectId: string,
   parentObjectId: string,
   updates: Updates,
   options: { condition?: CompositeCondition } = {}
-): Promise<DocumentWithId> {
+): Promise<DocumentType> {
   const collection = getChildCollection(context, collectionName);
 
   const key = {

@@ -8,6 +8,7 @@
   "scripts": {
     "build": "preconstruct build",
     "compile": "tsc",
+    "postinstall": "npm run build",
     "doc": "typedoc index.ts",
     "lint": "eslint '**/*.ts'",
     "test": "jest",

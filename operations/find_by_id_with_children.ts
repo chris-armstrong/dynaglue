@@ -12,7 +12,7 @@ import { CollectionNotFoundException } from '../base/exceptions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import debugDynamo from '../debug/debugDynamo';
 
-export type FindByIdWithChildrenResult = {
+export type FindByIdWithChildrenResult<DocumentType extends DocumentWithId> = {
   /**
    * The root object.
    *
@@ -24,13 +24,17 @@ export type FindByIdWithChildrenResult = {
    * with the previous `nextToken` and keep checking `root`
    * on each set of results.
    */
-  root?: DocumentWithId;
+  root?: DocumentType;
   /**
    * The child objects, organised by collection names.
    *
    * Similar to the root object, you must check each page
    * of results for children, which will come back based
    * on index order and scan direction.
+   *
+   * NOTE: These are typed as DocumentWithId: you will need
+   * to typecast each of the child collections based on the name
+   * you specify
    */
   children: { [collection: string]: DocumentWithId[] };
 
@@ -178,14 +182,14 @@ export type FindByIdWithChildrenResult = {
  * @returns the root and/or child objects found, along with a `nextToken` if there is more results
  *
  */
-export const findByIdWithChildren = async (
+export const findByIdWithChildren = async <DocumentType extends DocumentWithId>(
   ctx: Context,
   rootCollectionName: string,
   rootObjectId: string,
   childCollectionNames?: string[],
   nextToken?: Key,
   options: { limit?: number; scanForward?: boolean } = {}
-): Promise<FindByIdWithChildrenResult> => {
+): Promise<FindByIdWithChildrenResult<DocumentType>> => {
   const collection = getCollection(ctx, rootCollectionName);
   let childCollections;
   if (childCollectionNames) {
@@ -260,14 +264,14 @@ export const findByIdWithChildren = async (
     .query(request)
     .promise();
 
-  let root: DocumentWithId | undefined;
+  let root: DocumentType | undefined;
   const children: { [collection: string]: DocumentWithId[] } = fromPairs(
     allChildCollectionNames.map((name) => [name, []])
   );
   for (const item of Items) {
-    const attributes = Converter.unmarshall(item) as WrappedDocument;
+    const attributes = Converter.unmarshall(item) as WrappedDocument<any>;
     if (attributes.type === rootCollectionName) {
-      root = unwrap(attributes);
+      root = unwrap(attributes) as DocumentType;
     } else {
       children[attributes.type] = children[attributes.type] ?? [];
       children[attributes.type].push(unwrap(attributes));

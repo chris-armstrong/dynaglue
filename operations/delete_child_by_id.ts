@@ -24,13 +24,13 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * `undefined` if not found
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
-export async function deleteChildById(
+export async function deleteChildById<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   id: string,
   rootObjectId: string,
   options: { condition?: CompositeCondition } = {}
-): Promise<DocumentWithId | undefined> {
+): Promise<DocumentType | undefined> {
   const collection = getChildCollection(context, collectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
@@ -65,7 +65,7 @@ export async function deleteChildById(
   const result = await context.ddb.deleteItem(request).promise();
   if (result.Attributes) {
     const wrapped = Converter.unmarshall(result.Attributes);
-    return unwrap(wrapped as WrappedDocument);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;
 }

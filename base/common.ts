@@ -3,7 +3,6 @@
  * is not provided, one will be generated on insert.
  */
 export type DocumentWithId = {
-  [key: string]: any;
   _id: string;
 };
 
@@ -11,7 +10,7 @@ export type DocumentWithId = {
  * A wrapped document, as it is written to DynamoDB.
  * You should not have to manipulate this type directly.
  */
-export type WrappedDocument = {
+export type WrappedDocument<DocumentType extends DocumentWithId> = {
   type: string;
-  value: DocumentWithId;
+  value: DocumentType;
 };
