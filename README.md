@@ -1,6 +1,6 @@
 # Dynaglue
 
-*dynaglue* is an opinionated JavaScript library that makes single-table designs in DynamoDB easier
+*dynaglue* is an opinionated TypeScript/JavaScript library that makes single-table designs in DynamoDB easier
 to query and update.
 
 ```sh
@@ -17,6 +17,14 @@ onto your table's indexes, and wraps it all up with simple and foolproof Mongo-l
 
 See [Motivation](#Motivation) (below) for a more detailed explanation.
 
+## Benefits
+
+* Adds a rigourous model that makes it easy to implement numerous single-table patterns
+* Simple, Mongo-like interface to update and query your data
+* Easy to use query and filter expression syntax
+* Supports most of the DynamoDB functionality
+* Fully TypeScript-enabled API
+
 ## Getting Started
 
 A comprehensive [Getting Started Guide](https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide) is
@@ -30,9 +38,9 @@ also contains useful information about the operations and types you need to use 
 
 ## Status
 
-This project is currently in progress (alpha). **Its API may change during this period**, so take care and keep an eye on updates for now.
+This project is currently in progress (alpha) but mostly feature complete. **Its API may change during this period**, so take care and keep an eye on updates for now.
 
-It's quite feature complete, barring some specific items (like batch read/write, transacions, projection expressions, capacity numbers).
+It's quite feature complete, barring some specific items (like full transactions support, projection expressions, and returning capacity numbers).
 
 Please try it out, report bugs, suggest improvements or submit a PR.
 
@@ -112,15 +120,15 @@ const updatedItem = await updateById(ctx, 'users', user4._id, {
 
 ## Prerequisite Knowledge
 
-This library assumes you have a good understanding of DynamoDB partition and sort keys, primary and secondary indexes,
-and assumes you understand how single-table designs work in theory.
+This library assumes you have a good understanding of DynamoDB basics and some understanding
+of single-table modelling.
 
-If you're unsure what any of this means, first learn how to build applications using DynamoDB:
+If you need to get started, these are some good resources:
 
 * [DynamoDB Guide](https://www.dynamodbguide.com/)
 * [Getting Started with DynamoDB - AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html)
 
-more advanced DynamoDB modelling:
+more advanced DynamoDB modelling, including single-table design:
 
 * [The DynamoDB Book](https://www.dynamodbbook.com/) **HIGHLY RECOMMENDED**
 * [Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan](https://www.youtube.com/watch?v=HaEPXoXVf2k)
@@ -128,7 +136,7 @@ more advanced DynamoDB modelling:
 * [How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly](https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/)
 * [From relational DB to single DynamoDB table: a step-by-step exploration](https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/)
 
-and on the merits of single table vs multi table design (this library is mostly agnostic):
+and if you want to debate the usefulness of a single-table approach:
 
 * [Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail](https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/)
 * [Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie](https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices)
@@ -145,11 +153,10 @@ which will print out the queries it executes.
 
 ## Motivation
 
-I've learnt that in order to leverage DynamoDB properly, you must first:
+Apparently to use DynamoDB efficiently, you must:
 
 * purge yourself of any sensible knowledge of database design such as normalisation
-* know exactly how your application will access its data for now and all time (in
-  other words, it helps to be psychic)
+* know exactly how your application will access its data for now and into the future
 * pack multiple values into the same field in order to implement fast composite-key and
   hierarchical data lookups
 * mix multiple data structures together in the same table, distinguished only by
@@ -184,33 +191,21 @@ shared an index or table).
 
 This is a list of current limitations:
 
-* *It is highly opinionated about how data is stored.* Using this for existing
-  applications is going to require a data migration at the very least (there
-  are plans to add some flexibility around separators and important attribute
-  names)
-* *It is not possible to use projected attributes on GSIs with the current data layout*
-  *to control index storage and return value size.* 
-* *Only string types for values used to build indexes.* Obviously numbers
-  and dates are useful for sort key expressions, but they require more
+* *Opinionated* - the library follows popular practice on implementing a single-table design,
+  but it makes some assumptions about how you want to store your data
+* *No projection expression support* 
+* *No support for projected indexes* - all GSIs are assumed to project all the data. This
+  library may support in the future splitting up your document so that you can use projected indexes to
+  limit data in some indexes.
+* *Only string types for values used to build indexes.* Obviously numbers are also useful for sort key expressions, but they require more
   sophisticated handling than the library currently supports
-* *Basic adjacency list support*
-  see the new APIs: 
-    * [`ChildCollection` type](https://chris-armstrong.github.io/dynaglue/interfaces/childcollection.html)
-    * [`findChildren`](https://chris-armstrong.github.io/dynaglue/globals.html#findchildren) 
-    * [`findChildById`](https://chris-armstrong.github.io/dynaglue/globals.html#findchildbyid) 
-    * [`findByIdWithChildren`](https://chris-armstrong.github.io/dynaglue/globals.html#findbyidwithchildren) 
-    * [`updateChildById`](https://chris-armstrong.github.io/dynaglue/globals.html#updatechildbyid) 
-  and examples:
-    * [`basic_children.ts` example](https://github.com/chris-armstrong/dynaglue/blob/master/examples/basic_children.ts)
-    * [`adjacency_list.ts` example](https://github.com/chris-armstrong/dynaglue/blob/master/examples/adjacency_list.ts)
-* *Batch Read/Write and Transaction Support is still to be done*
+* *Batch Read/Write and Transaction Support is still in progress*
 * *No write sharding support for low-variance partition keys.* (NOTE: This isn't important for most use cases)
   If you have hot partition keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
   and you query them on one of those values relentlessly, you will get a
   hot partition. The normal solution is to add a suffix spread between a given
   set of values (e.g. 0-19) so that when it is queried on status the query can
   be split over 20 partitions instead of one.
-* *This library may not reflect "best practice"* 
 
 ## Contributing
 
@@ -222,7 +217,7 @@ without further engagement.
 
 ## License
 
-Copyright 2019-2020 Christopher Armstrong
+Copyright 2019-2021 Christopher Armstrong
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
