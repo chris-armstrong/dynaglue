@@ -28,7 +28,7 @@ export async function replace<DocumentType extends DocumentWithId>(
   options: { condition?: CompositeCondition } = {}
 ): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
-  const wrapped = toWrapped(collection, value);
+  const wrapped = toWrapped<DocumentType>(collection, value);
 
   let conditionExpression;
   const nameMapper = createNameMapper();

@@ -5,7 +5,7 @@ import {
   assemblePrimaryKeyValue,
   getRootCollection,
 } from '../base/util';
-import { WrappedDocument } from '../base/common';
+import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 
 /**
@@ -17,11 +17,11 @@ import debugDynamo from '../debug/debugDynamo';
  * @returns the stored value, or `undefined` if not found
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
-export async function findById(
+export async function findById<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   id: string
-): Promise<any> {
+): Promise<DocumentType | undefined> {
   const collection = getRootCollection(context, collectionName);
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
@@ -42,7 +42,7 @@ export async function findById(
   const result = await context.ddb.getItem(request).promise();
   if (result.Item) {
     const wrapped = Converter.unmarshall(result.Item);
-    return unwrap(wrapped as WrappedDocument);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;
 }

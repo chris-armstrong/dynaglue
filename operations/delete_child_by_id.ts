@@ -65,7 +65,7 @@ export async function deleteChildById<DocumentType extends DocumentWithId>(
   const result = await context.ddb.deleteItem(request).promise();
   if (result.Attributes) {
     const wrapped = Converter.unmarshall(result.Attributes);
-    return unwrap(wrapped as WrappedDocument);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;
 }

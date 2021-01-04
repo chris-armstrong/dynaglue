@@ -64,13 +64,13 @@ export type FindChildrenOptions = {
  * @param options.filter an optional filter expression to apply
  * @throws {CollectionNotFoundException} when the collection is not found in the context
  */
-export async function findChildren(
+export async function findChildren<DocumentType extends DocumentWithId>(
   ctx: Context,
   childCollectionName: string,
   rootObjectId: string,
   nextToken?: Key,
   options: FindChildrenOptions = {}
-): Promise<FindChildrenResults> {
+): Promise<FindChildrenResults<DocumentType>> {
   const childCollection = getChildCollection(ctx, childCollectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
@@ -112,7 +112,7 @@ export async function findChildren(
   const results = await ctx.ddb.query(request).promise();
   return {
     items: (results.Items || []).map((item) =>
-      unwrap(Converter.unmarshall(item) as WrappedDocument)
+      unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)
     ),
     nextToken: results.LastEvaluatedKey,
   };

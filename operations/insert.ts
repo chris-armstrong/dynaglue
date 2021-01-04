@@ -27,7 +27,7 @@ export async function insert<DocumentType extends DocumentWithId>(
   value: Record<string, any>
 ): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
-  const wrapped = toWrapped(collection, value);
+  const wrapped = toWrapped<DocumentType>(collection, value);
   let request: PutItemInput;
   if (collection.type === 'child') {
     request = {
