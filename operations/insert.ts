@@ -21,11 +21,11 @@ import debugDynamo from '../debug/debugDynamo';
  * @returns a copy of the inserted value, with appended `_id` field if not provided
  * @throws {ConflictException} when an item with the same _id already exists
  */
-export async function insert(
+export async function insert<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
   value: Record<string, any>
-): Promise<DocumentWithId> {
+): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped(collection, value);
   let request: PutItemInput;

@@ -13,9 +13,9 @@ import { createNameMapper, createValueMapper } from '../base/mappers';
 /**
  * The results of a [[findChildren]] operation.
  */
-export type FindChildrenResults = {
+export type FindChildrenResults<DocumentType extends DocumentWithId> = {
   /** the items that were returned in this batch */
-  items: DocumentWithId[];
+  items: DocumentType[];
   /** The pagination token. If this value is specified, it means
    * there is more results for the query. Provide it to another
    * call to `findChildren` to get the next set of results.

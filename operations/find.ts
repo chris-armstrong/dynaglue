@@ -43,9 +43,9 @@ export type FindQuery = { [matchKey: string]: string };
 /**
  * The results of a [[find]] operation.
  */
-export type FindResults = {
+export type FindResults<DocumentType extends DocumentWithId> = {
   /** The items in this batch of results */
-  items: DocumentWithId[];
+  items: DocumentType[];
   /** The pagination token. This value is specified when
    * there are more results to fetch; pass it to another [[find]] call
    * to get the next batch. It will be `undefined` when there is no
