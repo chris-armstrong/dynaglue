@@ -375,7 +375,9 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
   const unmarshalledAttributes = Converter.unmarshall(
     result.Attributes as AttributeMap
   );
-  const updatedDocument = unwrap(unmarshalledAttributes as WrappedDocument<DocumentType>);
+  const updatedDocument = unwrap(
+    unmarshalledAttributes as WrappedDocument<DocumentType>
+  );
   return updatedDocument;
 }
 

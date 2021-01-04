@@ -150,7 +150,7 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
   separator: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
-  value: DocumentType,
+  value: DocumentType
 ): string | number | undefined => {
   if (type === 'ttl') {
     return extractTransformedTTLValue(value, valuePaths[0]);
@@ -258,7 +258,9 @@ export const toWrapped = <DocumentType extends DocumentWithId>(
 /**
  * @internal
  */
-export const unwrap = <DocumentType extends DocumentWithId>(document: WrappedDocument<DocumentType>): DocumentType => {
+export const unwrap = <DocumentType extends DocumentWithId>(
+  document: WrappedDocument<DocumentType>
+): DocumentType => {
   return document.value;
 };
 

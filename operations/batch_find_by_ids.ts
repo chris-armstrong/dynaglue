@@ -130,7 +130,9 @@ export const batchFindByIds = async (
   };
   for (const items of Object.values(Responses)) {
     for (const item of items) {
-      const unmarshalled = Converter.unmarshall(item) as WrappedDocument<DocumentWithId>;
+      const unmarshalled = Converter.unmarshall(item) as WrappedDocument<
+        DocumentWithId
+      >;
       const collection = getCollection(ctx, unmarshalled.type);
       const document = unwrap(unmarshalled);
       const collectionMap =

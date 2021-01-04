@@ -333,7 +333,9 @@ export async function find<DocumentType extends DocumentWithId>(
     LastEvaluatedKey: lastEvaluatedKey,
   } = await ctx.ddb.query(queryRequest).promise();
   const unwrappedItems = items
-    ? items.map((item) => unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>))
+    ? items.map((item) =>
+        unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)
+      )
     : [];
   return {
     items: unwrappedItems,
