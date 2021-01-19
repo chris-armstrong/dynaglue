@@ -1,8 +1,6 @@
 import { NameMapper, ValueMapper } from './mappers';
 
 /**
- * @internal
- *
  * An element in the expression parse tree, used
  * to assist error messaging.
  */
