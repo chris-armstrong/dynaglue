@@ -7,6 +7,7 @@
 	<meta name="description" content="Documentation for dynaglue">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
@@ -51,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../globals.html">Globals</a>
+					<a href="../modules.html">dynaglue</a>
 				</li>
 				<li>
 					<a href="accesspattern.html">AccessPattern</a>
@@ -69,7 +70,7 @@
 					<div class="lead">
 						<p>A <strong>access pattern</strong> defines how to copy values from the entities
 							in a collection into an index. They are used to permit indexed
-						queryies with the <a href="../globals.html#find">find</a> operation.</p>
+						queryies with the <a href="../modules.html#find">find</a> operation.</p>
 					</div>
 					<p>In order to index values, you must first have defined a GSI in
 					your <a href="collectionlayout.html">collection&#39;s layout</a>.</p>
@@ -87,27 +88,27 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-external">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="accesspattern.html#indexname" class="tsd-kind-icon">index<wbr>Name</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="accesspattern.html#options" class="tsd-kind-icon">options</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="accesspattern.html#partitionkeys" class="tsd-kind-icon">partition<wbr>Keys</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="accesspattern.html#sortkeys" class="tsd-kind-icon">sort<wbr>Keys</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="accesspattern.html#indexname" class="tsd-kind-icon">index<wbr>Name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="accesspattern.html#options" class="tsd-kind-icon">options</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="accesspattern.html#partitionkeys" class="tsd-kind-icon">partition<wbr>Keys</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="accesspattern.html#sortkeys" class="tsd-kind-icon">sort<wbr>Keys</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-external">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="indexname" class="tsd-anchor"></a>
 					<h3>index<wbr>Name</h3>
 					<div class="tsd-signature tsd-kind-icon">index<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/bf951b1/base/access_pattern.ts#L40">base/access_pattern.ts:40</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/f41beef/base/access_pattern.ts#L40">base/access_pattern.ts:40</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -116,13 +117,13 @@
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="options" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> options</h3>
-					<div class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">:</span> <a href="../globals.html#accesspatternoptions" class="tsd-signature-type">AccessPatternOptions</a></div>
+					<div class="tsd-signature tsd-kind-icon">options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">AccessPatternOptions</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/bf951b1/base/access_pattern.ts#L54">base/access_pattern.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/f41beef/base/access_pattern.ts#L54">base/access_pattern.ts:54</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -131,35 +132,35 @@
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="partitionkeys" class="tsd-anchor"></a>
 					<h3>partition<wbr>Keys</h3>
-					<div class="tsd-signature tsd-kind-icon">partition<wbr>Keys<span class="tsd-signature-symbol">:</span> <a href="../globals.html#keypath" class="tsd-signature-type">KeyPath</a><span class="tsd-signature-symbol">[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">partition<wbr>Keys<span class="tsd-signature-symbol">:</span> <a href="../modules.html#keypath" class="tsd-signature-type" data-tsd-kind="Type alias">KeyPath</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/bf951b1/base/access_pattern.ts#L46">base/access_pattern.ts:46</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/f41beef/base/access_pattern.ts#L46">base/access_pattern.ts:46</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The <a href="../globals.html#keypath">key paths</a> to extract and store in the partition key.</p>
+							<p>The <a href="../modules.html#keypath">key paths</a> to extract and store in the partition key.</p>
 						</div>
 						<p>Key paths specified for a partition key must be present in documents
-						stored in the associated <a href="../globals.html#collection">Collection</a>.</p>
+						stored in the associated <a href="../modules.html#collection">Collection</a>.</p>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="sortkeys" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> sort<wbr>Keys</h3>
-					<div class="tsd-signature tsd-kind-icon">sort<wbr>Keys<span class="tsd-signature-symbol">:</span> <a href="../globals.html#keypath" class="tsd-signature-type">KeyPath</a><span class="tsd-signature-symbol">[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">sort<wbr>Keys<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../modules.html#keypath" class="tsd-signature-type" data-tsd-kind="Type alias">KeyPath</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/bf951b1/base/access_pattern.ts#L52">base/access_pattern.ts:52</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/f41beef/base/access_pattern.ts#L52">base/access_pattern.ts:52</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The <a href="../globals.html#keypath">key paths</a> to extract and store in the sort key.</p>
+							<p>The <a href="../modules.html#keypath">key paths</a> to extract and store in the sort key.</p>
 						</div>
 						<p>Leave this value unspecified if your GSI does not have a sort key. If it does
 						but you don&#39;t want a sort key, populate it with an empty array</p>
@@ -170,8 +171,8 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="../globals.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="../modules.html">Exports</a>
 					</li>
 				</ul>
 			</nav>
@@ -179,19 +180,19 @@
 				<ul class="before-current">
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-is-external">
+					<li class="current tsd-kind-interface">
 						<a href="accesspattern.html" class="tsd-kind-icon">Access<wbr>Pattern</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="accesspattern.html#indexname" class="tsd-kind-icon">index<wbr>Name</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="accesspattern.html#options" class="tsd-kind-icon">options</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="accesspattern.html#partitionkeys" class="tsd-kind-icon">partition<wbr>Keys</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="accesspattern.html#sortkeys" class="tsd-kind-icon">sort<wbr>Keys</a>
 							</li>
 						</ul>
@@ -207,6 +208,12 @@
 	<div class="container">
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+			</ul>
 		</div>
 	</div>
 </footer>

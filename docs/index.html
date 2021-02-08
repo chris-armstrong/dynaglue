@@ -7,6 +7,7 @@
 	<meta name="description" content="Documentation for dynaglue">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
@@ -49,11 +50,6 @@
 	</div>
 	<div class="tsd-page-title">
 		<div class="container">
-			<ul class="tsd-breadcrumb">
-				<li>
-					<a href="globals.html">Globals</a>
-				</li>
-			</ul>
 			<h1>dynaglue</h1>
 		</div>
 	</div>
@@ -65,9 +61,10 @@
 				<a href="#dynaglue" id="dynaglue" style="color: inherit; text-decoration: none;">
 					<h1>Dynaglue</h1>
 				</a>
-				<p><em>dynaglue</em> is an opinionated JavaScript library that makes single-table designs in DynamoDB easier
+				<p><em>dynaglue</em> is an opinionated TypeScript/JavaScript library that makes single-table designs in DynamoDB easier
 				to query and update.</p>
-				<pre><code class="language-sh">npm install dynaglue</code></pre>
+				<pre><code class="language-sh"><span style="color: #000000">npm install dynaglue</span>
+</code></pre>
 				<a href="#rationale" id="rationale" style="color: inherit; text-decoration: none;">
 					<h2>Rationale</h2>
 				</a>
@@ -76,6 +73,16 @@
 				<p><em>dynaglue</em> takes the hassle out of managing your data with a straightforward way to declare its mapping
 				onto your table&#39;s indexes, and wraps it all up with simple and foolproof Mongo-like API.</p>
 				<p>See <a href="#Motivation">Motivation</a> (below) for a more detailed explanation.</p>
+				<a href="#benefits" id="benefits" style="color: inherit; text-decoration: none;">
+					<h2>Benefits</h2>
+				</a>
+				<ul>
+					<li>Adds a rigourous model that makes it easy to implement numerous single-table patterns</li>
+					<li>Simple, Mongo-like interface to update and query your data</li>
+					<li>Easy to use query and filter expression syntax</li>
+					<li>Supports most of the DynamoDB functionality</li>
+					<li>Fully TypeScript-enabled API</li>
+				</ul>
 				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
 					<h2>Getting Started</h2>
 				</a>
@@ -88,92 +95,93 @@
 				<a href="#status" id="status" style="color: inherit; text-decoration: none;">
 					<h2>Status</h2>
 				</a>
-				<p>This project is currently in progress (alpha). <strong>Its API may change during this period</strong>, so take care and keep an eye on updates for now.</p>
-				<p>It&#39;s quite feature complete, barring some specific items (like batch read/write, transacions, projection expressions, capacity numbers).</p>
+				<p>This project is currently in progress (alpha) but mostly feature complete. <strong>Its API may change during this period</strong>, so take care and keep an eye on updates for now.</p>
+				<p>It&#39;s quite feature complete, barring some specific items (like full transactions support, projection expressions, and returning capacity numbers).</p>
 				<p>Please try it out, report bugs, suggest improvements or submit a PR.</p>
 				<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
 					<h2>Usage Example</h2>
 				</a>
-				<pre><code class="language-typescript"><span class="hljs-comment">// Declare the layout of your table (its primary and secondary indexes and their key names)</span>
-<span class="hljs-keyword">const</span> layout = {
-  <span class="hljs-attr">tableName</span>: <span class="hljs-string">&#x27;my-table&#x27;</span>,
-  <span class="hljs-attr">primaryKey</span>: { <span class="hljs-attr">partitionKey</span>: <span class="hljs-string">&#x27;id&#x27;</span>, <span class="hljs-attr">sortKey</span>: <span class="hljs-string">&#x27;collection&#x27;</span> },
-  <span class="hljs-attr">findKeys</span>: [
-    <span class="hljs-comment">// 2 GSIs =&gt; up to 2 extra access patterns per collection</span>
-    { <span class="hljs-attr">indexName</span>: <span class="hljs-string">&#x27;gs2&#x27;</span>, <span class="hljs-attr">partitionKey</span>: <span class="hljs-string">&#x27;gs2p&#x27;</span>, <span class="hljs-attr">sortKey</span>: <span class="hljs-string">&#x27;gs2s&#x27;</span> },
-    { <span class="hljs-attr">indexName</span>: <span class="hljs-string">&#x27;gs3&#x27;</span>, <span class="hljs-attr">partitionKey</span>: <span class="hljs-string">&#x27;gs3p&#x27;</span>, <span class="hljs-attr">sortKey</span>: <span class="hljs-string">&#x27;gs3s&#x27;</span> },
-  ],
-};
+				<pre><code class="language-typescript"><span style="color: #008000">// Declare the layout of your table (its primary and secondary indexes and their key names)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">layout</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">tableName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-table&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">primaryKey:</span><span style="color: #000000"> { </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;collection&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">  </span><span style="color: #001080">findKeys:</span><span style="color: #000000"> [</span>
+<span style="color: #000000">    </span><span style="color: #008000">// 2 GSIs =&gt; up to 2 extra access patterns per collection</span>
+<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2p&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2s&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3p&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3s&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">  ],</span>
+<span style="color: #000000">};</span>
 
-<span class="hljs-comment">// Declare a collection for each data type (like a Mongo collection)</span>
-<span class="hljs-keyword">const</span> usersCollection = {
-  <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;users&#x27;</span>,
-  layout,
-  <span class="hljs-comment">// access patterns that are mapped to indexes in the table layout</span>
-  <span class="hljs-attr">accessPatterns</span>: [
-    <span class="hljs-comment">// 1. Find users by their email address on GSI2</span>
-    { <span class="hljs-attr">indexName</span>: <span class="hljs-string">&#x27;gs2&#x27;</span>, <span class="hljs-attr">partitionKeys</span>: [], <span class="hljs-attr">sortKeys</span>: [[<span class="hljs-string">&#x27;email&#x27;</span>]] },
-    <span class="hljs-comment">// 2. Find users by their team (and optionally, employee code)</span>
-    { <span class="hljs-attr">indexName</span>: <span class="hljs-string">&#x27;gs3&#x27;</span>, <span class="hljs-attr">partitionKeys</span>: [[<span class="hljs-string">&#x27;team&#x27;</span>, <span class="hljs-string">&#x27;id&#x27;</span>]], <span class="hljs-attr">sortKeys</span>: [[<span class="hljs-string">&#x27;team&#x27;</span>, <span class="hljs-string">&#x27;employeeCode&#x27;</span>]] },
-  ],
-};
-<span class="hljs-keyword">const</span> ddb = <span class="hljs-keyword">new</span> AWS.DynamoDB();
-<span class="hljs-keyword">const</span> ctx = createContext(ddb, [usersCollection]);
+<span style="color: #008000">// Declare a collection for each data type (like a Mongo collection)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">usersCollection</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">layout</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #008000">// access patterns that are mapped to indexes in the table layout</span>
+<span style="color: #000000">  </span><span style="color: #001080">accessPatterns:</span><span style="color: #000000"> [</span>
+<span style="color: #000000">    </span><span style="color: #008000">// 1. Find users by their email address on GSI2</span>
+<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKeys:</span><span style="color: #000000"> [], </span><span style="color: #001080">sortKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;email&#039;</span><span style="color: #000000">]] },</span>
+<span style="color: #000000">    </span><span style="color: #008000">// 2. Find users by their team (and optionally, employee code)</span>
+<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;team&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;id&#039;</span><span style="color: #000000">]], </span><span style="color: #001080">sortKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;team&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;employeeCode&#039;</span><span style="color: #000000">]] },</span>
+<span style="color: #000000">  ],</span>
+<span style="color: #000000">};</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ddb</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #0070C1">AWS</span><span style="color: #000000">.</span><span style="color: #795E26">DynamoDB</span><span style="color: #000000">();</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ctx</span><span style="color: #000000"> = </span><span style="color: #795E26">createContext</span><span style="color: #000000">(</span><span style="color: #001080">ddb</span><span style="color: #000000">, [</span><span style="color: #001080">usersCollection</span><span style="color: #000000">]);</span>
 
-<span class="hljs-comment">// Insert users into collection (auto-generated IDs)</span>
-<span class="hljs-keyword">const</span> user1 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, {
-  <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Anayah Dyer&#x27;</span>,
-  <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;anayahd@example.com&#x27;</span>,
-  <span class="hljs-attr">team</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;team-code-1&#x27;</span>, <span class="hljs-attr">employeeCode</span>: <span class="hljs-string">&#x27;AC-1&#x27;</span> },
-});
-<span class="hljs-keyword">const</span> user2 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, {
-  <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Ruairidh Hughes&#x27;</span>,
-  <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;ruairidhh@example.com&#x27;</span>,
-  <span class="hljs-attr">team</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;team-code-1&#x27;</span>, <span class="hljs-attr">employeeCode</span>: <span class="hljs-string">&#x27;AC-2&#x27;</span> },
-});
-<span class="hljs-keyword">const</span> user3 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, {
-  <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Giles Major&#x27;</span>,
-  <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;giles@example.com&#x27;</span>,
-  <span class="hljs-attr">team</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;team-code-2&#x27;</span>, <span class="hljs-attr">employeeCode</span>: <span class="hljs-string">&#x27;GT-5&#x27;</span> },
-});
-<span class="hljs-keyword">const</span> user4 = <span class="hljs-keyword">await</span> insert(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, {
-  <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Lance Alles&#x27;</span>,
-  <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;lance@example.com&#x27;</span>,
-  <span class="hljs-attr">team</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;team-code-2&#x27;</span>, <span class="hljs-attr">employeeCode</span>: <span class="hljs-string">&#x27;GT-6&#x27;</span> },
-});
+<span style="color: #008000">// Insert users into collection (auto-generated IDs)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user1</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
+<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Anayah Dyer&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;anayahd@example.com&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-1&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">});</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
+<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Ruairidh Hughes&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;ruairidhh@example.com&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-2&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">});</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user3</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
+<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Giles Major&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;giles@example.com&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-5&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">});</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user4</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
+<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Lance Alles&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;lance@example.com&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-6&#039;</span><span style="color: #000000"> },</span>
+<span style="color: #000000">});</span>
 
-<span class="hljs-comment">// Find a user by ID (uses primary index)</span>
-<span class="hljs-keyword">const</span> foundUser = <span class="hljs-keyword">await</span> findById(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, user2._id);
-<span class="hljs-comment">// =&gt; { _id: &#x27;...&#x27;, name: &#x27;Ruairidh Hughes&#x27;, ... }</span>
+<span style="color: #008000">// Find a user by ID (uses primary index)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">foundUser</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">findById</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, </span><span style="color: #001080">user2</span><span style="color: #000000">.</span><span style="color: #001080">_id</span><span style="color: #000000">);</span>
+<span style="color: #008000">// =&gt; { _id: &#039;...&#039;, name: &#039;Ruairidh Hughes&#039;, ... }</span>
 
-<span class="hljs-comment">// Find a user by email (access pattern 1)</span>
-<span class="hljs-keyword">const</span> userByEmail = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, { <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;anayahd@example.com&#x27;</span> });
-<span class="hljs-comment">// =&gt; [{ _id: &#x27;...&#x27;, name: &#x27;Anayah Dyer&#x27;, ... }]</span>
+<span style="color: #008000">// Find a user by email (access pattern 1)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">userByEmail</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;anayahd@example.com&#039;</span><span style="color: #000000"> });</span>
+<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Anayah Dyer&#039;, ... }]</span>
 
-<span class="hljs-comment">// Find all users in a team (access pattern 2)</span>
-<span class="hljs-keyword">const</span> usersInTeam2 = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, { <span class="hljs-string">&#x27;team.id&#x27;</span>: <span class="hljs-string">&#x27;team-code-2&#x27;</span> });
-<span class="hljs-comment">// =&gt; [{ _id: &#x27;...&#x27;, name: &#x27;Giles Major&#x27;, ... }, { _id: &#x27;...&#x27;, name: &#x27;Lance Alles&#x27;, ... }]</span>
+<span style="color: #008000">// Find all users in a team (access pattern 2)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">usersInTeam2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #A31515">&#039;team.id&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000"> });</span>
+<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Giles Major&#039;, ... }, { _id: &#039;...&#039;, name: &#039;Lance Alles&#039;, ... }]</span>
 
-<span class="hljs-comment">// Find user by teamId and employeeCode (access pattern 2)</span>
-<span class="hljs-keyword">const</span> specificUser = <span class="hljs-keyword">await</span> find(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, { <span class="hljs-string">&#x27;team.id&#x27;</span>: <span class="hljs-string">&#x27;team-code-1&#x27;</span>, <span class="hljs-attr">employeeCode</span>: <span class="hljs-string">&#x27;AC-2&#x27;</span> });
-<span class="hljs-comment">// =&gt; [{ _id: &#x27;...&#x27;, name: &#x27;Ruairidh Hughes&#x27;, ... }]</span>
+<span style="color: #008000">// Find user by teamId and employeeCode (access pattern 2)</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">specificUser</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #A31515">&#039;team.id&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-2&#039;</span><span style="color: #000000"> });</span>
+<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Ruairidh Hughes&#039;, ... }]</span>
 
-<span class="hljs-comment">// Update an item</span>
-<span class="hljs-keyword">const</span> updatedItem = <span class="hljs-keyword">await</span> updateById(ctx, <span class="hljs-string">&#x27;users&#x27;</span>, user4._id, {
-  <span class="hljs-string">&#x27;team.employeeCode&#x27;</span>: <span class="hljs-string">&#x27;GT-10&#x27;</span>,
-  <span class="hljs-string">&#x27;name&#x27;</span>: <span class="hljs-string">&#x27;James Alles&#x27;</span>,
-});</code></pre>
+<span style="color: #008000">// Update an item</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">updatedItem</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">updateById</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, </span><span style="color: #001080">user4</span><span style="color: #000000">.</span><span style="color: #001080">_id</span><span style="color: #000000">, {</span>
+<span style="color: #000000">  </span><span style="color: #A31515">&#039;team.employeeCode&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-10&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #A31515">&#039;name&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;James Alles&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">});</span>
+</code></pre>
 				<a href="#prerequisite-knowledge" id="prerequisite-knowledge" style="color: inherit; text-decoration: none;">
 					<h2>Prerequisite Knowledge</h2>
 				</a>
-				<p>This library assumes you have a good understanding of DynamoDB partition and sort keys, primary and secondary indexes,
-				and assumes you understand how single-table designs work in theory.</p>
-				<p>If you&#39;re unsure what any of this means, first learn how to build applications using DynamoDB:</p>
+				<p>This library assumes you have a good understanding of DynamoDB basics and some understanding
+				of single-table modelling.</p>
+				<p>If you need to get started, these are some good resources:</p>
 				<ul>
 					<li><a href="https://www.dynamodbguide.com/">DynamoDB Guide</a></li>
 					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html">Getting Started with DynamoDB - AWS Documentation</a></li>
 				</ul>
-				<p>more advanced DynamoDB modelling:</p>
+				<p>more advanced DynamoDB modelling, including single-table design:</p>
 				<ul>
 					<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a> <strong>HIGHLY RECOMMENDED</strong></li>
 					<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
@@ -181,7 +189,7 @@
 					<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
 					<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
 				</ul>
-				<p>and on the merits of single table vs multi table design (this library is mostly agnostic):</p>
+				<p>and if you want to debate the usefulness of a single-table approach:</p>
 				<ul>
 					<li><a href="https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/">Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail</a></li>
 					<li><a href="https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices">Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie</a></li>
@@ -190,16 +198,16 @@
 					<h2>Debugging</h2>
 				</a>
 				<p>You can see what it is doing to DynamoDB by running your code with the environment variable:</p>
-				<pre><code class="language-bash"><span class="hljs-built_in">export</span> DEBUG=dynaglue:*</code></pre>
+				<pre><code class="language-bash"><span style="color: #0000FF">export</span><span style="color: #000000"> DEBUG=dynaglue:*</span>
+</code></pre>
 				<p>which will print out the queries it executes.</p>
 				<a href="#motivation" id="motivation" style="color: inherit; text-decoration: none;">
 					<h2>Motivation</h2>
 				</a>
-				<p>I&#39;ve learnt that in order to leverage DynamoDB properly, you must first:</p>
+				<p>Apparently to use DynamoDB efficiently, you must:</p>
 				<ul>
 					<li>purge yourself of any sensible knowledge of database design such as normalisation</li>
-					<li>know exactly how your application will access its data for now and all time (in
-					other words, it helps to be psychic)</li>
+					<li>know exactly how your application will access its data for now and into the future</li>
 					<li>pack multiple values into the same field in order to implement fast composite-key and
 					hierarchical data lookups</li>
 					<li>mix multiple data structures together in the same table, distinguished only by
@@ -229,35 +237,21 @@
 				</a>
 				<p>This is a list of current limitations:</p>
 				<ul>
-					<li><em>It is highly opinionated about how data is stored.</em> Using this for existing
-						applications is going to require a data migration at the very least (there
-						are plans to add some flexibility around separators and important attribute
-					names)</li>
-					<li><em>It is not possible to use projected attributes on GSIs with the current data layout</em>
-					<em>to control index storage and return value size.</em> </li>
-					<li><em>Only string types for values used to build indexes.</em> Obviously numbers
-						and dates are useful for sort key expressions, but they require more
+					<li><em>Opinionated</em> - the library follows popular practice on implementing a single-table design,
+					but it makes some assumptions about how you want to store your data</li>
+					<li><em>No projection expression support</em> </li>
+					<li><em>No support for projected indexes</em> - all GSIs are assumed to project all the data. This
+						library may support in the future splitting up your document so that you can use projected indexes to
+					limit data in some indexes.</li>
+					<li><em>Only string types for values used to build indexes.</em> Obviously numbers are also useful for sort key expressions, but they require more
 					sophisticated handling than the library currently supports</li>
-					<li><em>Basic adjacency list support</em>
-						see the new APIs: <ul>
-							<li><a href="https://chris-armstrong.github.io/dynaglue/interfaces/childcollection.html"><code>ChildCollection</code> type</a></li>
-							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findchildren"><code>findChildren</code></a> </li>
-							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findchildbyid"><code>findChildById</code></a> </li>
-							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#findbyidwithchildren"><code>findByIdWithChildren</code></a> </li>
-							<li><a href="https://chris-armstrong.github.io/dynaglue/globals.html#updatechildbyid"><code>updateChildById</code></a>
-							and examples:</li>
-							<li><a href="https://github.com/chris-armstrong/dynaglue/blob/master/examples/basic_children.ts"><code>basic_children.ts</code> example</a></li>
-							<li><a href="https://github.com/chris-armstrong/dynaglue/blob/master/examples/adjacency_list.ts"><code>adjacency_list.ts</code> example</a></li>
-						</ul>
-					</li>
-					<li><em>Batch Read/Write and Transaction Support is still to be done</em></li>
+					<li><em>Batch Read/Write and Transaction Support is still in progress</em></li>
 					<li><em>No write sharding support for low-variance partition keys.</em> (NOTE: This isn&#39;t important for most use cases)
 						If you have hot partition keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
 						and you query them on one of those values relentlessly, you will get a
 						hot partition. The normal solution is to add a suffix spread between a given
 						set of values (e.g. 0-19) so that when it is queried on status the query can
 					be split over 20 partitions instead of one.</li>
-					<li><em>This library may not reflect &quot;best practice&quot;</em> </li>
 				</ul>
 				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
 					<h2>Contributing</h2>
@@ -269,7 +263,7 @@
 				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
 					<h2>License</h2>
 				</a>
-				<p>Copyright 2019-2020 Christopher Armstrong</p>
+				<p>Copyright 2019-2021 Christopher Armstrong</p>
 				<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
 					you may not use this file except in compliance with the License.
 				You may obtain a copy of the License at</p>
@@ -284,267 +278,150 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="globals.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/collectionnotfoundexception.html" class="tsd-kind-icon">Collection<wbr>Not<wbr>Found<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/configurationexception.html" class="tsd-kind-icon">Configuration<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/conflictexception.html" class="tsd-kind-icon">Conflict<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/indexnotfoundexception.html" class="tsd-kind-icon">Index<wbr>Not<wbr>Found<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
-						<a href="classes/internalprocessingexception.html" class="tsd-kind-icon">Internal<wbr>Processing<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidbatchreplacedeletedescriptorexception.html" class="tsd-kind-icon">Invalid<wbr>Batch<wbr>Replace<wbr>Delete<wbr>Descriptor<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidcompositeconditionexception.html" class="tsd-kind-icon">Invalid<wbr>Composite<wbr>Condition<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
-						<a href="classes/invalidfinddescriptorexception.html" class="tsd-kind-icon">Invalid<wbr>Find<wbr>Descriptor<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalididexception.html" class="tsd-kind-icon">Invalid<wbr>IdException</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidindexedfieldvalueexception.html" class="tsd-kind-icon">Invalid<wbr>Indexed<wbr>Field<wbr>Value<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidparentidexception.html" class="tsd-kind-icon">Invalid<wbr>Parent<wbr>IdException</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidqueryexception.html" class="tsd-kind-icon">Invalid<wbr>Query<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidupdatevalueexception.html" class="tsd-kind-icon">Invalid<wbr>Update<wbr>Value<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-class tsd-is-external">
+					<li class=" tsd-kind-class">
 						<a href="classes/invalidupdatesexception.html" class="tsd-kind-icon">Invalid<wbr>Updates<wbr>Exception</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/accesspattern.html" class="tsd-kind-icon">Access<wbr>Pattern</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/childcollection.html" class="tsd-kind-icon">Child<wbr>Collection</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/collectionlayout.html" class="tsd-kind-icon">Collection<wbr>Layout</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
-						<a href="interfaces/commoncollection.html" class="tsd-kind-icon">Common<wbr>Collection</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
-						<a href="interfaces/dynagluecontext.html" class="tsd-kind-icon">Dynaglue<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/rootcollection.html" class="tsd-kind-icon">Root<wbr>Collection</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#accesspatternoptions" class="tsd-kind-icon">Access<wbr>Pattern<wbr>Options</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#collection" class="tsd-kind-icon">Collection</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#andcondition" class="tsd-kind-icon">And<wbr>Condition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#compositecondition" class="tsd-kind-icon">Composite<wbr>Condition</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchdeletedescriptor" class="tsd-kind-icon">Batch<wbr>Delete<wbr>Descriptor</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#context" class="tsd-kind-icon">Context</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchfindbyiddescriptor" class="tsd-kind-icon">Batch<wbr>Find<wbr>ById<wbr>Descriptor</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#documentwithid" class="tsd-kind-icon">Document<wbr>With<wbr>Id</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchfindbyidsresponse" class="tsd-kind-icon">Batch<wbr>Find<wbr>ByIds<wbr>Response</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#findchildrenoptions" class="tsd-kind-icon">Find<wbr>Children<wbr>Options</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchreplacedeletedescriptor" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Descriptor</a>
+					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
+						<a href="modules.html#findchildrenresults" class="tsd-kind-icon">Find<wbr>Children<wbr>Results</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchreplacedeleteresponse" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Response</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#findoptions" class="tsd-kind-icon">Find<wbr>Options</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#batchreplacedescriptor" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Descriptor</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#findquery" class="tsd-kind-icon">Find<wbr>Query</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#beginswithcondition" class="tsd-kind-icon">Begins<wbr>With<wbr>Condition</a>
+					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
+						<a href="modules.html#findresults" class="tsd-kind-icon">Find<wbr>Results</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#betweencondition" class="tsd-kind-icon">Between<wbr>Condition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#keypath" class="tsd-kind-icon">Key<wbr>Path</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#childcollectiondefinition" class="tsd-kind-icon">Child<wbr>Collection<wbr>Definition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#normaliserfunction" class="tsd-kind-icon">Normaliser<wbr>Function</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#collection" class="tsd-kind-icon">Collection</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#primaryindexlayout" class="tsd-kind-icon">Primary<wbr>Index<wbr>Layout</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#collectiondefinition" class="tsd-kind-icon">Collection<wbr>Definition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#secondaryindexlayout" class="tsd-kind-icon">Secondary<wbr>Index<wbr>Layout</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#comparisoncondition" class="tsd-kind-icon">Comparison<wbr>Condition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#setvaluesdocument" class="tsd-kind-icon">Set<wbr>Values<wbr>Document</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#compositecondition" class="tsd-kind-icon">Composite<wbr>Condition</a>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#updates" class="tsd-kind-icon">Updates</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#conditionvalue" class="tsd-kind-icon">Condition<wbr>Value</a>
+					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
+						<a href="modules.html#wrappeddocument" class="tsd-kind-icon">Wrapped<wbr>Document</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#containscondition" class="tsd-kind-icon">Contains<wbr>Condition</a>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#batchfindbyids" class="tsd-kind-icon">batch<wbr>Find<wbr>ByIds</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#context" class="tsd-kind-icon">Context</a>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#batchreplacedelete" class="tsd-kind-icon">batch<wbr>Replace<wbr>Delete</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#documentwithid" class="tsd-kind-icon">Document<wbr>With<wbr>Id</a>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#createcontext" class="tsd-kind-icon">create<wbr>Context</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#dynamodbset" class="tsd-kind-icon">DynamoDBSet</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#deletebyid" class="tsd-kind-icon">delete<wbr>ById</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#dynamodbtype" class="tsd-kind-icon">DynamoDBType</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#deletechildbyid" class="tsd-kind-icon">delete<wbr>Child<wbr>ById</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#eqcondition" class="tsd-kind-icon">Eq<wbr>Condition</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#find" class="tsd-kind-icon">find</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#existscondition" class="tsd-kind-icon">Exists<wbr>Condition</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#findbyid" class="tsd-kind-icon">find<wbr>ById</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#extractkey" class="tsd-kind-icon">Extract<wbr>Key</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#findbyidwithchildren" class="tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findbyidwithchildrenresult" class="tsd-kind-icon">Find<wbr>ById<wbr>With<wbr>Children<wbr>Result</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#findchildbyid" class="tsd-kind-icon">find<wbr>Child<wbr>ById</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findchildrenoptions" class="tsd-kind-icon">Find<wbr>Children<wbr>Options</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#findchildren" class="tsd-kind-icon">find<wbr>Children</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findchildrenresults" class="tsd-kind-icon">Find<wbr>Children<wbr>Results</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#insert" class="tsd-kind-icon">insert</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findoptions" class="tsd-kind-icon">Find<wbr>Options</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#replace" class="tsd-kind-icon">replace</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findquery" class="tsd-kind-icon">Find<wbr>Query</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#updatebyid" class="tsd-kind-icon">update<wbr>ById</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#findresults" class="tsd-kind-icon">Find<wbr>Results</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#gtcondition" class="tsd-kind-icon">Gt<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#gteqcondition" class="tsd-kind-icon">Gt<wbr>EqCondition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#incondition" class="tsd-kind-icon">In<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#keypath" class="tsd-kind-icon">Key<wbr>Path</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#keypathsandclause" class="tsd-kind-icon">Key<wbr>Paths<wbr>And<wbr>Clause</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#ltcondition" class="tsd-kind-icon">Lt<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#lteqcondition" class="tsd-kind-icon">Lt<wbr>EqCondition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#normaliserfunction" class="tsd-kind-icon">Normaliser<wbr>Function</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#notcondition" class="tsd-kind-icon">Not<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#noteqcondition" class="tsd-kind-icon">Not<wbr>EqCondition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-has-type-parameter tsd-is-external">
-						<a href="globals.html#opaque" class="tsd-kind-icon">Opaque</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#orcondition" class="tsd-kind-icon">Or<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#primaryindexlayout" class="tsd-kind-icon">Primary<wbr>Index<wbr>Layout</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#queryoperator" class="tsd-kind-icon">Query<wbr>Operator</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#rootcollectiondefinition" class="tsd-kind-icon">Root<wbr>Collection<wbr>Definition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#secondaryindexlayout" class="tsd-kind-icon">Secondary<wbr>Index<wbr>Layout</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#setvaluesdocument" class="tsd-kind-icon">Set<wbr>Values<wbr>Document</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#typecondition" class="tsd-kind-icon">Type<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#updates" class="tsd-kind-icon">Updates</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="globals.html#wrappeddocument" class="tsd-kind-icon">Wrapped<wbr>Document</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#batchfindbyids" class="tsd-kind-icon">batch<wbr>Find<wbr>ByIds</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#batchreplacedelete" class="tsd-kind-icon">batch<wbr>Replace<wbr>Delete</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#createcontext" class="tsd-kind-icon">create<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#deletebyid" class="tsd-kind-icon">delete<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#deletechildbyid" class="tsd-kind-icon">delete<wbr>Child<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#describeaccesspattern" class="tsd-kind-icon">describe<wbr>Access<wbr>Pattern</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#find" class="tsd-kind-icon">find</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#findbyid" class="tsd-kind-icon">find<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#findbyidwithchildren" class="tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#findchildbyid" class="tsd-kind-icon">find<wbr>Child<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#findchildren" class="tsd-kind-icon">find<wbr>Children</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#insert" class="tsd-kind-icon">insert</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#replace" class="tsd-kind-icon">replace</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#updatebyid" class="tsd-kind-icon">update<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-is-external">
-						<a href="globals.html#updatechildbyid" class="tsd-kind-icon">update<wbr>Child<wbr>ById</a>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="modules.html#updatechildbyid" class="tsd-kind-icon">update<wbr>Child<wbr>ById</a>
 					</li>
 				</ul>
 			</nav>
@@ -555,6 +432,12 @@
 	<div class="container">
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+			</ul>
 		</div>
 	</div>
 </footer>
