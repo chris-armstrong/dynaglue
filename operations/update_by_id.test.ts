@@ -33,7 +33,7 @@ const layout = {
     partitionKey: 'pk0',
     sortKey: 'sk0',
   },
-  findKeys: Array(3)
+  findKeys: Array(4)
     .fill({})
     .map((_, index) => layoutForIndex(index + 1)),
 };
@@ -56,6 +56,15 @@ const collectionWithAPs: Collection = {
       partitionKeys: [],
       sortKeys: [['profile', 'email']],
     },
+    {
+      indexName: 'index4',
+      // exact match on email by lowercase
+      partitionKeys: [['profile', 'email']],
+      sortKeys: [],
+      options: {
+        stringNormalizer: (_, value) => value.trim().toLowerCase(),
+      },
+    }
   ],
 };
 
@@ -76,11 +85,11 @@ describe('createUpdateActionForKey', () => {
     ['userType'],
   ];
 
-  it('should throw an InvalidUpdatesException for a partition key that is missing updates to all its key paths', () => {
+  it('should return just the collection name when there is blank values for all the partition key paths', () => {
     const updates = {
-      profile: { name: 'Chris Armstrong', phoneNumber: '123456' },
+      profile: { name: 'Chris Armstrong' },
     };
-    expect(() =>
+    expect(
       createUpdateActionForKey(
         collectionName,
         'partition',
@@ -88,7 +97,7 @@ describe('createUpdateActionForKey', () => {
         indexLayout,
         updates
       )
-    ).toThrowError(InvalidUpdatesException);
+    ).toEqual({ attributeName: indexLayout.partitionKey, value: collectionName });
   });
 
   it('should return undefined when there is no updates to the partition key in the set of updates', () => {
@@ -374,6 +383,7 @@ describe('mapAccessPatterns', () => {
       'sk1 = :value0',
       'pk2 = :value1',
       'sk2 = :value2',
+      'pk4 = :value3',
     ]);
     expect(deleteActions).toEqual(['sk3']);
     expect(mappers.nameMapper.get()).toBeUndefined();
@@ -381,6 +391,31 @@ describe('mapAccessPatterns', () => {
       ':value0': { S: 'test-collection|-|a new name' },
       ':value1': { S: 'test-collection|-|x' },
       ':value2': { S: 'test-collection|-|STAFF38' },
+      ':value3': { S: 'test-collection'}
+    });
+  });
+
+  it('should handle deletions on a GSI partition key', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates = {
+      profile: {
+      },
+    };
+    const { setActions, deleteActions } = mapAccessPatterns(
+      collectionWithAPs,
+      mappers,
+      updates
+    );
+    expect(setActions).toEqual([
+      'pk4 = :value0',
+    ]);
+    expect(deleteActions).toEqual(['sk2', 'sk3']);
+    expect(mappers.nameMapper.get()).toBeUndefined();
+    expect(mappers.valueMapper.get()).toEqual({
+      ':value0': { S: 'test-collection' },
     });
   });
 });
@@ -494,7 +529,7 @@ describe('updateById', () => {
     expect(ddbMock.updateItem).toHaveBeenCalledWith({
       TableName: layout.tableName,
       UpdateExpression:
-        'SET #value.#attr0 = :value0, #value.profile = :value1, #value.department = :value2, sk1 = :value3, pk2 = :value4, sk3 = :value5 REMOVE sk2',
+        'SET #value.#attr0 = :value0, #value.profile = :value1, #value.department = :value2, sk1 = :value3, pk2 = :value4, sk3 = :value5, pk4 = :value6 REMOVE sk2',
       Key: {
         pk0: { S: `test-collection**${testId}` },
         sk0: { S: `test-collection**${testId}` },
@@ -510,8 +545,10 @@ describe('updateById', () => {
         ':value3': { S: `test-collection**new name` },
         ':value4': { S: `test-collection**department 2` },
         ':value5': { S: `test-collection**email@email.com` },
+        ':value6': { S: `test-collection**email@email.com` },
       },
       ReturnValues: 'ALL_NEW',
+      ConditionExpression: undefined,
     } as UpdateItemInput);
   });
 });

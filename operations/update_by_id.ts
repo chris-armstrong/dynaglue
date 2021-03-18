@@ -102,23 +102,9 @@ export const createUpdateActionForKey = (
     keyPaths,
     attributeName
   );
-  if (matchingUpdatePaths.every((updatePath) => updatePath === undefined)) {
-    debug(
-      'createUpdateActionForKey: no updates to %s key in collection %s',
-      keyType,
-      collectionName
-    );
+  if (matchingUpdatePaths.every((updatePath) => typeof updatePath === 'undefined')) {
+    debug('createUpdateActionForKey: no updates to %s key in collection %s', keyType, collectionName);
     return undefined;
-  }
-  if (
-    keyType === 'partition' &&
-    !matchingUpdatePaths.every((updatePath) => updatePath !== undefined)
-  ) {
-    throw new InvalidUpdatesException(
-      `all values are required for ${keyType} access pattern with keys {${keyPaths
-        .map((kp) => kp.join('.'))
-        .join(', ')}}`
-    );
   }
   debug(
     'createUpdateActionForKey: key to be updated matchingUpdatePaths=%o',
@@ -225,7 +211,7 @@ export const mapAccessPatterns = (
       );
       if (update) {
         debug(
-          'mapAccessPatterns: adding set action for partition key in collection %s: %o',
+          'mapAccessPatterns: adding set/delete action for partition key in collection %s: %o',
           collection.name,
           update
         );
@@ -263,6 +249,7 @@ export const mapAccessPatterns = (
   }
   if (ttlKeyPath) {
     const updateAction = createUpdateActionForTTLKey(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       collection.layout.ttlAttribute!, // we've already asserted this in context creation
       ttlKeyPath,
       updates

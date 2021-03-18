@@ -37,7 +37,7 @@ describe('assembleIndexedValue', () => {
   test('returns undefined for a list of undefined values', () => {
     expect(
       assembleIndexedValue('partition', 'collection', [undefined, undefined])
-    ).toBeUndefined();
+    ).toEqual('collection');
     expect(
       assembleIndexedValue('sort', 'collection', [undefined])
     ).toBeUndefined();

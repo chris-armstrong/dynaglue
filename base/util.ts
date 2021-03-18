@@ -54,7 +54,7 @@ export const assemblePrimaryKeyValue = (
  * Assemble extracted key paths into their indexed value
  */
 export const assembleIndexedValue = (
-  _: 'partition' | 'sort',
+  keyType: 'partition' | 'sort',
   collectionName: string,
   values: (string | undefined)[],
   separator: string = SEPARATOR
@@ -64,7 +64,7 @@ export const assembleIndexedValue = (
     return collectionName;
   } else if (values.every((value) => typeof value === 'undefined')) {
     // sparse key? - keep the value blank to avoid showing up in searches
-    return undefined;
+    return keyType === 'partition' ? collectionName : undefined;
   }
   return `${collectionName}${separator}${values
     .map((x) => (typeof x === 'string' ? x : ''))

@@ -296,6 +296,7 @@ export async function find<DocumentType extends DocumentWithId>(
   const sortKeyOp =
     sortKeyValue &&
     getQueryOperator(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       nameMapper.map(layout.sortKey!, '#indexSortKey'),
       valueMapper.map(sortKeyValue),
       options?.queryOperator
