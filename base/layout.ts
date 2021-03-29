@@ -35,9 +35,11 @@ export type SecondaryIndexLayout = {
 };
 
 /**
- * The layout of a collection. Defines the structure
- * of the underlying tabel, its primary keys and sort
- * keys.
+ * Defines the structure of the underlying table of a collection,
+ * such as its table name, primary keys, sort keys and TTL
+ * attribute name.
+ *
+ * You can also customise the index name separator
  */
 export interface CollectionLayout {
   /** Name of the table */
