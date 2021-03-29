@@ -4,6 +4,7 @@ import {
   mapAccessPatterns,
   updateById,
   createUpdateActionForTTLKey,
+  StrictChangesDocument,
 } from './update_by_id';
 import {
   InvalidUpdatesException,
@@ -20,14 +21,14 @@ import {
   UpdateItemInput,
 } from 'aws-sdk/clients/dynamodb';
 import { createNameMapper, createValueMapper } from '../base/mappers';
-import { SecondaryIndexLayout } from '../base/layout';
+import { CollectionLayout, SecondaryIndexLayout } from '../base/layout';
 
 const layoutForIndex = (index: number): SecondaryIndexLayout => ({
   indexName: `index${index}`,
   partitionKey: `pk${index}`,
   sortKey: `sk${index}`,
 });
-const layout = {
+const layout: CollectionLayout = {
   tableName: 'general',
   primaryKey: {
     partitionKey: 'pk0',
@@ -36,9 +37,11 @@ const layout = {
   findKeys: Array(4)
     .fill({})
     .map((_, index) => layoutForIndex(index + 1)),
+  ttlAttribute: 'ttlattr',
 };
 const collectionWithNoAPs: Collection = {
   name: 'test-collection',
+  ttlKeyPath: ['expiresAt'],
   layout,
 };
 
@@ -64,7 +67,7 @@ const collectionWithAPs: Collection = {
       options: {
         stringNormalizer: (_, value) => value.trim().toLowerCase(),
       },
-    }
+    },
   ],
 };
 
@@ -86,8 +89,9 @@ describe('createUpdateActionForKey', () => {
   ];
 
   it('should return just the collection name when there is blank values for all the partition key paths', () => {
-    const updates = {
-      profile: { name: 'Chris Armstrong' },
+    const updates: StrictChangesDocument = {
+      $set: [[['profile'], { name: 'Chris Armstrong' }]],
+      $delete: [],
     };
     expect(
       createUpdateActionForKey(
@@ -97,11 +101,17 @@ describe('createUpdateActionForKey', () => {
         indexLayout,
         updates
       )
-    ).toEqual({ attributeName: indexLayout.partitionKey, value: collectionName });
+    ).toEqual({
+      attributeName: indexLayout.partitionKey,
+      value: collectionName,
+    });
   });
 
   it('should return undefined when there is no updates to the partition key in the set of updates', () => {
-    const updates = { staffCount: 5 };
+    const updates: StrictChangesDocument = {
+      $set: [[['staffCount'], 5]],
+      $delete: [],
+    };
     expect(
       createUpdateActionForKey(
         collectionName,
@@ -114,7 +124,10 @@ describe('createUpdateActionForKey', () => {
   });
 
   it('should return undefined when there is no updates to the sort key in the set of updates', () => {
-    const updates = { staffCount: 5 };
+    const updates: StrictChangesDocument = {
+      $set: [[['staffCount'], 5]],
+      $delete: [],
+    };
     expect(
       createUpdateActionForKey(
         collectionName,
@@ -127,10 +140,14 @@ describe('createUpdateActionForKey', () => {
   });
 
   it('should correctly calculate the update action for a scalar key', () => {
-    const updates = {
-      profile: { name: 'Chris Armstrong', phoneNumber: '123456' },
-      type: 'A',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile'], { name: 'Chris Armstrong', phoneNumber: '123456' }],
+        [['type'], 'A'],
+      ],
+      $delete: [],
     };
+
     const keyPaths = [['profile', 'phoneNumber']];
     expect(
       createUpdateActionForKey(
@@ -147,9 +164,12 @@ describe('createUpdateActionForKey', () => {
   });
 
   it('should correctly calculate the update action for an empty key', () => {
-    const updates = {
-      profile: { name: 'Chris Armstrong', phoneNumber: '123456' },
-      type: 'A',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile'], { name: 'Chris Armstrong', phoneNumber: '123456' }],
+        [['type'], 'A'],
+      ],
+      $delete: [],
     };
     const keyPaths = [];
     expect(
@@ -164,9 +184,12 @@ describe('createUpdateActionForKey', () => {
   });
 
   it('should correctly calculate the update action for a nested-value composite key', () => {
-    const updates = {
-      profile: { name: 'Chris Armstrong', phoneNumber: '123456' },
-      userType: 'AAA',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile'], { name: 'Chris Armstrong', phoneNumber: '123456' }],
+        [['userType'], 'AAA'],
+      ],
+      $delete: [],
     };
     expect(
       createUpdateActionForKey(
@@ -183,10 +206,13 @@ describe('createUpdateActionForKey', () => {
   });
 
   it('should correctly calculate the update action for a directly updated composite key', () => {
-    const updates = {
-      'profile.name': 'Chris Armstrong',
-      'profile.phoneNumber': '123456',
-      userType: 'AAA',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile', 'name'], 'Chris Armstrong'],
+        [['profile', 'phoneNumber'], '123456'],
+        [['userType'], 'AAA'],
+      ],
+      $delete: [],
     };
     expect(
       createUpdateActionForKey(
@@ -202,10 +228,13 @@ describe('createUpdateActionForKey', () => {
     });
   });
   it('should correctly work with custom separators', () => {
-    const updates = {
-      'profile.name': 'Chris Armstrong',
-      'profile.phoneNumber': '123456',
-      userType: 'AAA',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile', 'name'], 'Chris Armstrong'],
+        [['profile', 'phoneNumber'], '123456'],
+        [['userType'], 'AAA'],
+      ],
+      $delete: [],
     };
     expect(
       createUpdateActionForKey(
@@ -226,12 +255,18 @@ describe('createUpdateActionForKey', () => {
 describe('createUpdateActionForTTLKey', () => {
   const attributeName = 'expiry';
   const expiryDate = new Date();
-  const updates = {
-    'test.0': {
-      home: 'string',
-      'a date': expiryDate,
-    },
-    'direct.path': expiryDate.getTime(),
+  const updates: StrictChangesDocument = {
+    $set: [
+      [
+        ['test', '0'],
+        {
+          home: 'string',
+          'a date': expiryDate,
+        },
+      ],
+      [['direct', 'path'], expiryDate.getTime()],
+    ],
+    $delete: [],
   };
 
   it('should return undefined when there is no matching update path', () => {
@@ -300,9 +335,12 @@ describe('mapAccessPatterns', () => {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
-    const updates = {
-      'x.y': 8,
-      name: 'new name',
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['x', 'y'], 8],
+        [['name'], 'new name'],
+      ],
+      $delete: [],
     };
     const { setActions, deleteActions } = mapAccessPatterns(
       collectionWithNoAPs,
@@ -320,9 +358,12 @@ describe('mapAccessPatterns', () => {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
-    const updates = {
-      name: 'a new name',
-      'x.y': 8,
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['name'], 'a new name'],
+        [['x', 'y'], 8],
+      ],
+      $delete: [],
     };
     const { setActions, deleteActions } = mapAccessPatterns(
       collectionWithAPs,
@@ -336,14 +377,18 @@ describe('mapAccessPatterns', () => {
       ':value0': { S: 'test-collection|-|a new name' },
     });
   });
+
   it('should handle custom separators', () => {
     const mappers = {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
-    const updates = {
-      name: 'a new name',
-      'x.y': 8,
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['name'], 'a new name'],
+        [['x', 'y'], 8],
+      ],
+      $delete: [],
     };
     const customCollectionWithAPs = {
       ...collectionWithAPs,
@@ -367,12 +412,18 @@ describe('mapAccessPatterns', () => {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
-    const updates = {
-      name: 'a new name',
-      department: 'x',
-      profile: {
-        staffNumber: 'STAFF38',
-      },
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['name'], 'a new name'],
+        [['department'], 'x'],
+        [
+          ['profile'],
+          {
+            staffNumber: 'STAFF38',
+          },
+        ],
+      ],
+      $delete: [],
     };
     const { setActions, deleteActions } = mapAccessPatterns(
       collectionWithAPs,
@@ -391,7 +442,7 @@ describe('mapAccessPatterns', () => {
       ':value0': { S: 'test-collection|-|a new name' },
       ':value1': { S: 'test-collection|-|x' },
       ':value2': { S: 'test-collection|-|STAFF38' },
-      ':value3': { S: 'test-collection'}
+      ':value3': { S: 'test-collection' },
     });
   });
 
@@ -400,18 +451,16 @@ describe('mapAccessPatterns', () => {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
-    const updates = {
-      profile: {
-      },
+    const updates: StrictChangesDocument = {
+      $set: [[['profile'], {}]],
+      $delete: [],
     };
     const { setActions, deleteActions } = mapAccessPatterns(
       collectionWithAPs,
       mappers,
       updates
     );
-    expect(setActions).toEqual([
-      'pk4 = :value0',
-    ]);
+    expect(setActions).toEqual(['pk4 = :value0']);
     expect(deleteActions).toEqual(['sk2', 'sk3']);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
@@ -549,6 +598,65 @@ describe('updateById', () => {
       },
       ReturnValues: 'ALL_NEW',
       ConditionExpression: undefined,
+    } as UpdateItemInput);
+  });
+
+  it('should handle basic $set/$delete operations', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      profile: {
+        name: 'new name',
+      },
+      topLevelValue: [1, 2, 4],
+      somethingElse: false,
+      expiresAt: new Date().toISOString(),
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: Converter.marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    const results = await updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      {
+        $set: [
+          ['profile.name', 'new name'],
+          ['topLevelValue', [1, 2, 4]],
+          ['profile.status', { disabled: true }],
+        ],
+        $delete: [['somethingElse'], ['expiresAt']],
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.updateItem).toBeCalledTimes(1);
+    expect(ddbMock.updateItem).toBeCalledWith({
+      TableName: layout.tableName,
+      ConditionExpression: undefined,
+      UpdateExpression:
+        'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1, #value.profile.#attr1 = :value2 REMOVE #value.somethingElse, #value.expiresAt, ttlattr',
+      Key: {
+        pk0: { S: `test-collection|-|${testId}` },
+        sk0: { S: `test-collection|-|${testId}` },
+      },
+      ExpressionAttributeNames: {
+        '#value': 'value',
+        '#attr0': 'name',
+        '#attr1': 'status',
+      },
+      ExpressionAttributeValues: {
+        ':value0': { S: 'new name' },
+        ':value1': {
+          L: [{ N: '1' }, { N: '2' }, { N: '4' }],
+        },
+        ':value2': {
+          M: { disabled: { BOOL: true } },
+        },
+      },
+      ReturnValues: 'ALL_NEW',
     } as UpdateItemInput);
   });
 });

@@ -54,26 +54,37 @@ describe('E2E tests', () => {
 
   it('should sparse update correctly', async () => {
     const dynamodb = createDynamoDB();
-    const staffOriginal =  { name: 'test', profile: { email: 'test@example.com', departmentNumber: '1' } };
+    const staffOriginal = {
+      name: 'test',
+      profile: { email: 'test@example.com', departmentNumber: '1' },
+    };
     const context = createContext(dynamodb, [staffDefinition]);
     const inserted = await insert(context, 'staff', staffOriginal);
 
     await updateById(context, 'staff', inserted._id, {
-      profile: { },
+      profile: {},
     });
   });
 
   it('should allow search on a duplicated index key path', async () => {
     const dynamodb = createDynamoDB();
-    const staff1 =  { name: 'test', profile: { email: 'test@example.com', departmentNumber: '1' } };
-    const staff2 =  { name: 'test2', profile: { email: 'test2@example.com', departmentNumber: '1' } };
-    const staff3 =  { name: 'test3', profile: {} };
+    const staff1 = {
+      name: 'test',
+      profile: { email: 'test@example.com', departmentNumber: '1' },
+    };
+    const staff2 = {
+      name: 'test2',
+      profile: { email: 'test2@example.com', departmentNumber: '1' },
+    };
+    const staff3 = { name: 'test3', profile: {} };
     const context = createContext(dynamodb, [staffDefinition]);
     await insert(context, 'staff', staff1);
     const inserted2 = await insert(context, 'staff', staff2);
     await insert(context, 'staff', staff3);
 
-    const { items } = await find(context, 'staff', { 'profile.email': 'test2@example.com' });
+    const { items } = await find(context, 'staff', {
+      'profile.email': 'test2@example.com',
+    });
     expect(items).toHaveLength(1);
     expect(items[0]._id).toEqual(inserted2._id);
   });

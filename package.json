@@ -13,7 +13,8 @@
     "lint": "eslint '**/*.ts'",
     "test": "jest",
     "prettier:check": "prettier -c **/*.ts",
-    "prettier:write": "prettier --write **/*.ts"
+    "prettier:write": "prettier --write **/*.ts",
+    "test:watch": "jest --watch"
   },
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
