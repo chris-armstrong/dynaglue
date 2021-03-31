@@ -33,6 +33,7 @@ import {
 } from '../base/mappers';
 import { CompositeCondition } from '../base/conditions';
 import { parseCompositeCondition } from '../base/conditions_parser';
+import { isEqualKey } from './find';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -50,15 +51,106 @@ export type SetValuesDocument = {
 };
 
 /**
- * The set of updates to apply to a document.
+ * A key path and value to set on a document as part
+ * of an update operation. Specified as part of [[UpdateChangesDocument]],
+ * this is a tuple in the form:
+ *
+ * `[key_path, new_value]`
+ *
+ * * *key_path* is the property path into the document to update (either
+ *   as a dotted string path e.g. `'profile.name'` or a [[KeyPath]])
+ * * *new_value* is the value to update the property path to (it cannot be
+ *   undefined -- if you want to clear the value, see [[DeleteChange]])
  */
-export type Updates = SetValuesDocument;
+export type SetChange = [string | KeyPath, any];
+
+/**
+ * A property path to delete on a document as part of a [[UpdateChangesDocument]],
+ * specified either as a dotted string path (e.g. `'profile.name'`) or a [[KeyPath]]
+ */
+export type DeleteChange = string | KeyPath;
+
+/**
+ * A set of changes to perform in an [[updateById]] or [[updateChildById]]
+ * operation as an object. Each property is optional, but at
+ * least one change must be specified.
+ */
+export type UpdateChangesDocument = {
+  /**
+   * The list of key paths to set a value. This is a list
+   * of tuples, in the form [key_path, new_value]. The
+   * key paths can be specified in a string form e.g. `'profile.name'`
+   * or array form e.g. `['profile', 'name']`
+   */
+  $set?: SetChange[];
+  /**
+   * The list of key paths to clear the value. Key paths
+   * may be specified in string form e.g. `'profile.name'` or
+   * array form e.g. `['profile', 'name']`
+   */
+  $delete?: DeleteChange[];
+};
+
+/**
+ * The set of updates to apply to a document. This can be
+ * specified one of two ways:
+ *
+ * * an an object of key paths to values to set e.g. `{ 'profile.name': 'new name', 'status': 3 }`
+ * * an operator object of changes to perform (see [[UpdateChangesDocument]])
+ */
+export type Updates = SetValuesDocument | UpdateChangesDocument;
+
+const makeKeyPath = (pathOrPathArray: string | KeyPath): KeyPath =>
+  typeof pathOrPathArray === 'string'
+    ? pathOrPathArray.split('.')
+    : pathOrPathArray;
+
+/** @internal */
+export type StrictSetChange = [KeyPath, any];
+/** @internal */
+export type StrictDeleteChange = KeyPath;
+/** @internal */
+export type StrictChangesDocument = {
+  $set: StrictSetChange[];
+  $delete: StrictDeleteChange[];
+};
+
+/**
+ * @internal
+ * Convert the Updates object to something normalised that
+ * is simpler to process internally
+ */
+export const normaliseUpdates = (
+  updatesToPerform: Updates
+): StrictChangesDocument => {
+  if (updatesToPerform.$set || updatesToPerform.$delete) {
+    const changesDocument = updatesToPerform as UpdateChangesDocument;
+    return {
+      $set:
+        changesDocument.$set?.map((setUpdate) => [
+          makeKeyPath(setUpdate[0]),
+          setUpdate[1],
+        ]) ?? [],
+      $delete: changesDocument.$delete?.map(makeKeyPath) ?? [],
+    };
+  } else {
+    const updatesDocument = updatesToPerform as Updates;
+    return {
+      $set: Object.entries(updatesDocument).map(([key, value]) => [
+        makeKeyPath(key),
+        value,
+      ]),
+      $delete: [],
+    };
+  }
+};
 
 /**
  * @internal
  */
-export const extractUpdateKeyPaths = (updates: Updates): KeyPath[] =>
-  Object.keys(updates).map((updatePath) => updatePath.split('.'));
+export const extractUpdateKeyPaths = (
+  changes: StrictChangesDocument
+): KeyPath[] => [...changes.$set.map(([path]) => path), ...changes.$delete];
 
 /**
  * @internal
@@ -66,10 +158,15 @@ export const extractUpdateKeyPaths = (updates: Updates): KeyPath[] =>
 export const getValueForUpdatePath = (
   matchingUpdatePath: KeyPath,
   keyPath: KeyPath,
-  updates: Updates
+  changes: StrictChangesDocument
 ): any => {
-  let value = updates[matchingUpdatePath.join('.')];
-  if (keyPath.length !== matchingUpdatePath.length) {
+  // Work out if this was a $set update (in which case we get the index) or
+  // a delete path (which we perform by deduction)
+  const setPathIndex = changes.$set.findIndex(([setPath]) =>
+    isEqualKey(setPath, matchingUpdatePath)
+  );
+  let value = setPathIndex >= 0 ? changes.$set[setPathIndex][1] : undefined;
+  if (setPathIndex >= 0 && keyPath.length !== matchingUpdatePath.length) {
     const difference = keyPath.slice(matchingUpdatePath.length);
     value = get(value, difference);
   }
@@ -84,10 +181,10 @@ export const createUpdateActionForKey = (
   keyType: 'partition' | 'sort',
   keyPaths: KeyPath[],
   indexLayout: SecondaryIndexLayout,
-  updates: Updates,
+  changes: StrictChangesDocument,
   separator?: string
 ): { attributeName: string; value?: string } | undefined => {
-  const updateKeyPaths = extractUpdateKeyPaths(updates);
+  const updateKeyPaths = extractUpdateKeyPaths(changes);
   const matchingUpdatePaths = keyPaths.map((partitionKey) =>
     findMatchingPath(updateKeyPaths, partitionKey)
   );
@@ -102,8 +199,14 @@ export const createUpdateActionForKey = (
     keyPaths,
     attributeName
   );
-  if (matchingUpdatePaths.every((updatePath) => typeof updatePath === 'undefined')) {
-    debug('createUpdateActionForKey: no updates to %s key in collection %s', keyType, collectionName);
+  if (
+    matchingUpdatePaths.every((updatePath) => typeof updatePath === 'undefined')
+  ) {
+    debug(
+      'createUpdateActionForKey: no updates to %s key in collection %s',
+      keyType,
+      collectionName
+    );
     return undefined;
   }
   debug(
@@ -115,7 +218,7 @@ export const createUpdateActionForKey = (
     if (!matchingUpdatePath) {
       return undefined;
     }
-    return getValueForUpdatePath(matchingUpdatePath, keyPath, updates);
+    return getValueForUpdatePath(matchingUpdatePath, keyPath, changes);
   });
 
   return {
@@ -137,7 +240,7 @@ export const createUpdateActionForKey = (
 export const createUpdateActionForTTLKey = (
   attributeName: string,
   keyPath: KeyPath,
-  updates: Updates
+  updates: StrictChangesDocument
 ): { attributeName: string; value?: number } | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(updates);
   const matchingUpdatePath = findMatchingPath(updateKeyPaths, keyPath);
@@ -190,7 +293,7 @@ export const mapAccessPatterns = (
     nameMapper,
     valueMapper,
   }: { nameMapper: NameMapper; valueMapper: ValueMapper },
-  updates: Updates
+  changes: StrictChangesDocument
 ): {
   setActions: string[];
   deleteActions: string[];
@@ -206,7 +309,7 @@ export const mapAccessPatterns = (
         'partition',
         partitionKeys,
         layout,
-        updates,
+        changes,
         collection.layout.indexKeySeparator
       );
       if (update) {
@@ -227,7 +330,7 @@ export const mapAccessPatterns = (
         'sort',
         sortKeys,
         layout,
-        updates,
+        changes,
         collection.layout.indexKeySeparator
       );
       if (update) {
@@ -252,7 +355,7 @@ export const mapAccessPatterns = (
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       collection.layout.ttlAttribute!, // we've already asserted this in context creation
       ttlKeyPath,
-      updates
+      changes
     );
     if (updateAction) {
       const nameMapping = nameMapper.map(updateAction.attributeName);
@@ -281,46 +384,50 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
   ctx: Context,
   collection: Collection,
   key: Key,
-  updates: Updates,
+  updatesToPerform: Updates,
   options: { condition?: CompositeCondition }
 ): Promise<DocumentType> {
-  const updatePaths: string[] = Object.keys(updates);
-  if (updatePaths.length === 0) {
+  const changes = normaliseUpdates(updatesToPerform);
+  if (changes.$set.length === 0 && changes.$delete.length === 0) {
     throw new InvalidUpdatesException(
       'There must be at least one update path in the updates object'
     );
   }
-  const updateKeyPaths: KeyPath[] = extractUpdateKeyPaths(updates);
-
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
   let expressionSetActions: string[] = [];
   let expressionDeleteActions: string[] = [];
-  for (const [index, updatePath] of updatePaths.entries()) {
-    const updateKeyPath = updateKeyPaths[index];
 
-    const value = updates[updatePath];
-    if (typeof value === 'undefined') {
+  for (const [path, newValue] of changes.$set.values()) {
+    if (typeof newValue === 'undefined') {
       throw new InvalidUpdateValueException(
-        updatePath,
+        path.join('.'),
         'value must not be undefined'
       );
     }
-    const valueName = valueMapper.map(value);
+    const valueName = valueMapper.map(newValue);
 
     const expressionAttributeNameParts = [
       nameMapper.map('value', '#value'),
-      ...updateKeyPath.map((part) => nameMapper.map(part)),
+      ...path.map((part) => nameMapper.map(part)),
     ];
     expressionSetActions.push(
       `${expressionAttributeNameParts.join('.')} = ${valueName}`
     );
   }
 
+  for (const path of changes.$delete) {
+    const expressionAttributeNameParts = [
+      nameMapper.map('value', '#value'),
+      ...path.map((part) => nameMapper.map(part)),
+    ];
+    expressionDeleteActions.push(`${expressionAttributeNameParts.join('.')}`);
+  }
+
   const {
     setActions: additionalSetActions,
     deleteActions: additionalDeleteActions,
-  } = mapAccessPatterns(collection, { nameMapper, valueMapper }, updates);
+  } = mapAccessPatterns(collection, { nameMapper, valueMapper }, changes);
   expressionSetActions = [...expressionSetActions, ...additionalSetActions];
   expressionDeleteActions = [
     ...expressionDeleteActions,

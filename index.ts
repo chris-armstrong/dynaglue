@@ -47,7 +47,7 @@ export {
   InvalidUpdatesException,
 } from './base/exceptions';
 export type { WrappedDocument, DocumentWithId } from './base/common';
-export type { SetValuesDocument, Updates } from './operations/update_by_id';
+export type { SetValuesDocument, Updates, SetChange, DeleteChange, UpdateChangesDocument } from './operations/update_by_id';
 export type { FindQuery, FindOptions, FindResults } from './operations/find';
 export type {
   FindChildrenOptions,
