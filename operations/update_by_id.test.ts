@@ -540,6 +540,88 @@ describe('updateById', () => {
     } as UpdateItemInput);
   });
 
+  it('should clear sparse key index values as expected', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      profile: {
+        name: 'new name',
+      },
+      topLevelValue: [1, 2, 4],
+      somethingElse: false,
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: Converter.marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock, [collectionWithAPs]);
+    const results = await updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      {
+        $delete: ['profile.email'],
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.updateItem).toBeCalledWith({
+      TableName: layout.tableName,
+      UpdateExpression: 'SET pk4 = :value0 REMOVE #value.profile.email, sk3',
+      ExpressionAttributeNames: { '#value': 'value' },
+      ExpressionAttributeValues: {
+        ':value0': { S: 'test-collection' },
+      },
+      ReturnValues: 'ALL_NEW',
+      ConditionExpression: undefined,
+      Key: {
+        pk0: { S: `test-collection|-|${testId}` },
+        sk0: { S: `test-collection|-|${testId}` },
+      },
+    });
+  });
+
+  it('should clear index values across multiple indexes on a top-level update', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      profile: {
+        name: 'new name',
+      },
+      topLevelValue: [1, 2, 4],
+      somethingElse: false,
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: Converter.marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock, [collectionWithAPs]);
+    const results = await updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      {
+        $delete: ['profile'],
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.updateItem).toBeCalledWith({
+      TableName: layout.tableName,
+      UpdateExpression: 'SET pk4 = :value0 REMOVE #value.profile, sk2, sk3',
+      ExpressionAttributeNames: { '#value': 'value' },
+      ExpressionAttributeValues: {
+        ':value0': { S: 'test-collection' },
+      },
+      ReturnValues: 'ALL_NEW',
+      ConditionExpression: undefined,
+      Key: {
+        pk0: { S: `test-collection|-|${testId}` },
+        sk0: { S: `test-collection|-|${testId}` },
+      },
+    });
+  });
+
   it('should handle updates to multiple access patterns', async () => {
     const testId = newId();
     const createdValue = {
