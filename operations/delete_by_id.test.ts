@@ -29,7 +29,7 @@ describe('deleteById', () => {
         .fn()
         .mockReturnValue({ promise: jest.fn().mockResolvedValue({}) }),
     };
-    const context = createContext((mock as unknown) as DynamoDB, [collection]);
+    const context = createContext(mock as unknown as DynamoDB, [collection]);
     const result = await deleteById(context, 'test-collection', 'idvalue');
 
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
@@ -52,7 +52,7 @@ describe('deleteById', () => {
     const mock = createDynamoMock('deleteItem', {
       Attributes: Converter.marshall({ value }),
     });
-    const context = createContext((mock as unknown) as DynamoDB, [collection]);
+    const context = createContext(mock as unknown as DynamoDB, [collection]);
     const result = await deleteById(context, 'test-collection', 'idvalue');
 
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
@@ -72,7 +72,7 @@ describe('deleteById', () => {
       ...collection,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const context = createContext((mock as unknown) as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDB, [
       customCollection,
     ]);
     await deleteById(context, 'test-collection', 'idvalue');

@@ -329,10 +329,9 @@ export async function find<DocumentType extends DocumentWithId>(
     FilterExpression: filterExpression,
   };
   debugDynamo('Query', queryRequest);
-  const {
-    Items: items,
-    LastEvaluatedKey: lastEvaluatedKey,
-  } = await ctx.ddb.query(queryRequest).promise();
+  const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb
+    .query(queryRequest)
+    .promise();
   const unwrappedItems = items
     ? items.map((item) =>
         unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)

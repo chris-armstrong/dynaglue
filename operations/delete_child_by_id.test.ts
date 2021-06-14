@@ -41,7 +41,7 @@ describe('deleteChildById', () => {
         .fn()
         .mockReturnValue({ promise: jest.fn().mockResolvedValue({}) }),
     };
-    const context = createContext((mock as unknown) as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -72,7 +72,7 @@ describe('deleteChildById', () => {
     const mock = createDynamoMock('deleteItem', {
       Attributes: Converter.marshall({ value }),
     });
-    const context = createContext((mock as unknown) as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -99,7 +99,7 @@ describe('deleteChildById', () => {
     const customLayout = { ...layout, indexKeySeparator: '#' };
     const customRootCollection = { ...rootCollection, layout: customLayout };
     const customChildCollection = { ...childCollection, layout: customLayout };
-    const context = createContext((mock as unknown) as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDB, [
       customRootCollection,
       customChildCollection,
     ]);

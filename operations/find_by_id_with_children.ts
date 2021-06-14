@@ -244,9 +244,9 @@ export const findByIdWithChildren = async <DocumentType extends DocumentWithId>(
       )
     )} AND ${valueMapper.map(lastCollectionBound)}`;
 
-  const filterExpression = `${nameMapper.map(
-    'type'
-  )} IN (${allCollectionNames.map((c) => valueMapper.map(c)).join(',')})`;
+  const filterExpression = `${nameMapper.map('type')} IN (${allCollectionNames
+    .map((c) => valueMapper.map(c))
+    .join(',')})`;
   const request: QueryInput = {
     TableName: collection.layout.tableName,
     KeyConditionExpression: keyConditionExpression,

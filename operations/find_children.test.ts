@@ -36,7 +36,7 @@ describe('findChildren', () => {
 
   it('should throw when the child collection does not exist', () => {
     const dynamoMock = createDynamoMock('query', {});
-    const context = createContext((dynamoMock as unknown) as DynamoDB, [
+    const context = createContext(dynamoMock as unknown as DynamoDB, [
       rootCollection,
     ]);
     expect(findChildren(context, 'addresses', 'user-1')).rejects.toThrowError(
@@ -54,7 +54,7 @@ describe('findChildren', () => {
         S: 'address-2',
       },
     });
-    const context = createContext((dynamoMock as unknown) as DynamoDB, [
+    const context = createContext(dynamoMock as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -89,7 +89,7 @@ describe('findChildren', () => {
       Items: [item1],
       LastEvaluatedKey: undefined,
     });
-    const context = createContext((dynamoMock as unknown) as DynamoDB, [
+    const context = createContext(dynamoMock as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -136,7 +136,7 @@ describe('findChildren', () => {
       ...childCollection,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const context = createContext((dynamoMock as unknown) as DynamoDB, [
+    const context = createContext(dynamoMock as unknown as DynamoDB, [
       customRootCollection,
       customChildCollection,
     ]);

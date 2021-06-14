@@ -21,7 +21,7 @@ describe('replace', () => {
 
   test('should replace an item conditionally', async () => {
     const ddb = createDynamoMock('putItem', {});
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
     const result = await replace(context, 'users', value);
@@ -40,7 +40,7 @@ describe('replace', () => {
         'The conditional check failed'
       )
     );
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
     expect(replace(context, 'users', value)).rejects.toThrowError(

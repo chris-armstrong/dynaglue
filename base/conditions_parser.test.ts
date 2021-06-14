@@ -212,7 +212,7 @@ describe('parseCompositeCondition', () => {
       ).toThrow(InvalidCompositeConditionException);
       expect(() =>
         parseCompositeCondition(
-          ({ x: { $eq: 4 }, $gt: 4 } as unknown) as KeyPathsAndClause,
+          { x: { $eq: 4 }, $gt: 4 } as unknown as KeyPathsAndClause,
           context
         )
       ).toThrow(InvalidCompositeConditionException);

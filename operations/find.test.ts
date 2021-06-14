@@ -247,7 +247,7 @@ describe('find', () => {
 
   test('when there is no matching access pattern it throws', () => {
     const ddb = createDynamoMock('query', {});
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     expect(
       find(context, 'test-collection', { email: 'test@example.com' })
@@ -259,7 +259,7 @@ describe('find', () => {
     const ddb = createDynamoMock('query', {
       Items: [Converter.marshall(testItem1)],
     });
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const query = {
       'location.country': 'AU',
@@ -295,7 +295,7 @@ describe('find', () => {
     const ddb = createDynamoMock('query', {
       Items: [Converter.marshall(testItem1)],
     });
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const query = {
       'location.country': 'AU',
@@ -316,7 +316,7 @@ describe('find', () => {
     const ddb = createDynamoMock('query', {
       Items: [Converter.marshall(testItem1)],
     });
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const query = {
       'location.country': 'AU',
@@ -331,7 +331,7 @@ describe('find', () => {
     const ddb = createDynamoMock('query', {
       Items: [Converter.marshall(testItem1)],
     });
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const query = {
       'location.country': 'AU',

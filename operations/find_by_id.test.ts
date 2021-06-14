@@ -18,7 +18,7 @@ describe('findById', () => {
   test('returns undefined when it cannot find a value', async () => {
     const getItemReturnValue = {};
     const ddb = createDynamoMock('getItem', getItemReturnValue);
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
     expect(
       await findById(context, 'test-collection', 'test-id1')
     ).toBeUndefined();
@@ -46,7 +46,7 @@ describe('findById', () => {
       Item: Converter.marshall(item),
     };
     const ddb = createDynamoMock('getItem', getItemReturnValue);
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     expect(await findById(context, 'test-collection', 'test-id1')).toEqual(
       item.value
@@ -68,7 +68,7 @@ describe('findById', () => {
       ...collection,
       layout: { ...layout, indexKeySeparator: '@' },
     };
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       customCollection,
     ]);
     await findById(context, 'test-collection', 'test-id1');

@@ -10,16 +10,18 @@ import { ExtractKey } from '../base/collection_definition';
  * key is an internal definition derived from access patterns to indicate
  * a key path that should be extracted for indexing upon insert.
  */
-export const withTypeCreateExtractKey = (type: 'partition' | 'sort') => (
-  key: string,
-  valuePaths: KeyPath[],
-  options?: AccessPatternOptions
-): ExtractKey => ({
-  type,
-  key,
-  valuePaths,
-  options: options || {},
-});
+export const withTypeCreateExtractKey =
+  (type: 'partition' | 'sort') =>
+  (
+    key: string,
+    valuePaths: KeyPath[],
+    options?: AccessPatternOptions
+  ): ExtractKey => ({
+    type,
+    key,
+    valuePaths,
+    options: options || {},
+  });
 
 /** @internal */
 export const createPartitionExtractKey = withTypeCreateExtractKey('partition');

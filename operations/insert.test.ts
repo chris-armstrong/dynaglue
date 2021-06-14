@@ -34,7 +34,7 @@ describe('insert', () => {
 
   test('should insert a root item conditionally', async () => {
     const ddb = createDynamoMock('putItem', {});
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       collection,
       childCollection,
     ]);
@@ -58,9 +58,7 @@ describe('insert', () => {
       ...collection,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const context = createContext((ddb as unknown) as DynamoDB, [
-      rootCollection,
-    ]);
+    const context = createContext(ddb as unknown as DynamoDB, [rootCollection]);
 
     const value = { name: 'Chris', email: 'chris@example.com' };
     const result = await insert(context, 'users', value);
@@ -77,7 +75,7 @@ describe('insert', () => {
 
   test('should insert a child item conditionally', async () => {
     const ddb = createDynamoMock('putItem', {});
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       collection,
       childCollection,
     ]);
@@ -111,7 +109,7 @@ describe('insert', () => {
         'The conditional check failed'
       )
     );
-    const context = createContext((ddb as unknown) as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
     expect(insert(context, 'users', value)).rejects.toThrowError(

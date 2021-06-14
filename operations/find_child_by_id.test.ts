@@ -27,7 +27,7 @@ describe('findChildById', () => {
   test('returns undefined when it cannot find a value', async () => {
     const getItemReturnValue = {};
     const ddb = createDynamoMock('getItem', getItemReturnValue);
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -58,7 +58,7 @@ describe('findChildById', () => {
       Item: Converter.marshall(item),
     };
     const ddb = createDynamoMock('getItem', getItemReturnValue);
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       rootCollection,
       childCollection,
     ]);
@@ -82,7 +82,7 @@ describe('findChildById', () => {
     const customLayout = { ...layout, indexKeySeparator: '#' };
     const customRootCollection = { ...rootCollection, layout: customLayout };
     const customChildCollection = { ...childCollection, layout: customLayout };
-    const context = createContext((ddb as unknown) as DynamoDB, [
+    const context = createContext(ddb as unknown as DynamoDB, [
       customRootCollection,
       customChildCollection,
     ]);
