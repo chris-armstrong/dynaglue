@@ -54,3 +54,5 @@ export type {
   FindChildrenResults,
 } from './operations/find_children';
 export type { CompositeCondition } from './base/conditions';
+export type { BatchFindByIdDescriptor, BatchFindByIdsResponse } from './operations/batch_find_by_ids';
+export type { BatchReplaceDeleteDescriptor, BatchReplaceDeleteResponse } from './operations/batch_replace_delete';
