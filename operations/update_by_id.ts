@@ -305,7 +305,7 @@ export const mapAccessPatterns = (
   const expressionDeleteActions: string[] = [];
   const { accessPatterns = [], ttlKeyPath } = collection;
   for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
-    let partitionKeyUpdateSet: boolean = undefined;
+    let partitionKeyUpdateSet: boolean | undefined = undefined;
     let sortKeyUpdated = false;
     const layout = findCollectionIndex(collection, indexName);
     if (partitionKeys.length > 0) {
@@ -354,11 +354,11 @@ export const mapAccessPatterns = (
           expressionDeleteActions.push(nameMapping);
         }
       }
-    } else if (typeof partitionKeyUpdateSet !== 'undefined') {
+    } else if (typeof partitionKeyUpdateSet !== 'undefined' && layout.sortKey) {
       // When only primary key has indexed paths (i.e. partitionKeys.length > 0,
       // sortKeys.length === 0, and we applied an update for the partitionKey)
       // make an empty update to the sort key to in-case it wasn't populated
-      const nameMapping = nameMapper.map(layout.sortKey!);
+      const nameMapping = nameMapper.map(layout.sortKey);
       if (partitionKeyUpdateSet) {
         const valueMapping = valueMapper.map(
           assembleIndexedValue(
@@ -377,9 +377,7 @@ export const mapAccessPatterns = (
     // In the case the sort key is updated but there is no indexed partition key
     // paths, make sure the partition key gets a value written
     if (sortKeyUpdated && (!partitionKeys || partitionKeys.length === 0)) {
-      const nameMapping = nameMapper.map(
-        layout.partitionKey,
-      );
+      const nameMapping = nameMapper.map(layout.partitionKey);
       const valueMapping = valueMapper.map(
         assembleIndexedValue(
           'partition',

@@ -454,7 +454,6 @@ describe('mapAccessPatterns', () => {
       ':value3': { S: 'test-collection|-|STAFF38' },
       ':value4': { S: 'test-collection' },
       ':value5': { S: 'test-collection' },
-
     });
   });
 
@@ -496,10 +495,10 @@ describe('mapAccessPatterns', () => {
       updates
     );
     expect(deleteActions).toContain('sk2');
-    expect(setActions).toContain('pk3 = :value1')
-    expect(setActions).toContain('sk3 = :value0')
-    expect(setActions).toContain('pk4 = :value2')
-    expect(setActions).toContain('sk4 = :value3')
+    expect(setActions).toContain('pk3 = :value1');
+    expect(setActions).toContain('sk3 = :value0');
+    expect(setActions).toContain('pk4 = :value2');
+    expect(setActions).toContain('sk4 = :value3');
   });
 });
 
@@ -601,7 +600,8 @@ describe('updateById', () => {
     expect(results).toEqual(createdValue);
     expect(ddbMock.updateItem).toBeCalledWith({
       TableName: layout.tableName,
-      UpdateExpression: 'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile.email, sk3, sk4',
+      UpdateExpression:
+        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile.email, sk3, sk4',
       ExpressionAttributeNames: { '#value': 'value' },
       ExpressionAttributeValues: {
         ':value0': { S: 'test-collection' },
@@ -643,7 +643,8 @@ describe('updateById', () => {
     expect(results).toEqual(createdValue);
     expect(ddbMock.updateItem).toBeCalledWith({
       TableName: layout.tableName,
-      UpdateExpression: 'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile, sk2, sk3, sk4',
+      UpdateExpression:
+        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile, sk2, sk3, sk4',
       ExpressionAttributeNames: { '#value': 'value' },
       ExpressionAttributeValues: {
         ':value0': { S: 'test-collection' },
@@ -697,8 +698,8 @@ describe('updateById', () => {
       TableName: layout.tableName,
       UpdateExpression:
         'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
-        '#value.department = :value2, sk1 = :value3, pk1 = :value4, ' + 
-        'pk2 = :value5, sk3 = :value6, pk3 = :value7, pk4 = :value8, ' + 
+        '#value.department = :value2, sk1 = :value3, pk1 = :value4, ' +
+        'pk2 = :value5, sk3 = :value6, pk3 = :value7, pk4 = :value8, ' +
         'sk4 = :value9 REMOVE sk2',
       Key: {
         pk0: { S: `test-collection**${testId}` },

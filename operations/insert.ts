@@ -1,4 +1,5 @@
 import { PutItemInput, Converter } from 'aws-sdk/clients/dynamodb';
+import { AWSError } from 'aws-sdk/lib/error';
 import { Context } from '../context';
 import {
   getCollection,
@@ -68,7 +69,7 @@ export async function insert<DocumentType extends DocumentWithId>(
     debugDynamo('PutItem', request);
     await context.ddb.putItem(request).promise();
   } catch (error) {
-    if (error.code === 'ConditionalCheckFailedException') {
+    if ((error as AWSError).code === 'ConditionalCheckFailedException') {
       throw new ConflictException(
         'An item with this _id already exists',
         wrapped.value._id
