@@ -90,6 +90,10 @@
 						<section class="tsd-index-section ">
 							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias"><a href="modules.html#batchfindbyiddescriptor" class="tsd-kind-icon">Batch<wbr>Find<wbr>ById<wbr>Descriptor</a></li>
+								<li class="tsd-kind-type-alias"><a href="modules.html#batchfindbyidsresponse" class="tsd-kind-icon">Batch<wbr>Find<wbr>ByIds<wbr>Response</a></li>
+								<li class="tsd-kind-type-alias"><a href="modules.html#batchreplacedeletedescriptor" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Descriptor</a></li>
+								<li class="tsd-kind-type-alias"><a href="modules.html#batchreplacedeleteresponse" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Response</a></li>
 								<li class="tsd-kind-type-alias"><a href="modules.html#collection" class="tsd-kind-icon">Collection</a></li>
 								<li class="tsd-kind-type-alias"><a href="modules.html#compositecondition" class="tsd-kind-icon">Composite<wbr>Condition</a></li>
 								<li class="tsd-kind-type-alias"><a href="modules.html#context" class="tsd-kind-icon">Context</a></li>
@@ -136,12 +140,117 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Type aliases</h2>
 				<section class="tsd-panel tsd-member tsd-kind-type-alias">
+					<a name="batchfindbyiddescriptor" class="tsd-anchor"></a>
+					<h3>Batch<wbr>Find<wbr>ById<wbr>Descriptor</h3>
+					<div class="tsd-signature tsd-kind-icon">Batch<wbr>Find<wbr>ById<wbr>Descriptor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>collection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>parentId<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_find_by_ids.ts#L23">operations/batch_find_by_ids.ts:23</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The collection and ID of a root or child
+							item to retrieve with #transactFindByIds</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter">
+								<h5>collection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+								<div class="tsd-comment tsd-typography">
+									<div class="lead">
+										<p>The collection containing the item</p>
+									</div>
+								</div>
+							</li>
+							<li class="tsd-parameter">
+								<h5>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+							</li>
+							<li class="tsd-parameter">
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> parent<wbr>Id<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span></h5>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias">
+					<a name="batchfindbyidsresponse" class="tsd-anchor"></a>
+					<h3>Batch<wbr>Find<wbr>ByIds<wbr>Response</h3>
+					<div class="tsd-signature tsd-kind-icon">Batch<wbr>Find<wbr>ByIds<wbr>Response<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>documentsByCollection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{}</span><span class="tsd-signature-symbol">; </span>unprocessedDescriptors<span class="tsd-signature-symbol">: </span><a href="modules.html#batchfindbyiddescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdDescriptor</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_find_by_ids.ts#L44">operations/batch_find_by_ids.ts:44</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The response to a <a href="modules.html#batchfindbyids">batchFindByIds</a> request. The
+								retrieved documents are stored in a map, organised by
+							collection name.</p>
+						</div>
+						<p>Any unprocessed request keys are included in the
+							unprocessedDescriptors list. You will need to submit
+						another request to obtain these.</p>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter">
+								<h5>documents<wbr>ByCollection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{}</span></h5>
+								<ul class="tsd-parameters">
+									<li class="tsd-parameter-index-signature">
+										<h5><span class="tsd-signature-symbol">[</span>collection: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="modules.html#documentwithid" class="tsd-signature-type" data-tsd-kind="Type alias">DocumentWithId</a><span class="tsd-signature-symbol">[]</span></h5>
+									</li>
+								</ul>
+							</li>
+							<li class="tsd-parameter">
+								<h5>unprocessed<wbr>Descriptors<span class="tsd-signature-symbol">: </span><a href="modules.html#batchfindbyiddescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdDescriptor</a><span class="tsd-signature-symbol">[]</span></h5>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias">
+					<a name="batchreplacedeletedescriptor" class="tsd-anchor"></a>
+					<h3>Batch<wbr>Replace<wbr>Delete<wbr>Descriptor</h3>
+					<div class="tsd-signature tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Descriptor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">BatchReplaceDescriptor</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">BatchDeleteDescriptor</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_replace_delete.ts#L66">operations/batch_replace_delete.ts:66</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A replace (PutItem) or delete (DeleteItem) request
+							to perform with <a href="modules.html#batchreplacedelete">batchReplaceDelete</a></p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias">
+					<a name="batchreplacedeleteresponse" class="tsd-anchor"></a>
+					<h3>Batch<wbr>Replace<wbr>Delete<wbr>Response</h3>
+					<div class="tsd-signature tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Response<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>unprocessedDescriptors<span class="tsd-signature-symbol">: </span><a href="modules.html#batchreplacedeletedescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteDescriptor</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_replace_delete.ts#L73">operations/batch_replace_delete.ts:73</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter">
+								<h5>unprocessed<wbr>Descriptors<span class="tsd-signature-symbol">: </span><a href="modules.html#batchreplacedeletedescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteDescriptor</a><span class="tsd-signature-symbol">[]</span></h5>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias">
 					<a name="collection" class="tsd-anchor"></a>
 					<h3>Collection</h3>
 					<div class="tsd-signature tsd-kind-icon">Collection<span class="tsd-signature-symbol">:</span> <a href="interfaces/rootcollection.html" class="tsd-signature-type" data-tsd-kind="Interface">RootCollection</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/childcollection.html" class="tsd-signature-type" data-tsd-kind="Interface">ChildCollection</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/collection.ts#L106">base/collection.ts:106</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/collection.ts#L106">base/collection.ts:106</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -165,7 +274,7 @@
 					<div class="tsd-signature tsd-kind-icon">Composite<wbr>Condition<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">AndCondition</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">OrCondition</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">NotCondition</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">KeyPathsAndClause</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/conditions.ts#L88">base/conditions.ts:88</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/conditions.ts#L88">base/conditions.ts:88</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -226,7 +335,7 @@
 					<div class="tsd-signature tsd-kind-icon">Context<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/context/index.ts#L25">context/index.ts:25</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/context/index.ts#L25">context/index.ts:25</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -242,7 +351,7 @@
 					<div class="tsd-signature tsd-kind-icon">Delete<wbr>Change<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="modules.html#keypath" class="tsd-signature-type" data-tsd-kind="Type alias">KeyPath</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L71">operations/update_by_id.ts:71</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L71">operations/update_by_id.ts:71</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -258,7 +367,7 @@
 					<div class="tsd-signature tsd-kind-icon">Document<wbr>With<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>_id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/common.ts#L5">base/common.ts:5</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/common.ts#L5">base/common.ts:5</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -282,7 +391,7 @@
 					<div class="tsd-signature tsd-kind-icon">Find<wbr>Children<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>filter<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol">; </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_children.ts#L29">operations/find_children.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_children.ts#L29">operations/find_children.ts:29</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -322,7 +431,7 @@
 					<div class="tsd-signature tsd-kind-icon">Find<wbr>Children<wbr>Results&lt;DocumentType&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>items<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DocumentType</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>nextToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Key</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_children.ts#L16">operations/find_children.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_children.ts#L16">operations/find_children.ts:16</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -366,7 +475,7 @@
 					<div class="tsd-signature tsd-kind-icon">Find<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>filter<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol">; </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>queryOperator<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">QueryOperator</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find.ts#L171">operations/find.ts:171</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find.ts#L171">operations/find.ts:171</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -414,7 +523,7 @@
 					<div class="tsd-signature tsd-kind-icon">Find<wbr>Query<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find.ts#L41">operations/find.ts:41</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find.ts#L41">operations/find.ts:41</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -440,7 +549,7 @@
 					<div class="tsd-signature tsd-kind-icon">Find<wbr>Results&lt;DocumentType&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>items<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DocumentType</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>nextToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Key</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find.ts#L46">operations/find.ts:46</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find.ts#L46">operations/find.ts:46</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -485,7 +594,7 @@
 					<div class="tsd-signature tsd-kind-icon">Key<wbr>Path<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/access_pattern.ts#L7">base/access_pattern.ts:7</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/access_pattern.ts#L7">base/access_pattern.ts:7</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -503,7 +612,7 @@
 					<div class="tsd-signature tsd-kind-icon">Normaliser<wbr>Function<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>path<span class="tsd-signature-symbol">: </span><a href="modules.html#keypath" class="tsd-signature-type" data-tsd-kind="Type alias">KeyPath</a>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/access_pattern.ts#L20">base/access_pattern.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/access_pattern.ts#L20">base/access_pattern.ts:20</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -546,7 +655,7 @@
 					<div class="tsd-signature tsd-kind-icon">Primary<wbr>Index<wbr>Layout<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>partitionKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>sortKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/layout.ts#L6">base/layout.ts:6</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/layout.ts#L6">base/layout.ts:6</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -584,7 +693,7 @@
 					<div class="tsd-signature tsd-kind-icon">Secondary<wbr>Index<wbr>Layout<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>indexName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>partitionKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>sortKey<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/layout.ts#L20">base/layout.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/layout.ts#L20">base/layout.ts:20</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -630,7 +739,7 @@
 					<div class="tsd-signature tsd-kind-icon">Set<wbr>Change<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="modules.html#keypath" class="tsd-signature-type" data-tsd-kind="Type alias">KeyPath</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L65">operations/update_by_id.ts:65</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L65">operations/update_by_id.ts:65</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -654,7 +763,7 @@
 					<div class="tsd-signature tsd-kind-icon">Set<wbr>Values<wbr>Document<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L49">operations/update_by_id.ts:49</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L49">operations/update_by_id.ts:49</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -681,7 +790,7 @@
 					<div class="tsd-signature tsd-kind-icon">Update<wbr>Changes<wbr>Document<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>$delete<span class="tsd-signature-symbol">?: </span><a href="modules.html#deletechange" class="tsd-signature-type" data-tsd-kind="Type alias">DeleteChange</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>$set<span class="tsd-signature-symbol">?: </span><a href="modules.html#setchange" class="tsd-signature-type" data-tsd-kind="Type alias">SetChange</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L78">operations/update_by_id.ts:78</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L78">operations/update_by_id.ts:78</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -724,7 +833,7 @@
 					<div class="tsd-signature tsd-kind-icon">Updates<span class="tsd-signature-symbol">:</span> <a href="modules.html#setvaluesdocument" class="tsd-signature-type" data-tsd-kind="Type alias">SetValuesDocument</a><span class="tsd-signature-symbol"> | </span><a href="modules.html#updatechangesdocument" class="tsd-signature-type" data-tsd-kind="Type alias">UpdateChangesDocument</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L101">operations/update_by_id.ts:101</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L101">operations/update_by_id.ts:101</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -744,7 +853,7 @@
 					<div class="tsd-signature tsd-kind-icon">Wrapped<wbr>Document&lt;DocumentType&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DocumentType</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/base/common.ts#L13">base/common.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/base/common.ts#L13">base/common.ts:13</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -778,33 +887,33 @@
 					<a name="batchfindbyids" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> batch<wbr>Find<wbr>ByIds</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">batch<wbr>Find<wbr>ByIds<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span>, items<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BatchFindByIdDescriptor</span><span class="tsd-signature-symbol">[]</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>consistentReadTableNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BatchFindByIdsResponse</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">batch<wbr>Find<wbr>ByIds<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a>, items<span class="tsd-signature-symbol">: </span><a href="modules.html#batchfindbyiddescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdDescriptor</a><span class="tsd-signature-symbol">[]</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>consistentReadTableNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modules.html#batchfindbyidsresponse" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdsResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/batch_find_by_ids.ts#L52">operations/batch_find_by_ids.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_find_by_ids.ts#L52">operations/batch_find_by_ids.ts:52</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctx: <span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>ctx: <a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a></h5>
 								</li>
 								<li>
-									<h5>items: <span class="tsd-signature-type">BatchFindByIdDescriptor</span><span class="tsd-signature-symbol">[]</span></h5>
+									<h5>items: <a href="modules.html#batchfindbyiddescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdDescriptor</a><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-symbol">{ </span>consistentReadTableNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <span class="tsd-signature-symbol">{ </span>consistentReadTableNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></h5>
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter">
-											<h5><span class="tsd-flag ts-flagOptional">Optional</span> consistent<wbr>Read<wbr>Table<wbr>Names<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> consistent<wbr>Read<wbr>Table<wbr>Names<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
 										</li>
 									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BatchFindByIdsResponse</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modules.html#batchfindbyidsresponse" class="tsd-signature-type" data-tsd-kind="Type alias">BatchFindByIdsResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -812,25 +921,25 @@
 					<a name="batchreplacedelete" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> batch<wbr>Replace<wbr>Delete</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">batch<wbr>Replace<wbr>Delete<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span>, descriptors<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BatchReplaceDeleteDescriptor</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BatchReplaceDeleteResponse</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">batch<wbr>Replace<wbr>Delete<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a>, descriptors<span class="tsd-signature-symbol">: </span><a href="modules.html#batchreplacedeletedescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteDescriptor</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modules.html#batchreplacedeleteresponse" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteResponse</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/batch_replace_delete.ts#L77">operations/batch_replace_delete.ts:77</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/batch_replace_delete.ts#L77">operations/batch_replace_delete.ts:77</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctx: <span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>ctx: <a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a></h5>
 								</li>
 								<li>
-									<h5>descriptors: <span class="tsd-signature-type">BatchReplaceDeleteDescriptor</span><span class="tsd-signature-symbol">[]</span></h5>
+									<h5>descriptors: <a href="modules.html#batchreplacedeletedescriptor" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteDescriptor</a><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BatchReplaceDeleteResponse</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="modules.html#batchreplacedeleteresponse" class="tsd-signature-type" data-tsd-kind="Type alias">BatchReplaceDeleteResponse</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -844,7 +953,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/context/index.ts#L36">context/index.ts:36</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/context/index.ts#L36">context/index.ts:36</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -888,7 +997,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/delete_by_id.ts#L25">operations/delete_by_id.ts:25</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/delete_by_id.ts#L25">operations/delete_by_id.ts:25</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -928,7 +1037,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options to apply</p>
 									</div>
@@ -958,7 +1067,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/delete_child_by_id.ts#L27">operations/delete_child_by_id.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/delete_child_by_id.ts#L27">operations/delete_child_by_id.ts:27</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1004,7 +1113,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options to change behaviour of DynamoDB</p>
 									</div>
@@ -1034,7 +1143,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find.ts#L247">operations/find.ts:247</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find.ts#L247">operations/find.ts:247</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1116,7 +1225,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <a href="modules.html#findoptions" class="tsd-signature-type" data-tsd-kind="Type alias">FindOptions</a><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <a href="modules.html#findoptions" class="tsd-signature-type" data-tsd-kind="Type alias">FindOptions</a><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options controlling the query</p>
 									</div>
@@ -1138,7 +1247,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_by_id.ts#L20">operations/find_by_id.ts:20</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_by_id.ts#L20">operations/find_by_id.ts:20</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1187,13 +1296,13 @@
 					<a name="findbyidwithchildren" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> find<wbr>ById<wbr>With<wbr>Children</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children&lt;DocumentType&gt;<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span>, rootCollectionName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, rootObjectId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, childCollectionNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, nextToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Key</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">FindByIdWithChildrenResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DocumentType</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children&lt;DocumentType&gt;<span class="tsd-signature-symbol">(</span>ctx<span class="tsd-signature-symbol">: </span><a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a>, rootCollectionName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, rootObjectId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, childCollectionNames<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, nextToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Key</span>, options<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">FindByIdWithChildrenResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DocumentType</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_by_id_with_children.ts#L185">operations/find_by_id_with_children.ts:185</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_by_id_with_children.ts#L185">operations/find_by_id_with_children.ts:185</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1315,7 +1424,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>ctx: <span class="tsd-signature-type">Opaque</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">&quot;DynaglueContext&quot;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DynaglueContext</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>ctx: <a href="modules.html#context" class="tsd-signature-type" data-tsd-kind="Type alias">Context</a></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>the dynaglue context object</p>
 									</div>
@@ -1342,16 +1451,16 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>scanForward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options to control the limit, scan order and extra filtering</p>
 									</div>
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter">
-											<h5><span class="tsd-flag ts-flagOptional">Optional</span> limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> limit<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span></h5>
 										</li>
 										<li class="tsd-parameter">
-											<h5><span class="tsd-flag ts-flagOptional">Optional</span> scan<wbr>Forward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span></h5>
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> scan<wbr>Forward<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
 										</li>
 									</ul>
 								</li>
@@ -1371,7 +1480,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_child_by_id.ts#L26">operations/find_child_by_id.ts:26</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_child_by_id.ts#L26">operations/find_child_by_id.ts:26</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1436,7 +1545,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/find_children.ts#L67">operations/find_children.ts:67</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/find_children.ts#L67">operations/find_children.ts:67</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1489,7 +1598,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <a href="modules.html#findchildrenoptions" class="tsd-signature-type" data-tsd-kind="Type alias">FindChildrenOptions</a><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <a href="modules.html#findchildrenoptions" class="tsd-signature-type" data-tsd-kind="Type alias">FindChildrenOptions</a><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>the options to control the query</p>
 									</div>
@@ -1509,7 +1618,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/insert.ts#L24">operations/insert.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/insert.ts#L25">operations/insert.ts:25</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1566,7 +1675,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/replace.ts#L24">operations/replace.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/replace.ts#L24">operations/replace.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1608,7 +1717,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options to apply</p>
 									</div>
@@ -1637,7 +1746,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_by_id.ts#L499">operations/update_by_id.ts:499</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_by_id.ts#L538">operations/update_by_id.ts:538</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1695,7 +1804,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<ul class="tsd-parameters">
 										<li class="tsd-parameter">
 											<h5><span class="tsd-flag ts-flagOptional">Optional</span> condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a></h5>
@@ -1718,7 +1827,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/7216b18/operations/update_child_by_id.ts#L31">operations/update_child_by_id.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/27af09e/operations/update_child_by_id.ts#L31">operations/update_child_by_id.ts:31</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1776,7 +1885,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>options: <span class="tsd-signature-symbol">{ </span>condition<span class="tsd-signature-symbol">?: </span><a href="modules.html#compositecondition" class="tsd-signature-type" data-tsd-kind="Type alias">CompositeCondition</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>options to apply</p>
 									</div>
@@ -1854,6 +1963,18 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/rootcollection.html" class="tsd-kind-icon">Root<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#batchfindbyiddescriptor" class="tsd-kind-icon">Batch<wbr>Find<wbr>ById<wbr>Descriptor</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#batchfindbyidsresponse" class="tsd-kind-icon">Batch<wbr>Find<wbr>ByIds<wbr>Response</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#batchreplacedeletedescriptor" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Descriptor</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#batchreplacedeleteresponse" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Response</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#collection" class="tsd-kind-icon">Collection</a>
