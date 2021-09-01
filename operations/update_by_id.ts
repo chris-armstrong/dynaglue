@@ -183,7 +183,9 @@ export const createUpdateActionForKey = (
   indexLayout: SecondaryIndexLayout,
   changes: StrictChangesDocument,
   separator?: string
-): { attributeName: string; value?: string } | undefined => {
+):
+  | { attributeName: string; value?: string; valueErasure: boolean }
+  | undefined => {
   const updateKeyPaths = extractUpdateKeyPaths(changes);
   const matchingUpdatePaths = keyPaths.map((partitionKey) =>
     findMatchingPath(updateKeyPaths, partitionKey)
@@ -229,6 +231,7 @@ export const createUpdateActionForKey = (
       updateValues,
       separator
     ),
+    valueErasure: updateValues.every((value) => typeof value === 'undefined'),
   };
 };
 
@@ -302,8 +305,10 @@ export const mapAccessPatterns = (
   const expressionDeleteActions: string[] = [];
   const { accessPatterns = [], ttlKeyPath } = collection;
   for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
+    let partitionKeyUpdateSet: boolean | undefined = undefined;
+    let sortKeyUpdated = false;
+    const layout = findCollectionIndex(collection, indexName);
     if (partitionKeys.length > 0) {
-      const layout = findCollectionIndex(collection, indexName);
       const update = createUpdateActionForKey(
         collection.name,
         'partition',
@@ -313,6 +318,7 @@ export const mapAccessPatterns = (
         collection.layout.indexKeySeparator
       );
       if (update) {
+        partitionKeyUpdateSet = !update.valueErasure;
         debug(
           'mapAccessPatterns: adding set/delete action for partition key in collection %s: %o',
           collection.name,
@@ -324,7 +330,6 @@ export const mapAccessPatterns = (
       }
     }
     if (sortKeys && sortKeys.length > 0) {
-      const layout = findCollectionIndex(collection, indexName);
       const update = createUpdateActionForKey(
         collection.name,
         'sort',
@@ -339,6 +344,7 @@ export const mapAccessPatterns = (
           collection.name,
           update
         );
+        sortKeyUpdated = true;
         if (typeof update.value !== 'undefined') {
           const nameMapping = nameMapper.map(update.attributeName);
           const valueMapping = valueMapper.map(update.value);
@@ -348,6 +354,39 @@ export const mapAccessPatterns = (
           expressionDeleteActions.push(nameMapping);
         }
       }
+    } else if (typeof partitionKeyUpdateSet !== 'undefined' && layout.sortKey) {
+      // When only primary key has indexed paths (i.e. partitionKeys.length > 0,
+      // sortKeys.length === 0, and we applied an update for the partitionKey)
+      // make an empty update to the sort key to in-case it wasn't populated
+      const nameMapping = nameMapper.map(layout.sortKey);
+      if (partitionKeyUpdateSet) {
+        const valueMapping = valueMapper.map(
+          assembleIndexedValue(
+            'sort',
+            collection.name,
+            [],
+            collection.layout.indexKeySeparator
+          )
+        );
+        expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
+      } else {
+        expressionDeleteActions.push(nameMapping);
+      }
+    }
+
+    // In the case the sort key is updated but there is no indexed partition key
+    // paths, make sure the partition key gets a value written
+    if (sortKeyUpdated && (!partitionKeys || partitionKeys.length === 0)) {
+      const nameMapping = nameMapper.map(layout.partitionKey);
+      const valueMapping = valueMapper.map(
+        assembleIndexedValue(
+          'partition',
+          collection.name,
+          [],
+          collection.layout.indexKeySeparator
+        )
+      );
+      expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
     }
   }
   if (ttlKeyPath) {

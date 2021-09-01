@@ -104,6 +104,7 @@ describe('createUpdateActionForKey', () => {
     ).toEqual({
       attributeName: indexLayout.partitionKey,
       value: collectionName,
+      valueErasure: true,
     });
   });
 
@@ -160,6 +161,7 @@ describe('createUpdateActionForKey', () => {
     ).toEqual({
       attributeName: 'pk1',
       value: `${collectionName}|-|123456`,
+      valueErasure: false,
     });
   });
 
@@ -202,6 +204,7 @@ describe('createUpdateActionForKey', () => {
     ).toEqual({
       attributeName: 'pk1',
       value: `${collectionName}|-|AAA|-|123456`,
+      valueErasure: false,
     });
   });
 
@@ -225,6 +228,7 @@ describe('createUpdateActionForKey', () => {
     ).toEqual({
       attributeName: 'pk1',
       value: `${collectionName}|-|AAA|-|123456`,
+      valueErasure: false,
     });
   });
   it('should correctly work with custom separators', () => {
@@ -248,6 +252,7 @@ describe('createUpdateActionForKey', () => {
     ).toEqual({
       attributeName: 'pk1',
       value: `${collectionName}#AAA#123456`,
+      valueErasure: false,
     });
   });
 });
@@ -370,11 +375,12 @@ describe('mapAccessPatterns', () => {
       mappers,
       updates
     );
-    expect(setActions).toEqual(['sk1 = :value0']);
+    expect(setActions).toEqual(['sk1 = :value0', 'pk1 = :value1']);
     expect(deleteActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
+      ':value1': { S: 'test-collection' },
     });
   });
 
@@ -399,11 +405,12 @@ describe('mapAccessPatterns', () => {
       mappers,
       updates
     );
-    expect(setActions).toEqual(['sk1 = :value0']);
+    expect(setActions).toEqual(['sk1 = :value0', 'pk1 = :value1']);
     expect(deleteActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection#a new name' },
+      ':value1': { S: 'test-collection' },
     });
   });
 
@@ -432,17 +439,21 @@ describe('mapAccessPatterns', () => {
     );
     expect(setActions).toEqual([
       'sk1 = :value0',
-      'pk2 = :value1',
-      'sk2 = :value2',
-      'pk4 = :value3',
+      'pk1 = :value1',
+      'pk2 = :value2',
+      'sk2 = :value3',
+      'pk3 = :value4',
+      'pk4 = :value5',
     ]);
-    expect(deleteActions).toEqual(['sk3']);
+    expect(deleteActions).toEqual(['sk3', 'sk4']);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
-      ':value1': { S: 'test-collection|-|x' },
-      ':value2': { S: 'test-collection|-|STAFF38' },
-      ':value3': { S: 'test-collection' },
+      ':value1': { S: 'test-collection' },
+      ':value2': { S: 'test-collection|-|x' },
+      ':value3': { S: 'test-collection|-|STAFF38' },
+      ':value4': { S: 'test-collection' },
+      ':value5': { S: 'test-collection' },
     });
   });
 
@@ -460,12 +471,34 @@ describe('mapAccessPatterns', () => {
       mappers,
       updates
     );
-    expect(setActions).toEqual(['pk4 = :value0']);
-    expect(deleteActions).toEqual(['sk2', 'sk3']);
+    expect(setActions).toEqual(['pk3 = :value0', 'pk4 = :value1']);
+    expect(deleteActions).toEqual(['sk2', 'sk3', 'sk4']);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection' },
+      ':value1': { S: 'test-collection' },
     });
+  });
+
+  it('should correctly update an index with only the primary key populated and a new value specified', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [[['profile'], { email: 'Chris@example.com' }]],
+      $delete: [],
+    };
+    const { setActions, deleteActions } = mapAccessPatterns(
+      collectionWithAPs,
+      mappers,
+      updates
+    );
+    expect(deleteActions).toContain('sk2');
+    expect(setActions).toContain('pk3 = :value1');
+    expect(setActions).toContain('sk3 = :value0');
+    expect(setActions).toContain('pk4 = :value2');
+    expect(setActions).toContain('sk4 = :value3');
   });
 });
 
@@ -567,10 +600,12 @@ describe('updateById', () => {
     expect(results).toEqual(createdValue);
     expect(ddbMock.updateItem).toBeCalledWith({
       TableName: layout.tableName,
-      UpdateExpression: 'SET pk4 = :value0 REMOVE #value.profile.email, sk3',
+      UpdateExpression:
+        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile.email, sk3, sk4',
       ExpressionAttributeNames: { '#value': 'value' },
       ExpressionAttributeValues: {
         ':value0': { S: 'test-collection' },
+        ':value1': { S: 'test-collection' },
       },
       ReturnValues: 'ALL_NEW',
       ConditionExpression: undefined,
@@ -608,10 +643,12 @@ describe('updateById', () => {
     expect(results).toEqual(createdValue);
     expect(ddbMock.updateItem).toBeCalledWith({
       TableName: layout.tableName,
-      UpdateExpression: 'SET pk4 = :value0 REMOVE #value.profile, sk2, sk3',
+      UpdateExpression:
+        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile, sk2, sk3, sk4',
       ExpressionAttributeNames: { '#value': 'value' },
       ExpressionAttributeValues: {
         ':value0': { S: 'test-collection' },
+        ':value1': { S: 'test-collection' },
       },
       ReturnValues: 'ALL_NEW',
       ConditionExpression: undefined,
@@ -660,7 +697,10 @@ describe('updateById', () => {
     expect(ddbMock.updateItem).toHaveBeenCalledWith({
       TableName: layout.tableName,
       UpdateExpression:
-        'SET #value.#attr0 = :value0, #value.profile = :value1, #value.department = :value2, sk1 = :value3, pk2 = :value4, sk3 = :value5, pk4 = :value6 REMOVE sk2',
+        'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
+        '#value.department = :value2, sk1 = :value3, pk1 = :value4, ' +
+        'pk2 = :value5, sk3 = :value6, pk3 = :value7, pk4 = :value8, ' +
+        'sk4 = :value9 REMOVE sk2',
       Key: {
         pk0: { S: `test-collection**${testId}` },
         sk0: { S: `test-collection**${testId}` },
@@ -674,9 +714,12 @@ describe('updateById', () => {
         ':value1': Converter.input({ email: 'email@email.com', enabled: true }),
         ':value2': { S: 'department 2' },
         ':value3': { S: `test-collection**new name` },
-        ':value4': { S: `test-collection**department 2` },
-        ':value5': { S: `test-collection**email@email.com` },
+        ':value4': { S: 'test-collection' },
+        ':value5': { S: `test-collection**department 2` },
         ':value6': { S: `test-collection**email@email.com` },
+        ':value7': { S: 'test-collection' },
+        ':value8': { S: `test-collection**email@email.com` },
+        ':value9': { S: 'test-collection' },
       },
       ReturnValues: 'ALL_NEW',
       ConditionExpression: undefined,
