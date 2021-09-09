@@ -1,6 +1,6 @@
 {
   "name": "dynaglue",
-  "version": "0.1.0-alpha.31",
+  "version": "0.1.0-alpha.32",
   "description": "dynaglue",
   "main": "dist/dynaglue.cjs.js",
   "module": "dist/dynaglue.esm.js",
