@@ -30,6 +30,7 @@ describe('E2E tests', () => {
       { indexName: 'gsi1', partitionKey: 'gpk1', sortKey: 'gsk1' },
       { indexName: 'gsi2', partitionKey: 'gpk2', sortKey: 'gsk2' },
       { indexName: 'gsi3', partitionKey: 'gpk3', sortKey: 'gsk3' },
+      { indexName: 'gsi4', partitionKey: 'gpk4', sortKey: 'gsk4' },
     ],
   };
 
@@ -53,6 +54,11 @@ describe('E2E tests', () => {
         indexName: 'gsi3',
         partitionKeys: [['profile', 'departmentNumber']],
         sortKeys: [['name']],
+      },
+      {
+        indexName: 'gsi4',
+        partitionKeys: [],
+        sortKeys: [['updatedAt']],
       },
     ],
   };
@@ -115,5 +121,50 @@ describe('E2E tests', () => {
     });
     expect(items).toHaveLength(1);
     expect(items[0]._id).toEqual(inserted2._id);
+  });
+
+  it('should find with the BETWEEN operator correctly', async () => {
+    const dynamodb = createDynamoDB();
+    const staff1 = {
+      name: 'test',
+      updatedAt: '2021-01-21T01',
+    };
+    const staff2 = {
+      name: 'test2',
+      updatedAt: '2021-01-20T00',
+    };
+    const staff3 = {
+      name: 'test3',
+      updatedAt: '2021-01-21T00',
+    };
+    const staff4 = {
+      name: 'test4',
+      updatedAt: '2021-01-23T01',
+    };
+    const staff5 = {
+      name: 'test5',
+      updatedAt: '2021-01-22T03',
+    };
+
+    const ctx = createContext(dynamodb, [staffDefinition]);
+    await Promise.all([
+      insert(ctx, 'staff', staff1),
+      insert(ctx, 'staff', staff2),
+      insert(ctx, 'staff', staff3),
+      insert(ctx, 'staff', staff4),
+      insert(ctx, 'staff', staff5),
+    ]);
+    const { items } = await find(
+      ctx,
+      'staff',
+      {
+        updatedAt: ['2021-01-21T00', '2021-01-23T00'],
+      },
+      undefined,
+      { queryOperator: 'between' }
+    );
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveProperty('name', 'test3');
+    expect(items[2]).toHaveProperty('name', 'test5');
   });
 });

@@ -15,6 +15,8 @@ module.exports = {
         { AttributeName: 'gsk2', AttributeType: 'S' },
         { AttributeName: 'gpk3', AttributeType: 'S' },
         { AttributeName: 'gsk3', AttributeType: 'S' },
+        { AttributeName: 'gpk4', AttributeType: 'S' },
+        { AttributeName: 'gsk4', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: [
         {
@@ -38,6 +40,14 @@ module.exports = {
           KeySchema: [
             { AttributeName: 'gpk3', KeyType: 'HASH' },
             { AttributeName: 'gsk3', KeyType: 'RANGE' },
+          ],
+          Projection: { ProjectionType: 'ALL' },
+        },
+        {
+          IndexName: 'gsi4',
+          KeySchema: [
+            { AttributeName: 'gpk4', KeyType: 'HASH' },
+            { AttributeName: 'gsk4', KeyType: 'RANGE' },
           ],
           Projection: { ProjectionType: 'ALL' },
         },

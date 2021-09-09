@@ -162,7 +162,12 @@ export const assembleQueryValue = (
         : scalarPathValue;
       values.push(transformedValue);
     }
-    return assembleIndexedValue(type, collectionName, values, separator);
+    return assembleIndexedValue(
+      type === 'sort2' ? 'sort' : type,
+      collectionName,
+      values,
+      separator
+    );
   }
   return undefined;
 };
