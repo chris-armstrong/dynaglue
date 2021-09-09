@@ -29,7 +29,7 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * The query operator to use in the `KeyConditionExpression` to `QueryItem`
  * as called by [[find]]
  */
-export type QueryOperator = 'match' | 'equals';
+export type QueryOperator = 'match' | 'equals' | 'gte' | 'gt' | 'lte' | 'lt';
 
 /**
  * A find query. This is a map of key paths (specified dot-separated)
@@ -156,6 +156,14 @@ const getQueryOperator = (
   qo?: QueryOperator
 ): string => {
   switch (qo) {
+    case 'lte':
+      return `${sortKeyName} <= ${sortValueName}`;
+    case 'lt':
+      return `${sortKeyName} < ${sortValueName}`;
+    case 'gte':
+      return `${sortKeyName} >= ${sortValueName}`;
+    case 'gt':
+      return `${sortKeyName} >= ${sortValueName}`;
     case 'equals':
       return `${sortKeyName} = ${sortValueName}`;
     default:
