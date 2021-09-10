@@ -191,7 +191,7 @@ const getQueryOperator = (
     case 'gte':
       return `${sortKeyName} >= ${sortValueName}`;
     case 'gt':
-      return `${sortKeyName} >= ${sortValueName}`;
+      return `${sortKeyName} > ${sortValueName}`;
     case 'equals':
       return `${sortKeyName} = ${sortValueName}`;
     case 'between':
