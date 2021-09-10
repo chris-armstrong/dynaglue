@@ -13,6 +13,7 @@ import { Collection } from '../base/collection';
 import {
   InvalidQueryException,
   ConfigurationException,
+  InvalidIndexedFieldValueException,
 } from '../base/exceptions';
 import {
   KeyPath,
@@ -29,7 +30,14 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * The query operator to use in the `KeyConditionExpression` to `QueryItem`
  * as called by [[find]]
  */
-export type QueryOperator = 'match' | 'equals';
+export type QueryOperator =
+  | 'match'
+  | 'equals'
+  | 'gte'
+  | 'gt'
+  | 'lte'
+  | 'lt'
+  | 'between';
 
 /**
  * A find query. This is a map of key paths (specified dot-separated)
@@ -38,7 +46,7 @@ export type QueryOperator = 'match' | 'equals';
  * The query you specify must match an access pattern on the collection,
  * otherwise an [[IndexNotFoundException]] will be thrown by [[find]]
  */
-export type FindQuery = { [matchKey: string]: string };
+export type FindQuery = { [matchKey: string]: string | [string, string] };
 
 /**
  * The results of a [[find]] operation.
@@ -123,7 +131,7 @@ export const findAccessPatternLayout = (
  * Assemble a value into the query, taking into account string normalizer options.
  */
 export const assembleQueryValue = (
-  type: 'partition' | 'sort',
+  type: 'partition' | 'sort' | 'sort2',
   collectionName: string,
   query: FindQuery,
   options: AccessPatternOptions,
@@ -133,14 +141,33 @@ export const assembleQueryValue = (
   if (paths) {
     const values: IndexedValue[] = [];
     for (const path of paths) {
-      const pathValue = query[path.join('.')];
+      const keyPath = path.join('.');
+      const pathValue = query[keyPath];
       if (!pathValue) break;
+      const scalarPathValue =
+        type === 'partition' || type === 'sort'
+          ? Array.isArray(pathValue)
+            ? pathValue[0]
+            : pathValue
+          : Array.isArray(pathValue)
+          ? pathValue[1]
+          : undefined;
+      if (!scalarPathValue)
+        throw new InvalidIndexedFieldValueException(
+          '$between queries must specify an array for sort key values',
+          { collection: collectionName, keyPath: path }
+        );
       const transformedValue = options.stringNormalizer
-        ? options.stringNormalizer(path, pathValue)
-        : pathValue;
+        ? options.stringNormalizer(path, scalarPathValue)
+        : scalarPathValue;
       values.push(transformedValue);
     }
-    return assembleIndexedValue(type, collectionName, values, separator);
+    return assembleIndexedValue(
+      type === 'sort2' ? 'sort' : type,
+      collectionName,
+      values,
+      separator
+    );
   }
   return undefined;
 };
@@ -153,11 +180,22 @@ export const assembleQueryValue = (
 const getQueryOperator = (
   sortKeyName: string,
   sortValueName: string,
+  sortValueName2: string | undefined,
   qo?: QueryOperator
 ): string => {
   switch (qo) {
+    case 'lte':
+      return `${sortKeyName} <= ${sortValueName}`;
+    case 'lt':
+      return `${sortKeyName} < ${sortValueName}`;
+    case 'gte':
+      return `${sortKeyName} >= ${sortValueName}`;
+    case 'gt':
+      return `${sortKeyName} > ${sortValueName}`;
     case 'equals':
       return `${sortKeyName} = ${sortValueName}`;
+    case 'between':
+      return `${sortKeyName} BETWEEN ${sortValueName} AND ${sortValueName2}`;
     default:
     case 'match':
       return `begins_with(${sortKeyName}, ${sortValueName})`;
@@ -289,6 +327,17 @@ export async function find<DocumentType extends DocumentWithId>(
     ap.sortKeys,
     collection.layout.indexKeySeparator
   );
+  const sortKeyValue2 =
+    options?.queryOperator === 'between'
+      ? assembleQueryValue(
+          'sort2',
+          collection.name,
+          query,
+          ap.options || {},
+          ap.sortKeys,
+          collection.layout.indexKeySeparator
+        )
+      : undefined;
 
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
@@ -299,6 +348,9 @@ export async function find<DocumentType extends DocumentWithId>(
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       nameMapper.map(layout.sortKey!, '#indexSortKey'),
       valueMapper.map(sortKeyValue),
+      options?.queryOperator === 'between'
+        ? valueMapper.map(sortKeyValue2)
+        : undefined,
       options?.queryOperator
     );
   const keyConditionExpression = `${nameMapper.map(

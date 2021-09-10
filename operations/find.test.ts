@@ -227,6 +227,7 @@ describe('find', () => {
     primaryKey: { partitionKey: 'part', sortKey: 'sort' },
     findKeys: [
       { indexName: 'index1', partitionKey: 'gsi_p1', sortKey: 'gsi_s1' },
+      { indexName: 'index2', partitionKey: 'gsi_p2', sortKey: 'gsi_s2' },
     ],
   };
 
@@ -241,6 +242,11 @@ describe('find', () => {
           ['location', 'state'],
           ['location', 'city'],
         ],
+      },
+      {
+        indexName: 'index2',
+        partitionKeys: [['location', 'country']],
+        sortKeys: [['updatedAt']],
       },
     ],
   };
@@ -353,6 +359,64 @@ describe('find', () => {
         }),
         ExpressionAttributeValues: expect.objectContaining({
           ':value2': Converter.input('c'),
+        }),
+      })
+    );
+  });
+
+  it('should correctly handle other query operators', async () => {
+    const testItem1 = { value: { _id: 'testValue1' } };
+    const ddb = createDynamoMock('query', {
+      Items: [Converter.marshall(testItem1)],
+    });
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+
+    const query = {
+      'location.country': 'AU',
+      updatedAt: '2021-01-20',
+    };
+
+    await find(context, 'test-collection', query, undefined, {
+      limit: 5,
+      queryOperator: 'gte',
+    });
+    expect(ddb.query).lastCalledWith(
+      expect.objectContaining({
+        KeyConditionExpression:
+          '#indexPartitionKey = :value1 AND #indexSortKey >= :value0',
+        IndexName: 'index2',
+        ExpressionAttributeValues: expect.objectContaining({
+          ':value1': Converter.input('test-collection|-|AU'),
+          ':value0': Converter.input('test-collection|-|2021-01-20'),
+        }),
+      })
+    );
+  });
+  it('should correctly handle the between operator', async () => {
+    const testItem1 = { value: { _id: 'testValue1' } };
+    const ddb = createDynamoMock('query', {
+      Items: [Converter.marshall(testItem1)],
+    });
+    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+
+    const query = {
+      'location.country': 'AU',
+      updatedAt: ['2021-01-20', '2021-02-20'],
+    };
+
+    await find(context, 'test-collection', query, undefined, {
+      limit: 5,
+      queryOperator: 'between',
+    });
+    expect(ddb.query).lastCalledWith(
+      expect.objectContaining({
+        KeyConditionExpression:
+          '#indexPartitionKey = :value2 AND #indexSortKey BETWEEN :value0 AND :value1',
+        IndexName: 'index2',
+        ExpressionAttributeValues: expect.objectContaining({
+          ':value2': Converter.input('test-collection|-|AU'),
+          ':value0': Converter.input('test-collection|-|2021-01-20'),
+          ':value1': Converter.input('test-collection|-|2021-02-20'),
         }),
       })
     );
