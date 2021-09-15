@@ -93,7 +93,9 @@ export const batchFindByIds = async (
         {
           [primaryKey.partitionKey]: Converter.input(
             assemblePrimaryKeyValue(
-              collection,
+              collectionDefinition.type === 'child'
+                ? collectionDefinition.parentCollectionName
+                : collectionDefinition.name,
               parentId ? parentId : id,
               indexKeySeparator
             )
