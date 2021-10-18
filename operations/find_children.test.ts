@@ -68,7 +68,7 @@ describe('findChildren', () => {
 
     expect(dynamoMock.query).toBeCalledTimes(1);
     expect(dynamoMock.query).toBeCalledWith(
-      jasmine.objectContaining({
+      expect.objectContaining({
         TableName: layout.tableName,
         ExpressionAttributeNames: undefined,
         ExpressionAttributeValues: {
@@ -103,7 +103,7 @@ describe('findChildren', () => {
 
     expect(dynamoMock.query).toBeCalledTimes(1);
     expect(dynamoMock.query).toBeCalledWith(
-      jasmine.objectContaining({
+      expect.objectContaining({
         TableName: layout.tableName,
         ExpressionAttributeNames: undefined,
         ExpressionAttributeValues: {
@@ -150,7 +150,7 @@ describe('findChildren', () => {
 
     expect(dynamoMock.query).toBeCalledTimes(1);
     expect(dynamoMock.query).toBeCalledWith(
-      jasmine.objectContaining({
+      expect.objectContaining({
         TableName: layout.tableName,
         ExpressionAttributeNames: undefined,
         ExpressionAttributeValues: {

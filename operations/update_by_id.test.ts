@@ -329,7 +329,7 @@ describe('findCollectionIndex', () => {
 
   it('should return the index when it is found', () => {
     expect(findCollectionIndex(collectionWithNoAPs, 'index1')).toEqual(
-      jasmine.objectContaining({ indexName: 'index1' })
+      expect.objectContaining({ indexName: 'index1' })
     );
   });
 });
