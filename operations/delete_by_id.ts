@@ -41,18 +41,21 @@ export async function deleteById<DocumentType extends DocumentWithId>(
   }
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
-    Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
-        collectionName,
-        id,
-        collection.layout.indexKeySeparator
-      ),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
-        collectionName,
-        id,
-        collection.layout.indexKeySeparator
-      ),
-    }),
+    Key: Converter.marshall(
+      {
+        [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
+          collectionName,
+          id,
+          collection.layout.indexKeySeparator
+        ),
+        [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
+          collectionName,
+          id,
+          collection.layout.indexKeySeparator
+        ),
+      },
+      { convertEmptyValues: false }
+    ),
     ReturnValues: 'ALL_OLD',
     ConditionExpression: conditionExpression,
     ExpressionAttributeNames: nameMapper.get(),
@@ -61,7 +64,9 @@ export async function deleteById<DocumentType extends DocumentWithId>(
   debugDynamo('DeleteItem', request);
   const result = await context.ddb.deleteItem(request).promise();
   if (result.Attributes) {
-    const wrapped = Converter.unmarshall(result.Attributes);
+    const wrapped = Converter.unmarshall(result.Attributes, {
+      convertEmptyValues: false,
+    });
     return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;

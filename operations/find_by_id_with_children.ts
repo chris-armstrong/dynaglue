@@ -269,7 +269,9 @@ export const findByIdWithChildren = async <DocumentType extends DocumentWithId>(
     allChildCollectionNames.map((name) => [name, []])
   );
   for (const item of Items) {
-    const attributes = Converter.unmarshall(item) as WrappedDocument<any>;
+    const attributes = Converter.unmarshall(item, {
+      convertEmptyValues: false,
+    }) as WrappedDocument<any>;
     if (attributes.type === rootCollectionName) {
       root = unwrap(attributes) as DocumentType;
     } else {

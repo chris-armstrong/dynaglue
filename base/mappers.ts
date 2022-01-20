@@ -85,7 +85,9 @@ export const createValueMapper = (): ValueMapper => {
      */
     map(value: any): string {
       const valueKey = `:value${currentIndex++}`;
-      const convertedValue = Converter.input(value);
+      const convertedValue = Converter.input(value, {
+        convertEmptyValues: false,
+      });
       valueMap.set(valueKey, convertedValue);
       return valueKey;
     },

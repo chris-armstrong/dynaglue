@@ -25,23 +25,28 @@ export async function findById<DocumentType extends DocumentWithId>(
   const collection = getRootCollection(context, collectionName);
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
-    Key: Converter.marshall({
-      [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
-        collectionName,
-        id,
-        collection.layout.indexKeySeparator
-      ),
-      [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
-        collectionName,
-        id,
-        collection.layout.indexKeySeparator
-      ),
-    }),
+    Key: Converter.marshall(
+      {
+        [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
+          collectionName,
+          id,
+          collection.layout.indexKeySeparator
+        ),
+        [collection.layout.primaryKey.sortKey]: assemblePrimaryKeyValue(
+          collectionName,
+          id,
+          collection.layout.indexKeySeparator
+        ),
+      },
+      { convertEmptyValues: false }
+    ),
   };
   debugDynamo('GetItem', request);
   const result = await context.ddb.getItem(request).promise();
   if (result.Item) {
-    const wrapped = Converter.unmarshall(result.Item);
+    const wrapped = Converter.unmarshall(result.Item, {
+      convertEmptyValues: false,
+    });
     return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;

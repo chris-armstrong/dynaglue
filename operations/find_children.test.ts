@@ -46,8 +46,14 @@ describe('findChildren', () => {
   });
 
   it('should issue a query correctly and return the results when a nextToken is not provided', async () => {
-    const item1 = Converter.marshall({ value: address1 });
-    const item2 = Converter.marshall({ value: address2 });
+    const item1 = Converter.marshall(
+      { value: address1 },
+      { convertEmptyValues: false }
+    );
+    const item2 = Converter.marshall(
+      { value: address2 },
+      { convertEmptyValues: false }
+    );
     const dynamoMock = createDynamoMock('query', {
       Items: [item1, item2],
       LastEvaluatedKey: {
@@ -84,7 +90,10 @@ describe('findChildren', () => {
   });
 
   it('should issue a query correctly and return the results when a nextToken is provided', async () => {
-    const item1 = Converter.marshall({ value: address3 });
+    const item1 = Converter.marshall(
+      { value: address3 },
+      { convertEmptyValues: false }
+    );
     const dynamoMock = createDynamoMock('query', {
       Items: [item1],
       LastEvaluatedKey: undefined,
@@ -120,8 +129,14 @@ describe('findChildren', () => {
   });
 
   it('should issue a query correctly and return the results when the layout has a custom separator', async () => {
-    const item1 = Converter.marshall({ value: address1 });
-    const item2 = Converter.marshall({ value: address2 });
+    const item1 = Converter.marshall(
+      { value: address1 },
+      { convertEmptyValues: false }
+    );
+    const item2 = Converter.marshall(
+      { value: address2 },
+      { convertEmptyValues: false }
+    );
     const dynamoMock = createDynamoMock('query', {
       Items: [item1, item2],
       LastEvaluatedKey: {

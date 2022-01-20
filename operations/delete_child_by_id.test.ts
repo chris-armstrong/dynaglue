@@ -70,7 +70,7 @@ describe('deleteChildById', () => {
     };
 
     const mock = createDynamoMock('deleteItem', {
-      Attributes: Converter.marshall({ value }),
+      Attributes: Converter.marshall({ value }, { convertEmptyValues: false }),
     });
     const context = createContext(mock as unknown as DynamoDB, [
       rootCollection,

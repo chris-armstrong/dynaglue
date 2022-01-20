@@ -112,7 +112,11 @@ export async function findChildren<DocumentType extends DocumentWithId>(
   const results = await ctx.ddb.query(request).promise();
   return {
     items: (results.Items || []).map((item) =>
-      unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)
+      unwrap(
+        Converter.unmarshall(item, {
+          convertEmptyValues: false,
+        }) as WrappedDocument<DocumentType>
+      )
     ),
     nextToken: results.LastEvaluatedKey,
   };

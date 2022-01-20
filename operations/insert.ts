@@ -33,7 +33,7 @@ export async function insert<DocumentType extends DocumentWithId>(
   if (collection.type === 'child') {
     request = {
       TableName: collection.layout.tableName,
-      Item: Converter.marshall(wrapped),
+      Item: Converter.marshall(wrapped, { convertEmptyValues: false }),
       ReturnValues: 'NONE',
       ConditionExpression:
         'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
@@ -53,7 +53,7 @@ export async function insert<DocumentType extends DocumentWithId>(
   } else {
     request = {
       TableName: collection.layout.tableName,
-      Item: Converter.marshall(wrapped),
+      Item: Converter.marshall(wrapped, { convertEmptyValues: false }),
       ReturnValues: 'NONE',
       ConditionExpression: 'attribute_not_exists(#idAttribute)',
       ExpressionAttributeNames: {

@@ -30,8 +30,12 @@ export const parseKey = (
   layout: CollectionLayout,
   key: Key
 ): ItemIdDescriptor => {
-  const partitionKey = Converter.output(key[layout.primaryKey.partitionKey]);
-  const sortKey = Converter.output(key[layout.primaryKey.sortKey]);
+  const partitionKey = Converter.output(key[layout.primaryKey.partitionKey], {
+    convertEmptyValues: false,
+  });
+  const sortKey = Converter.output(key[layout.primaryKey.sortKey], {
+    convertEmptyValues: false,
+  });
   // The following checks are for sanity and should not occur in any real application that
   // has setup the layout correctly
   if (!partitionKey || !sortKey)

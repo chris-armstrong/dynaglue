@@ -98,10 +98,12 @@ export const batchFindByIds = async (
                 : collectionDefinition.name,
               parentId ? parentId : id,
               indexKeySeparator
-            )
+            ),
+            { convertEmptyValues: false }
           ),
           [primaryKey.sortKey]: Converter.input(
-            assemblePrimaryKeyValue(collection, id, indexKeySeparator)
+            assemblePrimaryKeyValue(collection, id, indexKeySeparator),
+            { convertEmptyValues: false }
           ),
         },
       ];
@@ -132,9 +134,9 @@ export const batchFindByIds = async (
   };
   for (const items of Object.values(Responses)) {
     for (const item of items) {
-      const unmarshalled = Converter.unmarshall(
-        item
-      ) as WrappedDocument<DocumentWithId>;
+      const unmarshalled = Converter.unmarshall(item, {
+        convertEmptyValues: false,
+      }) as WrappedDocument<DocumentWithId>;
       const collection = getCollection(ctx, unmarshalled.type);
       const document = unwrap(unmarshalled);
       const collectionMap =

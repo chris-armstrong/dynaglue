@@ -506,7 +506,8 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
 
   const result = await ctx.ddb.updateItem(updateItem).promise();
   const unmarshalledAttributes = Converter.unmarshall(
-    result.Attributes as AttributeMap
+    result.Attributes as AttributeMap,
+    { convertEmptyValues: false }
   );
   const updatedDocument = unwrap(
     unmarshalledAttributes as WrappedDocument<DocumentType>

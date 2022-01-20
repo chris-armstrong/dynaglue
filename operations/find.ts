@@ -386,7 +386,11 @@ export async function find<DocumentType extends DocumentWithId>(
     .promise();
   const unwrappedItems = items
     ? items.map((item) =>
-        unwrap(Converter.unmarshall(item) as WrappedDocument<DocumentType>)
+        unwrap(
+          Converter.unmarshall(item, {
+            convertEmptyValues: false,
+          }) as WrappedDocument<DocumentType>
+        )
       )
     : [];
   return {

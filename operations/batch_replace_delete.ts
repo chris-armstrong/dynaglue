@@ -98,7 +98,8 @@ export const batchReplaceDelete = async (
         request = {
           PutRequest: {
             Item: Converter.marshall(
-              toWrapped(collection, descriptor.replaceItem)
+              toWrapped(collection, descriptor.replaceItem),
+              { convertEmptyValues: false }
             ),
           },
         };
@@ -128,10 +129,13 @@ export const batchReplaceDelete = async (
         );
         request = {
           DeleteRequest: {
-            Key: Converter.marshall({
-              [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
-              [collection.layout.primaryKey.sortKey]: sortKeyValue,
-            }),
+            Key: Converter.marshall(
+              {
+                [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
+                [collection.layout.primaryKey.sortKey]: sortKeyValue,
+              },
+              { convertEmptyValues: false }
+            ),
           },
         };
       }
@@ -170,9 +174,9 @@ export const batchReplaceDelete = async (
       const { PutRequest, DeleteRequest } = item;
       if (PutRequest) {
         const key = parseKey(tableMapping, PutRequest.Item);
-        const wrapped = Converter.unmarshall(
-          PutRequest.Item
-        ) as WrappedDocument<DocumentWithId>;
+        const wrapped = Converter.unmarshall(PutRequest.Item, {
+          convertEmptyValues: false,
+        }) as WrappedDocument<DocumentWithId>;
         const document = unwrap(wrapped);
         unprocessedDescriptors.push({
           op: 'replace',

@@ -53,10 +53,12 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
                 collection,
                 rootId ? rootId : id,
                 indexKeySeparator
-              )
+              ),
+              { convertEmptyValues: false }
             ),
             [primaryKey.sortKey]: Converter.input(
-              assemblePrimaryKeyValue(collection, id, indexKeySeparator)
+              assemblePrimaryKeyValue(collection, id, indexKeySeparator),
+              { convertEmptyValues: false }
             ),
           },
         },
@@ -72,7 +74,9 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
   for (const response of Responses) {
     let item = null;
     if (response.Item) {
-      const unmarshalled = Converter.unmarshall(response.Item);
+      const unmarshalled = Converter.unmarshall(response.Item, {
+        convertEmptyValues: false,
+      });
       item = unwrap(unmarshalled as WrappedDocument<DocumentType>);
     }
     returnedItems.push(item);
