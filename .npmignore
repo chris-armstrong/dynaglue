@@ -1,3 +1,4 @@
+src/
 base/
 context/
 debug/
@@ -20,5 +21,5 @@ typedoc.json
 .eslintignore
 .prettierignore
 rollup.config.js
-jest.config.js
+jest.config.ts
 jest-dynalite-config.js
