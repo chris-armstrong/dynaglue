@@ -1,7 +1,7 @@
 import { Collection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
 import { createContext } from '../context';
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { findChildren } from '../operations/find_children';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { CollectionNotFoundException } from '../base/exceptions';

@@ -3,7 +3,7 @@ import { SEPARATOR, toWrapped } from '../base/util';
 import { Collection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
 import { createContext } from '../context';
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { findByIdWithChildren } from './find_by_id_with_children';
 import { CollectionNotFoundException } from '../base/exceptions';
 import { CollectionDefinition } from '../base/collection_definition';

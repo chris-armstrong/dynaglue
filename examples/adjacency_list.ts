@@ -5,8 +5,8 @@ import {
   findById,
   find,
   findByIdWithChildren,
-} from '../dist';
-import { ChildCollection, RootCollection } from '../dist/base/collection';
+} from '../dist/dynaglue.cjs';
+import { ChildCollection, RootCollection } from '../dist/dynaglue.cjs';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';

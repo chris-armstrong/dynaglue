@@ -8,8 +8,9 @@ import {
   findChildById,
   deleteChildById,
   updateById,
-} from '../dist';
-import { ChildCollection, RootCollection } from '../dist/base/collection';
+  ChildCollection,
+  RootCollection,
+} from '../dist/dynaglue.cjs';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';

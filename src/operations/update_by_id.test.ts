@@ -13,7 +13,7 @@ import {
 } from '../base/exceptions';
 import { Collection } from '../base/collection';
 import { createContext } from '../context';
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 import newId from '../base/new_id';
 import {
   Converter,

@@ -1,12 +1,9 @@
 import { CollectionLayout } from '../base/layout';
 import {
   createDynamoMock,
-  createDynamoMockError,
-  createAWSError,
-} from '../testutil/dynamo_mock';
+} from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { DynamoDB } from 'aws-sdk/clients/all';
-import { ExistingItemNotFoundForUpdateException } from '../base/exceptions';
 import { replace } from './replace';
 
 describe('replace', () => {
@@ -30,21 +27,5 @@ describe('replace', () => {
     const request = ddb.putItem.mock.calls[0][0];
     expect(request.TableName).toBe('my-objects');
     expect(request.Item).toBeDefined();
-  });
-
-  test("should wrap and throw an exception if the item doesn't exists", async () => {
-    const ddb = createDynamoMockError(
-      'putItem',
-      createAWSError(
-        'ConditionalCheckFailedException',
-        'The conditional check failed'
-      )
-    );
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
-
-    const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
-    expect(replace(context, 'users', value)).rejects.toThrowError(
-      ExistingItemNotFoundForUpdateException
-    );
   });
 });

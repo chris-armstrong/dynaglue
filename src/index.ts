@@ -47,12 +47,24 @@ export {
   InvalidUpdatesException,
 } from './base/exceptions';
 export type { WrappedDocument, DocumentWithId } from './base/common';
-export type { SetValuesDocument, Updates, SetChange, DeleteChange, UpdateChangesDocument } from './operations/update_by_id';
+export type {
+  SetValuesDocument,
+  Updates,
+  SetChange,
+  DeleteChange,
+  UpdateChangesDocument,
+} from './operations/update_by_id';
 export type { FindQuery, FindOptions, FindResults } from './operations/find';
 export type {
   FindChildrenOptions,
   FindChildrenResults,
 } from './operations/find_children';
 export type { CompositeCondition } from './base/conditions';
-export type { BatchFindByIdDescriptor, BatchFindByIdsResponse } from './operations/batch_find_by_ids';
-export type { BatchReplaceDeleteDescriptor, BatchReplaceDeleteResponse } from './operations/batch_replace_delete';
+export type {
+  BatchFindByIdDescriptor,
+  BatchFindByIdsResponse,
+} from './operations/batch_find_by_ids';
+export type {
+  BatchReplaceDeleteDescriptor,
+  BatchReplaceDeleteResponse,
+} from './operations/batch_replace_delete';

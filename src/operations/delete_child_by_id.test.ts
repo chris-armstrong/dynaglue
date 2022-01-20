@@ -1,25 +1,37 @@
 import { CollectionNotFoundException } from '../base/exceptions';
-import { deleteById } from './delete_by_id';
+import { deleteChildById } from './delete_child_by_id';
 import { createContext } from '../context';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { Converter } from 'aws-sdk/clients/dynamodb';
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
+import { Collection } from '../base/collection';
 
-describe('deleteById', () => {
+describe('deleteChildById', () => {
   const layout = {
     tableName: 'testtable',
     primaryKey: { partitionKey: 'id', sortKey: 'collection' },
   };
 
-  const collection = {
-    name: 'test-collection',
+  const rootCollection: Collection = {
+    name: 'root-collection',
     layout,
   };
 
+  const childCollection: Collection = {
+    name: 'test-collection',
+    type: 'child',
+    layout,
+    foreignKeyPath: ['rootId'],
+    parentCollectionName: 'root-collection',
+  };
+
   test('throws when the collection does not exist', () => {
-    const context = createContext({} as DynamoDB, [collection]);
+    const context = createContext({} as DynamoDB, [
+      rootCollection,
+      childCollection,
+    ]);
     expect(
-      deleteById(context, 'not-a-collection', 'idvalue')
+      deleteChildById(context, 'not-a-collection', 'idvalue', 'rootid')
     ).rejects.toThrowError(CollectionNotFoundException);
   });
 
@@ -29,13 +41,21 @@ describe('deleteById', () => {
         .fn()
         .mockReturnValue({ promise: jest.fn().mockResolvedValue({}) }),
     };
-    const context = createContext(mock as unknown as DynamoDB, [collection]);
-    const result = await deleteById(context, 'test-collection', 'idvalue');
+    const context = createContext(mock as unknown as DynamoDB, [
+      rootCollection,
+      childCollection,
+    ]);
+    const result = await deleteChildById(
+      context,
+      'test-collection',
+      'idvalue',
+      'rootid'
+    );
 
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'test-collection|-|idvalue' },
+        id: { S: 'root-collection|-|rootid' },
         collection: { S: 'test-collection|-|idvalue' },
       },
       ReturnValues: 'ALL_OLD',
@@ -50,15 +70,23 @@ describe('deleteById', () => {
     };
 
     const mock = createDynamoMock('deleteItem', {
-      Attributes: Converter.marshall({ value }),
+      Attributes: Converter.marshall({ value }, { convertEmptyValues: false }),
     });
-    const context = createContext(mock as unknown as DynamoDB, [collection]);
-    const result = await deleteById(context, 'test-collection', 'idvalue');
+    const context = createContext(mock as unknown as DynamoDB, [
+      rootCollection,
+      childCollection,
+    ]);
+    const result = await deleteChildById(
+      context,
+      'test-collection',
+      'idvalue',
+      'rootid'
+    );
 
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'test-collection|-|idvalue' },
+        id: { S: 'root-collection|-|rootid' },
         collection: { S: 'test-collection|-|idvalue' },
       },
       ReturnValues: 'ALL_OLD',
@@ -68,19 +96,19 @@ describe('deleteById', () => {
 
   test('works with custom separators', async () => {
     const mock = createDynamoMock('deleteItem', {});
-    const customCollection = {
-      ...collection,
-      layout: { ...layout, indexKeySeparator: '#' },
-    };
+    const customLayout = { ...layout, indexKeySeparator: '#' };
+    const customRootCollection = { ...rootCollection, layout: customLayout };
+    const customChildCollection = { ...childCollection, layout: customLayout };
     const context = createContext(mock as unknown as DynamoDB, [
-      customCollection,
+      customRootCollection,
+      customChildCollection,
     ]);
-    await deleteById(context, 'test-collection', 'idvalue');
+    await deleteChildById(context, 'test-collection', 'idvalue', 'rootid');
 
     expect(mock.deleteItem.mock.calls[0][0]).toEqual({
       TableName: 'testtable',
       Key: {
-        id: { S: 'test-collection#idvalue' },
+        id: { S: 'root-collection#rootid' },
         collection: { S: 'test-collection#idvalue' },
       },
       ReturnValues: 'ALL_OLD',

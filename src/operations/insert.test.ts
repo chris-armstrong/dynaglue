@@ -3,7 +3,7 @@ import {
   createDynamoMock,
   createDynamoMockError,
   createAWSError,
-} from '../testutil/dynamo_mock';
+} from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { insert } from './insert';

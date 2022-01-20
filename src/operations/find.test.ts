@@ -7,7 +7,7 @@ import {
 } from './find';
 import { AccessPattern, KeyPath } from '../base/access_pattern';
 import { DynamoDB } from 'aws-sdk/clients/all';
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { InvalidQueryException } from '../base/exceptions';
 import { Converter } from 'aws-sdk/clients/dynamodb';

@@ -1,4 +1,4 @@
-import { createDynamoMock } from '../testutil/dynamo_mock';
+import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { DynamoDB } from 'aws-sdk/clients/all';
 import { findChildById } from './find_child_by_id';
