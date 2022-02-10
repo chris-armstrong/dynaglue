@@ -1,4 +1,3 @@
-import { AWSError } from 'aws-sdk/lib/error';
 import { Context } from '../context';
 import {
   getCollection,
@@ -71,7 +70,7 @@ export async function insert<DocumentType extends DocumentWithId>(
     const command = new PutItemCommand(request);
     await context.ddb.send(command);
   } catch (error) {
-    if ((error as AWSError).code === 'ConditionalCheckFailedException') {
+    if ((error as Error).name === 'ConditionalCheckFailedException') {
       throw new ConflictException(
         'An item with this _id already exists',
         wrapped.value._id
