@@ -1,4 +1,5 @@
-import { Converter } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { SEPARATOR, toWrapped } from '../base/util';
 import { Collection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
@@ -51,7 +52,7 @@ describe('findByIdWithChildren', () => {
 
   it('should fail if one of the specified child collections does not have the root as its parent', async () => {
     const dc = createDynamoMock('query', {});
-    const ctx = createContext(dc, allCollections);
+    const ctx = createContext(dc as unknown as DynamoDBClient, allCollections);
     await expect(
       findByIdWithChildren(ctx, 'users', 'testid', ['addresses', 'teams'])
     ).rejects.toThrowError(CollectionNotFoundException);
@@ -59,7 +60,7 @@ describe('findByIdWithChildren', () => {
 
   it('should limit itself to just the specified child collections', async () => {
     const dc = createDynamoMock('query', {});
-    const ctx = createContext(dc, allCollections);
+    const ctx = createContext(dc as unknown as DynamoDBClient, allCollections);
     await findByIdWithChildren(
       ctx,
       'users',
@@ -68,38 +69,42 @@ describe('findByIdWithChildren', () => {
       undefined,
       { scanForward: false }
     );
-    expect(dc.query).toHaveBeenCalledWith(
+    expect(dc.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        ExpressionAttributeValues: {
-          ':value0': { S: `users${SEPARATOR}testid` },
-          ':value1': { S: `profiles${SEPARATOR}` },
-          ':value2': { S: `users${SEPARATOR}\uFFFF` },
-          ':value3': { S: `profiles` },
-          ':value4': { S: 'users' },
-        },
+        input: expect.objectContaining({
+          ExpressionAttributeValues: {
+            ':value0': { S: `users${SEPARATOR}testid` },
+            ':value1': { S: `profiles${SEPARATOR}` },
+            ':value2': { S: `users${SEPARATOR}\uFFFF` },
+            ':value3': { S: `profiles` },
+            ':value4': { S: 'users' },
+          },
+        }),
       })
     );
   });
 
   it('should search against all the known child collections if none are specified', async () => {
     const dc = createDynamoMock('query', {});
-    const ctx = createContext(dc, allCollections);
+    const ctx = createContext(dc as unknown as DynamoDBClient, allCollections);
     await findByIdWithChildren(ctx, 'users', 'testid');
-    expect(dc.query).toHaveBeenCalledWith(
+    expect(dc.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        KeyConditionExpression:
-          'pk = :value0 AND sk BETWEEN :value1 AND :value2',
-        ExpressionAttributeValues: expect.objectContaining({
-          ':value0': { S: `users${SEPARATOR}testid` },
-          ':value1': { S: `addresses${SEPARATOR}` },
-          ':value2': { S: `users${SEPARATOR}\uFFFF` },
-          ':value3': { S: 'addresses' },
-          ':value4': { S: 'profiles' },
-          ':value5': { S: 'users' },
-        }),
-        FilterExpression: '#attr0 IN (:value3,:value4,:value5)',
-        ExpressionAttributeNames: expect.objectContaining({
-          '#attr0': 'type',
+        input: expect.objectContaining({
+          KeyConditionExpression:
+            'pk = :value0 AND sk BETWEEN :value1 AND :value2',
+          ExpressionAttributeValues: expect.objectContaining({
+            ':value0': { S: `users${SEPARATOR}testid` },
+            ':value1': { S: `addresses${SEPARATOR}` },
+            ':value2': { S: `users${SEPARATOR}\uFFFF` },
+            ':value3': { S: 'addresses' },
+            ':value4': { S: 'profiles' },
+            ':value5': { S: 'users' },
+          }),
+          FilterExpression: '#attr0 IN (:value3,:value4,:value5)',
+          ExpressionAttributeNames: expect.objectContaining({
+            '#attr0': 'type',
+          }),
         }),
       })
     );
@@ -109,7 +114,7 @@ describe('findByIdWithChildren', () => {
     const address1 = { _id: 'testaddress1', userId: 'userId1' };
     const dc = createDynamoMock('query', {
       Items: [
-        Converter.marshall(
+        marshall(
           toWrapped(
             {
               ...addressesCollection,
@@ -120,7 +125,7 @@ describe('findByIdWithChildren', () => {
         ),
       ],
     });
-    const ctx = createContext(dc, allCollections);
+    const ctx = createContext(dc as unknown as DynamoDBClient, allCollections);
     const result = await findByIdWithChildren(ctx, 'users', 'testid');
 
     expect(result.root).toBeUndefined();
@@ -141,11 +146,11 @@ describe('findByIdWithChildren', () => {
     } as CollectionDefinition;
     const dc = createDynamoMock('query', {
       Items: [
-        Converter.marshall(toWrapped(addressesDefinition, address1)),
-        Converter.marshall(toWrapped(rootDefinition, root1)),
+        marshall(toWrapped(addressesDefinition, address1)),
+        marshall(toWrapped(rootDefinition, root1)),
       ],
     });
-    const ctx = createContext(dc, allCollections);
+    const ctx = createContext(dc as unknown as DynamoDBClient, allCollections);
     const result = await findByIdWithChildren(ctx, 'users', 'testid');
 
     expect(result.root).toEqual(root1);

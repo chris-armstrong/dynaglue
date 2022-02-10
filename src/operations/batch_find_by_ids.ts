@@ -1,5 +1,5 @@
 import { Context } from '../context';
-import { Converter, KeysAndAttributes, Key } from 'aws-sdk/clients/dynamodb';
+import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import {
   InvalidFindDescriptorException,
   InternalProcessingException,
@@ -11,10 +11,14 @@ import {
   unwrap,
   getCollection,
 } from '../base/util';
-import { DocumentWithId, WrappedDocument } from '../base/common';
+import { DocumentWithId, Key, WrappedDocument } from '../base/common';
 import { CollectionLayout } from '../base/layout';
 import debugDynamo from '../debug/debugDynamo';
 import { parseKey } from './batch_utils';
+import {
+  BatchGetItemCommand,
+  KeysAndAttributes,
+} from '@aws-sdk/client-dynamodb';
 
 /**
  * The collection and ID of a root or child
@@ -91,7 +95,7 @@ export const batchFindByIds = async (
       return [
         tableName,
         {
-          [primaryKey.partitionKey]: Converter.input(
+          [primaryKey.partitionKey]: convertToAttr(
             assemblePrimaryKeyValue(
               collectionDefinition.type === 'child'
                 ? collectionDefinition.parentCollectionName
@@ -101,7 +105,7 @@ export const batchFindByIds = async (
             ),
             { convertEmptyValues: false }
           ),
-          [primaryKey.sortKey]: Converter.input(
+          [primaryKey.sortKey]: convertToAttr(
             assemblePrimaryKeyValue(collection, id, indexKeySeparator),
             { convertEmptyValues: false }
           ),
@@ -118,15 +122,14 @@ export const batchFindByIds = async (
       Keys: [],
     };
     req[tuple[0]] = keyAndsAttrs;
-    keyAndsAttrs.Keys.push(tuple[1]);
+    keyAndsAttrs.Keys!.push(tuple[1]);
     return req;
   }, {} as { [collection: string]: KeysAndAttributes });
 
   const request = { RequestItems: requestItems };
   debugDynamo('batchGetItem', request);
-  const { Responses = {}, UnprocessedKeys = {} } = await ctx.ddb
-    .batchGetItem(request)
-    .promise();
+  const command = new BatchGetItemCommand(request);
+  const { Responses = {}, UnprocessedKeys = {} } = await ctx.ddb.send(command);
 
   const response: BatchFindByIdsResponse = {
     documentsByCollection: {},
@@ -134,9 +137,7 @@ export const batchFindByIds = async (
   };
   for (const items of Object.values(Responses)) {
     for (const item of items) {
-      const unmarshalled = Converter.unmarshall(item, {
-        convertEmptyValues: false,
-      }) as WrappedDocument<DocumentWithId>;
+      const unmarshalled = unmarshall(item) as WrappedDocument<DocumentWithId>;
       const collection = getCollection(ctx, unmarshalled.type);
       const document = unwrap(unmarshalled);
       const collectionMap =
@@ -153,7 +154,7 @@ export const batchFindByIds = async (
         `Could not find table mapping for ${tableName} while parsing UnprocessedKeys`
       );
     }
-    for (const key of unprocessed.Keys) {
+    for (const key of unprocessed.Keys ?? []) {
       const descriptor = parseKey(tableMapping, key);
       response.unprocessedDescriptors.push(descriptor);
     }

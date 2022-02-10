@@ -1,4 +1,5 @@
-import { AttributeValue, Converter } from 'aws-sdk/clients/dynamodb';
+import { convertToAttr } from '@aws-sdk/util-dynamodb';
+import type { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { isSafeAttributeName } from './expression_util';
 import { invertMap } from './util';
 
@@ -85,7 +86,7 @@ export const createValueMapper = (): ValueMapper => {
      */
     map(value: any): string {
       const valueKey = `:value${currentIndex++}`;
-      const convertedValue = Converter.input(value, {
+      const convertedValue = convertToAttr(value, {
         convertEmptyValues: false,
       });
       valueMap.set(valueKey, convertedValue);

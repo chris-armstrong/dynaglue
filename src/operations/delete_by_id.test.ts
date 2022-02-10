@@ -1,8 +1,8 @@
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { CollectionNotFoundException } from '../base/exceptions';
 import { deleteById } from './delete_by_id';
 import { createContext } from '../context';
-import { DynamoDB } from 'aws-sdk/clients/all';
-import { Converter } from 'aws-sdk/clients/dynamodb';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 
 describe('deleteById', () => {
@@ -17,22 +17,18 @@ describe('deleteById', () => {
   };
 
   test('throws when the collection does not exist', () => {
-    const context = createContext({} as DynamoDB, [collection]);
+    const context = createContext({} as DynamoDBClient, [collection]);
     expect(
       deleteById(context, 'not-a-collection', 'idvalue')
     ).rejects.toThrowError(CollectionNotFoundException);
   });
 
   test('returns undefined when there is no old value', async () => {
-    const mock = {
-      deleteItem: jest
-        .fn()
-        .mockReturnValue({ promise: jest.fn().mockResolvedValue({}) }),
-    };
-    const context = createContext(mock as unknown as DynamoDB, [collection]);
+    const mock = createDynamoMock('deleteItem', {});
+    const context = createContext(mock as unknown as DynamoDBClient, [collection]);
     const result = await deleteById(context, 'test-collection', 'idvalue');
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'test-collection|-|idvalue' },
@@ -50,12 +46,12 @@ describe('deleteById', () => {
     };
 
     const mock = createDynamoMock('deleteItem', {
-      Attributes: Converter.marshall({ value }),
+      Attributes: marshall({ value }, { convertEmptyValues: false, removeUndefinedValues: true }),
     });
-    const context = createContext(mock as unknown as DynamoDB, [collection]);
+    const context = createContext(mock as unknown as DynamoDBClient, [collection]);
     const result = await deleteById(context, 'test-collection', 'idvalue');
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'test-collection|-|idvalue' },
@@ -72,12 +68,12 @@ describe('deleteById', () => {
       ...collection,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const context = createContext(mock as unknown as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDBClient, [
       customCollection,
     ]);
     await deleteById(context, 'test-collection', 'idvalue');
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'test-collection#idvalue' },

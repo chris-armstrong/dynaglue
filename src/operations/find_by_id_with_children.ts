@@ -1,6 +1,7 @@
-import { Key, Converter, QueryInput } from 'aws-sdk/clients/dynamodb';
+import { QueryCommand, QueryInput } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import fromPairs from 'lodash/fromPairs';
-import { WrappedDocument, DocumentWithId } from '../base/common';
+import { WrappedDocument, DocumentWithId, Key } from '../base/common';
 import { Context } from '../context';
 import {
   unwrap,
@@ -260,18 +261,15 @@ export const findByIdWithChildren = async <DocumentType extends DocumentWithId>(
 
   debugDynamo('Query', request);
 
-  const { Items = [], LastEvaluatedKey } = await ctx.ddb
-    .query(request)
-    .promise();
+  const command = new QueryCommand(request);
+  const { Items = [], LastEvaluatedKey } = await ctx.ddb.send(command);
 
   let root: DocumentType | undefined;
   const children: { [collection: string]: DocumentWithId[] } = fromPairs(
     allChildCollectionNames.map((name) => [name, []])
   );
   for (const item of Items) {
-    const attributes = Converter.unmarshall(item, {
-      convertEmptyValues: false,
-    }) as WrappedDocument<any>;
+    const attributes = unmarshall(item) as WrappedDocument<any>;
     if (attributes.type === rootCollectionName) {
       root = unwrap(attributes) as DocumentType;
     } else {

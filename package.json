@@ -19,6 +19,7 @@
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.50.0",
     "@babel/cli": "^7.16.8",
     "@babel/core": "^7.15.0",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.14.5",
@@ -28,7 +29,6 @@
     "@preconstruct/cli": "^2.1.5",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
-    "aws-sdk": "^2.979.0",
     "babel-jest": "^27.3.0",
     "dynalite": "^3.2.1",
     "eslint": "^7.32.0",
@@ -40,9 +40,10 @@
     "typescript": "~4.2.2"
   },
   "peerDependencies": {
-    "aws-sdk": "^2.562.0"
+    "@aws-sdk/client-dynamodb": "^3.50.0"
   },
   "dependencies": {
+    "@aws-sdk/util-dynamodb": "^3.50.0",
     "@types/debug": "^4.1.7",
     "@types/jest": "^27.0.2",
     "@types/lodash": "^4.14.172",

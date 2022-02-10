@@ -1,4 +1,4 @@
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDBClient, ListTablesCommand } from '@aws-sdk/client-dynamodb';
 import {
   Collection,
   createContext,
@@ -75,11 +75,11 @@ const postsCollection: Collection = {
 };
 
 async function main(): Promise<void> {
-  const ddb = new DynamoDB({ endpoint: DYNAMODB_ENDPOINT, region: REGION });
+  const ddb = new DynamoDBClient({ endpoint: DYNAMODB_ENDPOINT, region: REGION });
   const ctx = createContext(ddb, [usersCollection, postsCollection]);
 
-  console.log(`Connecting at endpoint ${ddb.endpoint.href}`);
-  const tables = await ddb.listTables().promise();
+  console.log(`Connecting at endpoint ${ddb.config.endpoint}`);
+  const tables = await ddb.send(new ListTablesCommand({}));
   console.log('tables: ', tables.TableNames);
 
   const user1 = await insert(ctx, 'users', {

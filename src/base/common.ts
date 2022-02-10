@@ -1,3 +1,5 @@
+import { AttributeValue } from "@aws-sdk/client-dynamodb";
+
 /**
  * A document stored in a collection. If an _id field
  * is not provided, one will be generated on insert.
@@ -14,3 +16,8 @@ export type WrappedDocument<DocumentType extends DocumentWithId> = {
   type: string;
   value: DocumentType;
 };
+
+/**
+ * A DynamoDB primary key
+ */
+export type Key = { [key: string]: AttributeValue };

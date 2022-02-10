@@ -9,10 +9,9 @@ export function createDynamoMock(
   methodName: string,
   returnValue: Record<string, unknown>
 ): DynamoMock<typeof returnValue> {
+  const mockFunction = jest.fn().mockResolvedValue(returnValue);
   return {
-    [methodName]: jest.fn().mockReturnValue({
-      promise: jest.fn().mockResolvedValue(returnValue),
-    }),
+    send: mockFunction,
   };
 }
 
@@ -21,8 +20,6 @@ export function createDynamoMockError(
   error: Error
 ): DynamoMock<any> {
   return {
-    [methodName]: jest.fn().mockReturnValue({
-      promise: jest.fn().mockRejectedValue(error),
-    }),
+    send: jest.fn().mockRejectedValue(error),
   };
 }

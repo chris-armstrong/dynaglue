@@ -1,11 +1,12 @@
+import { QueryCommand, QueryInput } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import {
   getChildCollection,
   assemblePrimaryKeyValue,
   unwrap,
 } from '../base/util';
-import { QueryInput, Key, Converter } from 'aws-sdk/clients/dynamodb';
 import { Context } from '../context';
-import { DocumentWithId, WrappedDocument } from '../base/common';
+import { DocumentWithId, Key, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 import { CompositeCondition } from '../base/conditions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
@@ -109,14 +110,11 @@ export async function findChildren<DocumentType extends DocumentWithId>(
   };
 
   debugDynamo('Query', request);
-  const results = await ctx.ddb.query(request).promise();
+  const command = new QueryCommand(request);
+  const results = await ctx.ddb.send(command);
   return {
     items: (results.Items || []).map((item) =>
-      unwrap(
-        Converter.unmarshall(item, {
-          convertEmptyValues: false,
-        }) as WrappedDocument<DocumentType>
-      )
+      unwrap(unmarshall(item) as WrappedDocument<DocumentType>)
     ),
     nextToken: results.LastEvaluatedKey,
   };

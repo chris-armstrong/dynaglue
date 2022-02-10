@@ -1,4 +1,4 @@
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   Collection,
   createContext,
@@ -67,7 +67,7 @@ const addressesCollection: ChildCollection = {
 };
 
 async function main(): Promise<void> {
-  const ddb = new DynamoDB({
+  const ddb = new DynamoDBClient({
     endpoint: DYNAMODB_ENDPOINT,
     region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
   });

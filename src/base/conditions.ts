@@ -1,9 +1,7 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-
 /**
  * The DynamoDB `Set` type
  */
-export type DynamoDBSet = DocumentClient.DynamoDbSet;
+export type DynamoDBSet = Set<unknown>;
 
 /**
  * The value for a condition expression
