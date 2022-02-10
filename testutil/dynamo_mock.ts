@@ -3,7 +3,7 @@ export type DynamoMock<T> = {
 };
 
 export const createAWSError = (code: string, message: string): Error =>
-  Object.assign(new Error(message), { code });
+  Object.assign(new Error(message), { name: code });
 
 export function createDynamoMock(
   methodName: string,

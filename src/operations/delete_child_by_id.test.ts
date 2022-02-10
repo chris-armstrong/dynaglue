@@ -30,7 +30,7 @@ describe('deleteChildById', () => {
       rootCollection,
       childCollection,
     ]);
-    expect(
+    return expect(
       deleteChildById(context, 'not-a-collection', 'idvalue', 'rootid')
     ).rejects.toThrowError(CollectionNotFoundException);
   });

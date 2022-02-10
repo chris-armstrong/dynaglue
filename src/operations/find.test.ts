@@ -257,7 +257,7 @@ describe('find', () => {
       collection,
     ]);
 
-    expect(
+    return expect(
       find(context, 'test-collection', { email: 'test@example.com' })
     ).rejects.toThrowError(InvalidQueryException);
   });

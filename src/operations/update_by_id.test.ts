@@ -510,7 +510,7 @@ describe('updateById', () => {
     const context = createContext(ddbMock as unknown as DynamoDBClient, [
       collectionWithNoAPs,
     ]);
-    expect(
+    return expect(
       updateById(context, collectionWithNoAPs.name, testId, {})
     ).rejects.toThrowError(InvalidUpdatesException);
   });
@@ -521,7 +521,7 @@ describe('updateById', () => {
     const context = createContext(ddbMock as unknown as DynamoDBClient, [
       collectionWithNoAPs,
     ]);
-    expect(
+    return expect(
       updateById(context, collectionWithNoAPs.name, testId, {
         value1: undefined,
         value2: {},

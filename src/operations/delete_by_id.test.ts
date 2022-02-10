@@ -18,7 +18,7 @@ describe('deleteById', () => {
 
   test('throws when the collection does not exist', () => {
     const context = createContext({} as DynamoDBClient, [collection]);
-    expect(
+    return expect(
       deleteById(context, 'not-a-collection', 'idvalue')
     ).rejects.toThrowError(CollectionNotFoundException);
   });

@@ -34,12 +34,12 @@ describe('findChildren', () => {
   const address2 = { _id: 'address-2', street: 'Timber Cl' };
   const address3 = { _id: 'address-3', street: 'Adrian St' };
 
-  it('should throw when the child collection does not exist', () => {
+  it('should throw when the child collection does not exist', async () => {
     const dynamoMock = createDynamoMock('query', {});
     const context = createContext(dynamoMock as unknown as DynamoDBClient, [
       rootCollection,
     ]);
-    expect(findChildren(context, 'addresses', 'user-1')).rejects.toThrowError(
+    await expect(findChildren(context, 'addresses', 'user-1')).rejects.toThrowError(
       CollectionNotFoundException
     );
     expect(dynamoMock.send).not.toBeCalled();
