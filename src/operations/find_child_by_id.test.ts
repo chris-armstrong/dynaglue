@@ -1,8 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { findChildById } from './find_child_by_id';
-import { Converter } from 'aws-sdk/clients/dynamodb';
 import { Collection } from '../base/collection';
 
 describe('findChildById', () => {
@@ -59,7 +59,7 @@ describe('findChildById', () => {
       },
     };
     const getItemReturnValue = {
-      Item: Converter.marshall(item),
+      Item: marshall(item),
     };
     const ddb = createDynamoMock('getItem', getItemReturnValue);
     const context = createContext(ddb as unknown as DynamoDBClient, [
