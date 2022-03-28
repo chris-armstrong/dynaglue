@@ -18,7 +18,7 @@ describe('Lexographical operations', () => {
       expect(decrementLast('123')).toBe('122'));
     it('should decrement on the last character being min correctly', () =>
       expect(decrementLast('12\u0000')).toBe(
-        '13\uFFFF'
+        '11\uFFFF'
       ));
   });
 });
