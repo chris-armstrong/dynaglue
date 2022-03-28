@@ -9,6 +9,8 @@ import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
 import { CompositeCondition } from '../base/conditions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
+import { InvalidRangeOperatorException } from '../base/exceptions';
+import { decrementLast, incrementLast } from '../base/lexo';
 
 /**
  * The results of a [[findChildren]] operation.
@@ -22,6 +24,17 @@ export type FindChildrenResults<DocumentType extends DocumentWithId> = {
    */
   nextToken?: Key;
 };
+
+export type KeyRangeExpression =
+  | {
+      op: 'gte' | 'gt' | 'lte' | 'lt' | 'begins_with';
+      value: string;
+    }
+  | {
+      op: 'between';
+      min: string;
+      max: string;
+    };
 
 /**
  * The options to a [[findChildren]] operation
@@ -40,6 +53,11 @@ export type FindChildrenOptions = {
    * find operation
    */
   filter?: CompositeCondition;
+
+  /**
+   * The range of children to retrieve (on the child's ID value)
+   */
+  range?: KeyRangeExpression;
 };
 
 /**
@@ -87,17 +105,135 @@ export async function findChildren<DocumentType extends DocumentWithId>(
     rootObjectId,
     childCollection.layout.indexKeySeparator
   );
-  const childCollectionPrefix = assemblePrimaryKeyValue(
-    childCollectionName,
-    '',
-    childCollection.layout.indexKeySeparator
-  );
 
-  const keyConditionExpression =
-    `${nameMapper.map(partitionKey)} = ${valueMapper.map(parentId)} ` +
-    `AND begins_with(${nameMapper.map(sortKey)}, ${valueMapper.map(
-      childCollectionPrefix
-    )})`;
+  const partitionKeyExpression = `${nameMapper.map(
+    partitionKey
+  )} = ${valueMapper.map(parentId)}`;
+  let sortKeyExpression: string;
+  if (options.range) {
+    // for <, <=, >, >=, we can't use the builtin DynamoDB operators because they
+    // will include items from other collections naturally. Instead, we construct
+    // a barrier for highest and lowest and use the `BETWEEN` operator (similar
+    // to findByIdWithChildren)
+    switch (options.range.op) {
+      case 'gt': {
+        const childCollectionMin = assemblePrimaryKeyValue(
+          childCollectionName,
+          incrementLast(options.range.value),
+          childCollection.layout.indexKeySeparator
+        );
+        const childCollectionMax = assemblePrimaryKeyValue(
+          childCollectionName,
+          '\uFFFF',
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `${nameMapper.map(
+          sortKey
+        )} BETWEEN ${valueMapper.map(childCollectionMin)} AND ${valueMapper.map(
+          childCollectionMax
+        )}`;
+        break;
+      }
+      case 'lt': {
+        const childCollectionMax = assemblePrimaryKeyValue(
+          childCollectionName,
+          decrementLast(options.range.value),
+          childCollection.layout.indexKeySeparator
+        );
+        const childCollectionMin = assemblePrimaryKeyValue(
+          childCollectionName,
+          '',
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `${nameMapper.map(
+          sortKey
+        )} BETWEEN ${valueMapper.map(childCollectionMin)} AND ${valueMapper.map(
+          childCollectionMax
+        )}`;
+        break;
+      }
+      case 'lte': {
+        const childCollectionMax = assemblePrimaryKeyValue(
+          childCollectionName,
+          options.range.value,
+          childCollection.layout.indexKeySeparator
+        );
+        const childCollectionMin = assemblePrimaryKeyValue(
+          childCollectionName,
+          '',
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `${nameMapper.map(
+          sortKey
+        )} BETWEEN ${valueMapper.map(childCollectionMin)} AND ${valueMapper.map(
+          childCollectionMax
+        )}`;
+        break;
+      }
+      case 'gte': {
+        const childCollectionMin = assemblePrimaryKeyValue(
+          childCollectionName,
+          options.range.value,
+          childCollection.layout.indexKeySeparator
+        );
+        const childCollectionMax = assemblePrimaryKeyValue(
+          childCollectionName,
+          '\uFFFF',
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `${nameMapper.map(
+          sortKey
+        )} BETWEEN ${valueMapper.map(childCollectionMin)} AND ${valueMapper.map(
+          childCollectionMax
+        )}`;
+        break;
+      }
+      case 'begins_with': {
+        const childCollectionValue = assemblePrimaryKeyValue(
+          childCollectionName,
+          options.range.value,
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `begins_with(${nameMapper.map(
+          sortKey
+        )}, ${valueMapper.map(childCollectionValue)})`;
+        break;
+      }
+      case 'between': {
+        const childCollectionMin = assemblePrimaryKeyValue(
+          childCollectionName,
+          options.range.min,
+          childCollection.layout.indexKeySeparator
+        );
+        const childCollectionMax = assemblePrimaryKeyValue(
+          childCollectionName,
+          options.range.max,
+          childCollection.layout.indexKeySeparator
+        );
+        sortKeyExpression = `${nameMapper.map(
+          sortKey
+        )} BETWEEN ${valueMapper.map(childCollectionMin)} AND ${valueMapper.map(
+          childCollectionMax
+        )}`;
+        break;
+      }
+      default:
+        throw new InvalidRangeOperatorException(
+          'Unknown range operator',
+          (options.range as KeyRangeExpression).op
+        );
+    }
+  } else {
+    const childCollectionPrefix = assemblePrimaryKeyValue(
+      childCollectionName,
+      '',
+      childCollection.layout.indexKeySeparator
+    );
+    sortKeyExpression = `begins_with(${nameMapper.map(
+      sortKey
+    )}, ${valueMapper.map(childCollectionPrefix)})`;
+  }
+  const keyConditionExpression = `${partitionKeyExpression} AND ${sortKeyExpression}`;
   const request: QueryInput = {
     TableName: childCollection.layout.tableName,
     KeyConditionExpression: keyConditionExpression,

@@ -231,3 +231,9 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
     super({ name: 'invalid_batch_replace_descriptor', info }, message);
   }
 }
+
+export class InvalidRangeOperatorException extends VError {
+  constructor(message: string, operator: string) {
+    super({ name: 'invalid_range_operator', info: { operator } }, message);
+  }
+}
