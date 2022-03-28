@@ -1,12 +1,14 @@
 import DynamoDB from 'aws-sdk/clients/dynamodb';
 import { startDb, stopDb, createTables } from 'jest-dynalite';
 
-import type { RootCollection } from '../base/collection';
+import type { ChildCollection, RootCollection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
 import { createContext } from '../context';
 import { insert } from '../operations/insert';
 import { updateById } from '../operations/update_by_id';
 import { find } from '../operations/find';
+import { findChildren } from './find_children';
+import { findByIdWithChildren } from './find_by_id_with_children';
 
 describe('E2E tests', () => {
   beforeAll(startDb, 10000);
@@ -61,6 +63,15 @@ describe('E2E tests', () => {
         sortKeys: [['updatedAt']],
       },
     ],
+  };
+
+  const directReportsDefinition: ChildCollection = {
+    type: 'child',
+    name: 'direct-report',
+    layout,
+    parentCollectionName: 'staff',
+    foreignKeyPath: ['staffId'],
+    accessPatterns: [],
   };
 
   it('should sparse update correctly', async () => {
@@ -166,5 +177,155 @@ describe('E2E tests', () => {
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveProperty('name', 'test3');
     expect(items[2]).toHaveProperty('name', 'test5');
+  });
+
+  it('should find children correctly', async () => {
+    const staff1 = {
+      _id: 'staff-1',
+      name: 'test1',
+      updatedAt: '2021-01-21T01',
+    };
+
+    const staff2 = {
+      _id: 'staff-2',
+      name: 'test2',
+      updatedAt: '2021-01-20T00',
+    };
+
+    const dr1 = {
+      _id: 'direct-report-1',
+      staffId: 'staff-1',
+      type: 'B',
+    };
+    const dr2 = {
+      _id: 'direct-report-2',
+      staffId: 'staff-1',
+      type: 'D',
+    };
+    const dr3 = {
+      _id: 'direct-report-3',
+      staffId: 'staff-1',
+      type: 'B',
+    };
+    const dr4 = {
+      _id: 'direct-report-4',
+      staffId: 'staff-1',
+      type: 'C',
+    };
+    const dr5 = {
+      _id: 'direct-report-A1',
+      staffId: 'staff-2',
+      type: 'B',
+    };
+    const dr6 = {
+      _id: 'direct-report-A2',
+      staffId: 'staff-2',
+      type: 'B',
+    };
+    const dr7 = {
+      _id: 'direct-report-B2',
+      staffId: 'staff-2',
+      type: 'A',
+    };
+    const dynamodb = createDynamoDB();
+    const ctx = createContext(dynamodb, [
+      staffDefinition,
+      directReportsDefinition,
+    ]);
+
+    await Promise.all([
+      insert(ctx, 'staff', staff1),
+      insert(ctx, 'staff', staff2),
+      insert(ctx, 'direct-report', dr6),
+      insert(ctx, 'direct-report', dr4),
+      insert(ctx, 'direct-report', dr1),
+      insert(ctx, 'direct-report', dr3),
+      insert(ctx, 'direct-report', dr5),
+      insert(ctx, 'direct-report', dr2),
+      insert(ctx, 'direct-report', dr7),
+    ]);
+
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1')
+    ).resolves.toEqual({
+      items: [dr1, dr2, dr3, dr4],
+    });
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-2')
+    ).resolves.toEqual({
+      items: [dr5, dr6, dr7],
+    });
+    await expect(
+      findByIdWithChildren(
+        ctx,
+        'staff',
+        'staff-1',
+        ['direct-report'],
+        undefined,
+        { scanForward: false }
+      )
+    ).resolves.toEqual({
+      root: staff1,
+      children: { 'direct-report': [dr4, dr3, dr2, dr1] },
+    });
+
+    // <
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1', undefined, {
+        range: { op: 'lt', value: 'direct-report-3' },
+      })
+    ).resolves.toEqual({
+      items: [dr1, dr2],
+    });
+    // <=
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1', undefined, {
+        range: { op: 'lte', value: 'direct-report-3' },
+      })
+    ).resolves.toEqual({
+      items: [dr1, dr2, dr3],
+    });
+    // >
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1', undefined, {
+        range: { op: 'gt', value: 'direct-report-3' },
+        scanForward: false,
+      })
+    ).resolves.toEqual({
+      items: [dr4],
+    });
+    // >=
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1', undefined, {
+        range: { op: 'gte', value: 'direct-report-2' },
+        scanForward: false,
+      })
+    ).resolves.toEqual({
+      items: [dr4, dr3, dr2],
+    });
+
+    // between
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-1', undefined, {
+        range: {
+          op: 'between',
+          min: 'direct-report-2',
+          max: 'direct-report-4',
+        },
+        scanForward: false,
+      })
+    ).resolves.toEqual({
+      items: [dr4, dr3, dr2],
+    });
+
+    // begins_with
+    await expect(
+      findChildren(ctx, 'direct-report', 'staff-2', undefined, {
+        range: { op: 'begins_with', value: 'direct-report-A' },
+        scanForward: false,
+      })
+    ).resolves.toEqual({
+      items: [dr6, dr5],
+    });
   });
 });
