@@ -23,3 +23,4 @@ typedoc.json
 rollup.config.js
 jest.config.ts
 jest-dynalite-config.js
+esbuild.config.js
