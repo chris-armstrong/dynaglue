@@ -5,7 +5,7 @@ import {
   insert,
   find,
   Context,
-} from '../dist/dynaglue.cjs';
+} from '../dist';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';

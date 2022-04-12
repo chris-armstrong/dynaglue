@@ -5,8 +5,8 @@ import {
   findById,
   find,
   findByIdWithChildren,
-} from '../dist/dynaglue.cjs';
-import { ChildCollection, RootCollection } from '../dist/dynaglue.cjs';
+} from '../dist';
+import { ChildCollection, RootCollection } from '../dist';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
@@ -173,7 +173,7 @@ async function main(): Promise<void> {
   ); // scan forward to get user object first
   console.log(
     'user1 addresses',
-    result1.root?.name,
+    (result1.root as any)?.name,
     result1.children?.[ADDRESSES_COLLECTION],
     JSON.stringify(result1)
   );
@@ -191,7 +191,7 @@ async function main(): Promise<void> {
   ); // scan backward to get user object first
   console.log(
     'user2 credentials',
-    result2.root?.name,
+    (result2.root as any).name,
     result2.children?.[CREDENTIALS_COLLECTION],
     JSON.stringify(result2)
   );
