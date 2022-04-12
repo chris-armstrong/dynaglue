@@ -2,9 +2,8 @@
   "name": "dynaglue",
   "version": "0.1.0-alpha.37",
   "description": "dynaglue",
-  "main": "dist/dynaglue.cjs.js",
-  "module": "dist/dynaglue.esm.js",
-  "types": "dist/dynaglue.cjs.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile:build": "node esbuild.config.js",
     "compile:declarations": "tsc --build src",
