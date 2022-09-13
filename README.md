@@ -38,9 +38,9 @@ also contains useful information about the operations and types you need to use 
 
 ## Status
 
-This project is currently in progress (alpha) but mostly feature complete. **Its API may change during this period**, so take care and keep an eye on updates for now.
+dynaglue is reasonably complete with a stable API. It is being improved over time and is used in production.
 
-It's quite feature complete, barring some specific items (like full transactions support, projection expressions, and returning capacity numbers).
+There are some specific areas that could be improved, such as full transactions support, projection expressions, and returning capacity numbers.
 
 Please try it out, report bugs, suggest improvements or submit a PR.
 
@@ -217,7 +217,7 @@ without further engagement.
 
 ## License
 
-Copyright 2019-2021 Christopher Armstrong
+Copyright 2019-2022 Christopher Armstrong
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
