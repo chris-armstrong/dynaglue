@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "esModuleInterop": true
+  },
+  "include": ["**/*.ts"],
+  "references": [
+    { "path": "../src" }
+  ]
+}
