@@ -9,7 +9,7 @@
     "compile:declarations": "tsc --build src",
     "build": "run-p compile:build compile:declarations",
     "prepublishOnly": "npm run build",
-    "doc": "typedoc index.ts",
+    "doc": "typedoc --tsconfig src/tsconfig.json src/index.ts",
     "lint": "eslint '**/*.ts'",
     "test": "jest",
     "prettier:check": "prettier -c **/*.ts",

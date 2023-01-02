@@ -1,471 +1,160 @@
-<!doctype html>
-<html class="default no-js">
-<head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>dynaglue</title>
-	<meta name="description" content="Documentation for dynaglue">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="assets/css/main.css">
-	<script async src="assets/js/search.js" id="search-script"></script>
-</head>
-<body>
-<header>
-	<div class="tsd-page-toolbar">
-		<div class="container">
-			<div class="table-wrap">
-				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
-					<div class="field">
-						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
-						<input id="tsd-search-field" type="text" />
-					</div>
-					<ul class="results">
-						<li class="state loading">Preparing search index...</li>
-						<li class="state failure">The search index is not available</li>
-					</ul>
-					<a href="index.html" class="title">dynaglue</a>
-				</div>
-				<div class="table-cell" id="tsd-widgets">
-					<div id="tsd-filter">
-						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
-						<div class="tsd-filter-group">
-							<div class="tsd-select" id="tsd-filter-visibility">
-								<span class="tsd-select-label">All</span>
-								<ul class="tsd-select-list">
-									<li data-value="public">Public</li>
-									<li data-value="protected">Public/Protected</li>
-									<li data-value="private" class="selected">All</li>
-								</ul>
-							</div>
-							<input type="checkbox" id="tsd-filter-inherited" checked />
-							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
-							<input type="checkbox" id="tsd-filter-externals" checked />
-							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-						</div>
-					</div>
-					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="tsd-page-title">
-		<div class="container">
-			<h1>dynaglue</h1>
-		</div>
-	</div>
-</header>
-<div class="container container-main">
-	<div class="row">
-		<div class="col-8 col-content">
-			<div class="tsd-panel tsd-typography">
-				<a href="#dynaglue" id="dynaglue" style="color: inherit; text-decoration: none;">
-					<h1>Dynaglue</h1>
-				</a>
-				<p><em>dynaglue</em> is an opinionated TypeScript/JavaScript library that makes single-table designs in DynamoDB easier
-				to query and update.</p>
-				<pre><code class="language-sh"><span style="color: #000000">npm install dynaglue</span>
+<!DOCTYPE html><html class="default"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>dynaglue</title><meta name="description" content="Documentation for dynaglue"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.body.classList.add(localStorage.getItem("tsd-theme") || "os")</script><header><div class="tsd-page-toolbar"><div class="container"><div class="table-wrap"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption">Search</label><input type="text" id="tsd-search-field"/></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">dynaglue</a></div><div class="table-cell" id="tsd-widgets"><div id="tsd-filter"><a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a><div class="tsd-filter-group"><div class="tsd-select" id="tsd-filter-visibility"><span class="tsd-select-label">All</span><ul class="tsd-select-list"><li data-value="public">Public</li><li data-value="protected">Public/Protected</li><li data-value="private" class="selected">All</li></ul></div> <input type="checkbox" id="tsd-filter-inherited" checked/><label class="tsd-widget" for="tsd-filter-inherited">Inherited</label><input type="checkbox" id="tsd-filter-externals" checked/><label class="tsd-widget" for="tsd-filter-externals">Externals</label></div></div><a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a></div></div></div></div><div class="tsd-page-title"><div class="container"><h1>dynaglue </h1></div></div></header><div class="container container-main"><div class="row"><div class="col-8 col-content"><div class="tsd-panel tsd-typography">
+<a href="#dynaglue" id="dynaglue" style="color: inherit; text-decoration: none;">
+  <h1>Dynaglue</h1>
+</a>
+<p><em>dynaglue</em> is an opinionated TypeScript/JavaScript library that makes single-table designs in DynamoDB easier
+to query and update.</p>
+<pre><code class="language-sh"><span class="hl-0">npm install dynaglue</span>
 </code></pre>
-				<a href="#rationale" id="rationale" style="color: inherit; text-decoration: none;">
-					<h2>Rationale</h2>
-				</a>
-				<p>Querying and storing data in single-table DynamoDB designs <strong>is hard</strong>. Keeping indexes up-to-date and
-				constructing DynamoDB queries and update expressions is time-consuming and error-prone.</p>
-				<p><em>dynaglue</em> takes the hassle out of managing your data with a straightforward way to declare its mapping
-				onto your table&#39;s indexes, and wraps it all up with simple and foolproof Mongo-like API.</p>
-				<p>See <a href="#Motivation">Motivation</a> (below) for a more detailed explanation.</p>
-				<a href="#benefits" id="benefits" style="color: inherit; text-decoration: none;">
-					<h2>Benefits</h2>
-				</a>
-				<ul>
-					<li>Adds a rigourous model that makes it easy to implement numerous single-table patterns</li>
-					<li>Simple, Mongo-like interface to update and query your data</li>
-					<li>Easy to use query and filter expression syntax</li>
-					<li>Supports most of the DynamoDB functionality</li>
-					<li>Fully TypeScript-enabled API</li>
-				</ul>
-				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
-					<h2>Getting Started</h2>
-				</a>
-				<p>A comprehensive <a href="https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide">Getting Started Guide</a> is
-				available explaining how to install and use dynaglue in a new project as well as all its current features.</p>
-				<p>See the <a href="https://github.com/chris-armstrong/dynaglue/tree/master/examples">examples directory</a> for a more
-				concise overview of its features in action.</p>
-				<p><a href="https://chris-armstrong.github.io/dynaglue/">Reference Documentation</a>, generated from the source code,
-				also contains useful information about the operations and types you need to use dynaglue.</p>
-				<a href="#status" id="status" style="color: inherit; text-decoration: none;">
-					<h2>Status</h2>
-				</a>
-				<p>This project is currently in progress (alpha) but mostly feature complete. <strong>Its API may change during this period</strong>, so take care and keep an eye on updates for now.</p>
-				<p>It&#39;s quite feature complete, barring some specific items (like full transactions support, projection expressions, and returning capacity numbers).</p>
-				<p>Please try it out, report bugs, suggest improvements or submit a PR.</p>
-				<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
-					<h2>Usage Example</h2>
-				</a>
-				<pre><code class="language-typescript"><span style="color: #008000">// Declare the layout of your table (its primary and secondary indexes and their key names)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">layout</span><span style="color: #000000"> = {</span>
-<span style="color: #000000">  </span><span style="color: #001080">tableName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-table&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">primaryKey:</span><span style="color: #000000"> { </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;collection&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">  </span><span style="color: #001080">findKeys:</span><span style="color: #000000"> [</span>
-<span style="color: #000000">    </span><span style="color: #008000">// 2 GSIs =&gt; up to 2 extra access patterns per collection</span>
-<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2p&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2s&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3p&#039;</span><span style="color: #000000">, </span><span style="color: #001080">sortKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3s&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">  ],</span>
-<span style="color: #000000">};</span>
 
-<span style="color: #008000">// Declare a collection for each data type (like a Mongo collection)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">usersCollection</span><span style="color: #000000"> = {</span>
-<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">layout</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #008000">// access patterns that are mapped to indexes in the table layout</span>
-<span style="color: #000000">  </span><span style="color: #001080">accessPatterns:</span><span style="color: #000000"> [</span>
-<span style="color: #000000">    </span><span style="color: #008000">// 1. Find users by their email address on GSI2</span>
-<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKeys:</span><span style="color: #000000"> [], </span><span style="color: #001080">sortKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;email&#039;</span><span style="color: #000000">]] },</span>
-<span style="color: #000000">    </span><span style="color: #008000">// 2. Find users by their team (and optionally, employee code)</span>
-<span style="color: #000000">    { </span><span style="color: #001080">indexName:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;gs3&#039;</span><span style="color: #000000">, </span><span style="color: #001080">partitionKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;team&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;id&#039;</span><span style="color: #000000">]], </span><span style="color: #001080">sortKeys:</span><span style="color: #000000"> [[</span><span style="color: #A31515">&#039;team&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;employeeCode&#039;</span><span style="color: #000000">]] },</span>
-<span style="color: #000000">  ],</span>
-<span style="color: #000000">};</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ddb</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #0070C1">AWS</span><span style="color: #000000">.</span><span style="color: #795E26">DynamoDB</span><span style="color: #000000">();</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ctx</span><span style="color: #000000"> = </span><span style="color: #795E26">createContext</span><span style="color: #000000">(</span><span style="color: #001080">ddb</span><span style="color: #000000">, [</span><span style="color: #001080">usersCollection</span><span style="color: #000000">]);</span>
+<a href="#rationale" id="rationale" style="color: inherit; text-decoration: none;">
+  <h2>Rationale</h2>
+</a>
+<p>Querying and storing data in single-table DynamoDB designs <strong>is hard</strong>. Keeping indexes up-to-date and
+constructing DynamoDB queries and update expressions is time-consuming and error-prone.</p>
+<p><em>dynaglue</em> takes the hassle out of managing your data with a straightforward way to declare its mapping 
+onto your table&#39;s indexes, and wraps it all up with simple and foolproof Mongo-like API.</p>
+<p>See <a href="#Motivation">Motivation</a> (below) for a more detailed explanation.</p>
 
-<span style="color: #008000">// Insert users into collection (auto-generated IDs)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user1</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
-<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Anayah Dyer&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;anayahd@example.com&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-1&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">});</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
-<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Ruairidh Hughes&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;ruairidhh@example.com&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-2&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">});</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user3</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
-<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Giles Major&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;giles@example.com&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-5&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">});</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">user4</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">insert</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, {</span>
-<span style="color: #000000">  </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;Lance Alles&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;lance@example.com&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #001080">team:</span><span style="color: #000000"> { </span><span style="color: #001080">id:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-6&#039;</span><span style="color: #000000"> },</span>
-<span style="color: #000000">});</span>
+<a href="#benefits" id="benefits" style="color: inherit; text-decoration: none;">
+  <h2>Benefits</h2>
+</a>
+<ul>
+<li>Adds a rigourous model that makes it easy to implement numerous single-table patterns</li>
+<li>Simple, Mongo-like interface to update and query your data</li>
+<li>Easy to use query and filter expression syntax</li>
+<li>Supports most of the DynamoDB functionality</li>
+<li>Fully TypeScript-enabled API</li>
+</ul>
 
-<span style="color: #008000">// Find a user by ID (uses primary index)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">foundUser</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">findById</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, </span><span style="color: #001080">user2</span><span style="color: #000000">.</span><span style="color: #001080">_id</span><span style="color: #000000">);</span>
-<span style="color: #008000">// =&gt; { _id: &#039;...&#039;, name: &#039;Ruairidh Hughes&#039;, ... }</span>
+<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+  <h2>Getting Started</h2>
+</a>
+<p>A comprehensive <a href="https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide">Getting Started Guide</a> is
+available explaining how to install and use dynaglue in a new project as well as all its current features.</p>
+<p>See the <a href="https://github.com/chris-armstrong/dynaglue/tree/master/examples">examples directory</a> for a more
+concise overview of its features in action.</p>
+<p><a href="https://chris-armstrong.github.io/dynaglue/">Reference Documentation</a>, generated from the source code,
+also contains useful information about the operations and types you need to use dynaglue.</p>
 
-<span style="color: #008000">// Find a user by email (access pattern 1)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">userByEmail</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #001080">email:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;anayahd@example.com&#039;</span><span style="color: #000000"> });</span>
-<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Anayah Dyer&#039;, ... }]</span>
+<a href="#status" id="status" style="color: inherit; text-decoration: none;">
+  <h2>Status</h2>
+</a>
+<p>dynaglue is reasonably complete with a stable API. It is being improved over time and is used in production.</p>
+<p>There are some specific areas that could be improved, such as full transactions support, projection expressions, and returning capacity numbers.</p>
+<p>Please try it out, report bugs, suggest improvements or submit a PR.</p>
 
-<span style="color: #008000">// Find all users in a team (access pattern 2)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">usersInTeam2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #A31515">&#039;team.id&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-2&#039;</span><span style="color: #000000"> });</span>
-<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Giles Major&#039;, ... }, { _id: &#039;...&#039;, name: &#039;Lance Alles&#039;, ... }]</span>
-
-<span style="color: #008000">// Find user by teamId and employeeCode (access pattern 2)</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">specificUser</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">find</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, { </span><span style="color: #A31515">&#039;team.id&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;team-code-1&#039;</span><span style="color: #000000">, </span><span style="color: #001080">employeeCode:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;AC-2&#039;</span><span style="color: #000000"> });</span>
-<span style="color: #008000">// =&gt; [{ _id: &#039;...&#039;, name: &#039;Ruairidh Hughes&#039;, ... }]</span>
-
-<span style="color: #008000">// Update an item</span>
-<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">updatedItem</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">updateById</span><span style="color: #000000">(</span><span style="color: #001080">ctx</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;users&#039;</span><span style="color: #000000">, </span><span style="color: #001080">user4</span><span style="color: #000000">.</span><span style="color: #001080">_id</span><span style="color: #000000">, {</span>
-<span style="color: #000000">  </span><span style="color: #A31515">&#039;team.employeeCode&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;GT-10&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">  </span><span style="color: #A31515">&#039;name&#039;</span><span style="color: #001080">:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;James Alles&#039;</span><span style="color: #000000">,</span>
-<span style="color: #000000">});</span>
+<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
+  <h2>Usage Example</h2>
+</a>
+<pre><code class="language-typescript"><span class="hl-8">// Declare the layout of your table (its primary and secondary indexes and their key names)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">layout</span><span class="hl-0"> = {</span><br/><span class="hl-0">  </span><span class="hl-2">tableName:</span><span class="hl-0"> </span><span class="hl-1">&#39;my-table&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">primaryKey:</span><span class="hl-0"> { </span><span class="hl-2">partitionKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;id&#39;</span><span class="hl-0">, </span><span class="hl-2">sortKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;collection&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">  </span><span class="hl-2">findKeys:</span><span class="hl-0"> [</span><br/><span class="hl-0">    </span><span class="hl-8">// 2 GSIs =&gt; up to 2 extra access patterns per collection</span><br/><span class="hl-0">    { </span><span class="hl-2">indexName:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs2&#39;</span><span class="hl-0">, </span><span class="hl-2">partitionKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs2p&#39;</span><span class="hl-0">, </span><span class="hl-2">sortKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs2s&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">    { </span><span class="hl-2">indexName:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs3&#39;</span><span class="hl-0">, </span><span class="hl-2">partitionKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs3p&#39;</span><span class="hl-0">, </span><span class="hl-2">sortKey:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs3s&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">  ],</span><br/><span class="hl-0">};</span><br/><br/><span class="hl-8">// Declare a collection for each data type (like a Mongo collection)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">usersCollection</span><span class="hl-0"> = {</span><br/><span class="hl-0">  </span><span class="hl-2">name:</span><span class="hl-0"> </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">layout</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-8">// access patterns that are mapped to indexes in the table layout</span><br/><span class="hl-0">  </span><span class="hl-2">accessPatterns:</span><span class="hl-0"> [</span><br/><span class="hl-0">    </span><span class="hl-8">// 1. Find users by their email address on GSI2</span><br/><span class="hl-0">    { </span><span class="hl-2">indexName:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs2&#39;</span><span class="hl-0">, </span><span class="hl-2">partitionKeys:</span><span class="hl-0"> [], </span><span class="hl-2">sortKeys:</span><span class="hl-0"> [[</span><span class="hl-1">&#39;email&#39;</span><span class="hl-0">]] },</span><br/><span class="hl-0">    </span><span class="hl-8">// 2. Find users by their team (and optionally, employee code)</span><br/><span class="hl-0">    { </span><span class="hl-2">indexName:</span><span class="hl-0"> </span><span class="hl-1">&#39;gs3&#39;</span><span class="hl-0">, </span><span class="hl-2">partitionKeys:</span><span class="hl-0"> [[</span><span class="hl-1">&#39;team&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;id&#39;</span><span class="hl-0">]], </span><span class="hl-2">sortKeys:</span><span class="hl-0"> [[</span><span class="hl-1">&#39;team&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;employeeCode&#39;</span><span class="hl-0">]] },</span><br/><span class="hl-0">  ],</span><br/><span class="hl-0">};</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">ddb</span><span class="hl-0"> = </span><span class="hl-6">new</span><span class="hl-0"> </span><span class="hl-5">AWS</span><span class="hl-0">.</span><span class="hl-9">DynamoDB</span><span class="hl-0">();</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">ctx</span><span class="hl-0"> = </span><span class="hl-9">createContext</span><span class="hl-0">(</span><span class="hl-2">ddb</span><span class="hl-0">, [</span><span class="hl-2">usersCollection</span><span class="hl-0">]);</span><br/><br/><span class="hl-8">// Insert users into collection (auto-generated IDs)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">user1</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">insert</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-2">name:</span><span class="hl-0"> </span><span class="hl-1">&#39;Anayah Dyer&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">email:</span><span class="hl-0"> </span><span class="hl-1">&#39;anayahd@example.com&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">team:</span><span class="hl-0"> { </span><span class="hl-2">id:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-1&#39;</span><span class="hl-0">, </span><span class="hl-2">employeeCode:</span><span class="hl-0"> </span><span class="hl-1">&#39;AC-1&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">});</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">user2</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">insert</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-2">name:</span><span class="hl-0"> </span><span class="hl-1">&#39;Ruairidh Hughes&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">email:</span><span class="hl-0"> </span><span class="hl-1">&#39;ruairidhh@example.com&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">team:</span><span class="hl-0"> { </span><span class="hl-2">id:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-1&#39;</span><span class="hl-0">, </span><span class="hl-2">employeeCode:</span><span class="hl-0"> </span><span class="hl-1">&#39;AC-2&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">});</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">user3</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">insert</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-2">name:</span><span class="hl-0"> </span><span class="hl-1">&#39;Giles Major&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">email:</span><span class="hl-0"> </span><span class="hl-1">&#39;giles@example.com&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">team:</span><span class="hl-0"> { </span><span class="hl-2">id:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-2&#39;</span><span class="hl-0">, </span><span class="hl-2">employeeCode:</span><span class="hl-0"> </span><span class="hl-1">&#39;GT-5&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">});</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">user4</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">insert</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-2">name:</span><span class="hl-0"> </span><span class="hl-1">&#39;Lance Alles&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">email:</span><span class="hl-0"> </span><span class="hl-1">&#39;lance@example.com&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-2">team:</span><span class="hl-0"> { </span><span class="hl-2">id:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-2&#39;</span><span class="hl-0">, </span><span class="hl-2">employeeCode:</span><span class="hl-0"> </span><span class="hl-1">&#39;GT-6&#39;</span><span class="hl-0"> },</span><br/><span class="hl-0">});</span><br/><br/><span class="hl-8">// Find a user by ID (uses primary index)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">foundUser</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">findById</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, </span><span class="hl-2">user2</span><span class="hl-0">.</span><span class="hl-2">_id</span><span class="hl-0">);</span><br/><span class="hl-8">// =&gt; { _id: &#39;...&#39;, name: &#39;Ruairidh Hughes&#39;, ... }</span><br/><br/><span class="hl-8">// Find a user by email (access pattern 1)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">userByEmail</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">find</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, { </span><span class="hl-2">email:</span><span class="hl-0"> </span><span class="hl-1">&#39;anayahd@example.com&#39;</span><span class="hl-0"> });</span><br/><span class="hl-8">// =&gt; [{ _id: &#39;...&#39;, name: &#39;Anayah Dyer&#39;, ... }]</span><br/><br/><span class="hl-8">// Find all users in a team (access pattern 2)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">usersInTeam2</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">find</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, { </span><span class="hl-1">&#39;team.id&#39;</span><span class="hl-2">:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-2&#39;</span><span class="hl-0"> });</span><br/><span class="hl-8">// =&gt; [{ _id: &#39;...&#39;, name: &#39;Giles Major&#39;, ... }, { _id: &#39;...&#39;, name: &#39;Lance Alles&#39;, ... }]</span><br/><br/><span class="hl-8">// Find user by teamId and employeeCode (access pattern 2)</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">specificUser</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">find</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, { </span><span class="hl-1">&#39;team.id&#39;</span><span class="hl-2">:</span><span class="hl-0"> </span><span class="hl-1">&#39;team-code-1&#39;</span><span class="hl-0">, </span><span class="hl-2">employeeCode:</span><span class="hl-0"> </span><span class="hl-1">&#39;AC-2&#39;</span><span class="hl-0"> });</span><br/><span class="hl-8">// =&gt; [{ _id: &#39;...&#39;, name: &#39;Ruairidh Hughes&#39;, ... }]</span><br/><br/><span class="hl-8">// Update an item</span><br/><span class="hl-6">const</span><span class="hl-0"> </span><span class="hl-5">updatedItem</span><span class="hl-0"> = </span><span class="hl-10">await</span><span class="hl-0"> </span><span class="hl-9">updateById</span><span class="hl-0">(</span><span class="hl-2">ctx</span><span class="hl-0">, </span><span class="hl-1">&#39;users&#39;</span><span class="hl-0">, </span><span class="hl-2">user4</span><span class="hl-0">.</span><span class="hl-2">_id</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-1">&#39;team.employeeCode&#39;</span><span class="hl-2">:</span><span class="hl-0"> </span><span class="hl-1">&#39;GT-10&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">  </span><span class="hl-1">&#39;name&#39;</span><span class="hl-2">:</span><span class="hl-0"> </span><span class="hl-1">&#39;James Alles&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">});</span>
 </code></pre>
-				<a href="#prerequisite-knowledge" id="prerequisite-knowledge" style="color: inherit; text-decoration: none;">
-					<h2>Prerequisite Knowledge</h2>
-				</a>
-				<p>This library assumes you have a good understanding of DynamoDB basics and some understanding
-				of single-table modelling.</p>
-				<p>If you need to get started, these are some good resources:</p>
-				<ul>
-					<li><a href="https://www.dynamodbguide.com/">DynamoDB Guide</a></li>
-					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html">Getting Started with DynamoDB - AWS Documentation</a></li>
-				</ul>
-				<p>more advanced DynamoDB modelling, including single-table design:</p>
-				<ul>
-					<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a> <strong>HIGHLY RECOMMENDED</strong></li>
-					<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
-					<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html">DynamoDB Best Practices</a></li>
-					<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
-					<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
-				</ul>
-				<p>and if you want to debate the usefulness of a single-table approach:</p>
-				<ul>
-					<li><a href="https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/">Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail</a></li>
-					<li><a href="https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices">Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie</a></li>
-				</ul>
-				<a href="#debugging" id="debugging" style="color: inherit; text-decoration: none;">
-					<h2>Debugging</h2>
-				</a>
-				<p>You can see what it is doing to DynamoDB by running your code with the environment variable:</p>
-				<pre><code class="language-bash"><span style="color: #0000FF">export</span><span style="color: #000000"> DEBUG=dynaglue:*</span>
+
+<a href="#prerequisite-knowledge" id="prerequisite-knowledge" style="color: inherit; text-decoration: none;">
+  <h2>Prerequisite Knowledge</h2>
+</a>
+<p>This library assumes you have a good understanding of DynamoDB basics and some understanding
+of single-table modelling.</p>
+<p>If you need to get started, these are some good resources:</p>
+<ul>
+<li><a href="https://www.dynamodbguide.com/">DynamoDB Guide</a></li>
+<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStartedDynamoDB.html">Getting Started with DynamoDB - AWS Documentation</a></li>
+</ul>
+<p>more advanced DynamoDB modelling, including single-table design:</p>
+<ul>
+<li><a href="https://www.dynamodbbook.com/">The DynamoDB Book</a> <strong>HIGHLY RECOMMENDED</strong></li>
+<li><a href="https://www.youtube.com/watch?v=HaEPXoXVf2k">Advanced Design Patterns for DynamoDB - AWS ReInvent 2018 - Rick Houlihan</a></li>
+<li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html">DynamoDB Best Practices</a></li>
+<li><a href="https://www.jeremydaly.com/how-to-switch-from-rdbms-to-dynamodb-in-20-easy-steps/">How to switch from RDBMS to DynamoDB in 20 easy steps… - Jeremy Daly</a></li>
+<li><a href="https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/">From relational DB to single DynamoDB table: a step-by-step exploration</a></li>
+</ul>
+<p>and if you want to debate the usefulness of a single-table approach:</p>
+<ul>
+<li><a href="https://winterwindsoftware.com/dynamodb-modelling-single-vs-multi-table/">Comparing multi and single table approaches to designing a DynamoDB data model - Paul Swail</a></li>
+<li><a href="https://acloud.guru/series/serverlessconf-nyc-2019/view/dynamodb-best-practices">Using (and Ignoring) DynamoDB Best Practices with Serverless | Alex DeBrie</a></li>
+</ul>
+
+<a href="#debugging" id="debugging" style="color: inherit; text-decoration: none;">
+  <h2>Debugging</h2>
+</a>
+<p>You can see what it is doing to DynamoDB by running your code with the environment variable:</p>
+<pre><code class="language-bash"><span class="hl-6">export</span><span class="hl-0"> DEBUG=dynaglue:*</span>
 </code></pre>
-				<p>which will print out the queries it executes.</p>
-				<a href="#motivation" id="motivation" style="color: inherit; text-decoration: none;">
-					<h2>Motivation</h2>
-				</a>
-				<p>Apparently to use DynamoDB efficiently, you must:</p>
-				<ul>
-					<li>purge yourself of any sensible knowledge of database design such as normalisation</li>
-					<li>know exactly how your application will access its data for now and into the future</li>
-					<li>pack multiple values into the same field in order to implement fast composite-key and
-					hierarchical data lookups</li>
-					<li>mix multiple data structures together in the same table, distinguished only by
-					prefixes and values</li>
-				</ul>
-				<p>Once you&#39;ve accepted all that is horrible as best practice, only then you may then build highly
-				performant and scalable web applications.</p>
-				<p>The next stumbling block is DynamoDB&#39;s API: it does not make this easy. Combining multiple
-					records from different data types sharing indexes in the same logical table requires
-				discipline and attention to detail.</p>
-				<p>Most DynamoDB applications will attempt to avoid this by using separate tables
-					for each type of data, using secondary indexes liberally and by naming their keys
-					intuitively based on the data being modelled. <strong>This is actually fine</strong>: it makes working
-				with the API less painful but it makes it harder to optimise for cost and performance.</p>
-				<p>This library is an attempt at a compromise - it presents a Mongo-like
-					API for looking up data, but still relies on you to identify and declare your access
-				patterns up front.</p>
-				<p>You can query your data as if your storage engine knows how to work out
-					what index to use, but it will fail hard if it can&#39;t find that index, which is
-				(counterintuitively) what you want with DynamoDB.</p>
-				<p>You can use it for single or multi-table designs (in reality, there is no such thing
-					as single-table designs, because there will be at least one access pattern that is
-					so different from your others that it would affect the performance of them if they
-				shared an index or table).</p>
-				<a href="#limitations" id="limitations" style="color: inherit; text-decoration: none;">
-					<h2>Limitations</h2>
-				</a>
-				<p>This is a list of current limitations:</p>
-				<ul>
-					<li><em>Opinionated</em> - the library follows popular practice on implementing a single-table design,
-					but it makes some assumptions about how you want to store your data</li>
-					<li><em>No projection expression support</em> </li>
-					<li><em>No support for projected indexes</em> - all GSIs are assumed to project all the data. This
-						library may support in the future splitting up your document so that you can use projected indexes to
-					limit data in some indexes.</li>
-					<li><em>Only string types for values used to build indexes.</em> Obviously numbers are also useful for sort key expressions, but they require more
-					sophisticated handling than the library currently supports</li>
-					<li><em>Batch Read/Write and Transaction Support is still in progress</em></li>
-					<li><em>No write sharding support for low-variance partition keys.</em> (NOTE: This isn&#39;t important for most use cases)
-						If you have hot partition keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
-						and you query them on one of those values relentlessly, you will get a
-						hot partition. The normal solution is to add a suffix spread between a given
-						set of values (e.g. 0-19) so that when it is queried on status the query can
-					be split over 20 partitions instead of one.</li>
-				</ul>
-				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
-					<h2>Contributing</h2>
-				</a>
-				<p>Open an Issue (<strong>especially before you write any code</strong>) and share your
-				thoughts / plans / ideas before you do anything substantial.</p>
-				<p>Abuse, harrassment, and anything else that is becoming unproductive will be closed
-				without further engagement.</p>
-				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
-					<h2>License</h2>
-				</a>
-				<p>Copyright 2019-2021 Christopher Armstrong</p>
-				<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-					you may not use this file except in compliance with the License.
-				You may obtain a copy of the License at</p>
-				<p>  <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
-				<p>Unless required by applicable law or agreed to in writing, software
-					distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-					WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-					See the License for the specific language governing permissions and
-				limitations under the License.</p>
-			</div>
-		</div>
-		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
-			<nav class="tsd-navigation primary">
-				<ul>
-					<li class=" ">
-						<a href="modules.html">Exports</a>
-					</li>
-				</ul>
-			</nav>
-			<nav class="tsd-navigation secondary menu-sticky">
-				<ul class="before-current">
-					<li class=" tsd-kind-class">
-						<a href="classes/collectionnotfoundexception.html" class="tsd-kind-icon">Collection<wbr>Not<wbr>Found<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/configurationexception.html" class="tsd-kind-icon">Configuration<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/conflictexception.html" class="tsd-kind-icon">Conflict<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/indexnotfoundexception.html" class="tsd-kind-icon">Index<wbr>Not<wbr>Found<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidbatchreplacedeletedescriptorexception.html" class="tsd-kind-icon">Invalid<wbr>Batch<wbr>Replace<wbr>Delete<wbr>Descriptor<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidcompositeconditionexception.html" class="tsd-kind-icon">Invalid<wbr>Composite<wbr>Condition<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalididexception.html" class="tsd-kind-icon">Invalid<wbr>IdException</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidindexedfieldvalueexception.html" class="tsd-kind-icon">Invalid<wbr>Indexed<wbr>Field<wbr>Value<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidparentidexception.html" class="tsd-kind-icon">Invalid<wbr>Parent<wbr>IdException</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidqueryexception.html" class="tsd-kind-icon">Invalid<wbr>Query<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidupdatevalueexception.html" class="tsd-kind-icon">Invalid<wbr>Update<wbr>Value<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="classes/invalidupdatesexception.html" class="tsd-kind-icon">Invalid<wbr>Updates<wbr>Exception</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/accesspattern.html" class="tsd-kind-icon">Access<wbr>Pattern</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/childcollection.html" class="tsd-kind-icon">Child<wbr>Collection</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/collectionlayout.html" class="tsd-kind-icon">Collection<wbr>Layout</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/rootcollection.html" class="tsd-kind-icon">Root<wbr>Collection</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#batchfindbyiddescriptor" class="tsd-kind-icon">Batch<wbr>Find<wbr>ById<wbr>Descriptor</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#batchfindbyidsresponse" class="tsd-kind-icon">Batch<wbr>Find<wbr>ByIds<wbr>Response</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#batchreplacedeletedescriptor" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Descriptor</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#batchreplacedeleteresponse" class="tsd-kind-icon">Batch<wbr>Replace<wbr>Delete<wbr>Response</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#collection" class="tsd-kind-icon">Collection</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#compositecondition" class="tsd-kind-icon">Composite<wbr>Condition</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#context" class="tsd-kind-icon">Context</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#deletechange" class="tsd-kind-icon">Delete<wbr>Change</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#documentwithid" class="tsd-kind-icon">Document<wbr>With<wbr>Id</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#findchildrenoptions" class="tsd-kind-icon">Find<wbr>Children<wbr>Options</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
-						<a href="modules.html#findchildrenresults" class="tsd-kind-icon">Find<wbr>Children<wbr>Results</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#findoptions" class="tsd-kind-icon">Find<wbr>Options</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#findquery" class="tsd-kind-icon">Find<wbr>Query</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
-						<a href="modules.html#findresults" class="tsd-kind-icon">Find<wbr>Results</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#keypath" class="tsd-kind-icon">Key<wbr>Path</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#normaliserfunction" class="tsd-kind-icon">Normaliser<wbr>Function</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#primaryindexlayout" class="tsd-kind-icon">Primary<wbr>Index<wbr>Layout</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#secondaryindexlayout" class="tsd-kind-icon">Secondary<wbr>Index<wbr>Layout</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#setchange" class="tsd-kind-icon">Set<wbr>Change</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#setvaluesdocument" class="tsd-kind-icon">Set<wbr>Values<wbr>Document</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#updatechangesdocument" class="tsd-kind-icon">Update<wbr>Changes<wbr>Document</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="modules.html#updates" class="tsd-kind-icon">Updates</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-has-type-parameter">
-						<a href="modules.html#wrappeddocument" class="tsd-kind-icon">Wrapped<wbr>Document</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="modules.html#batchfindbyids" class="tsd-kind-icon">batch<wbr>Find<wbr>ByIds</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="modules.html#batchreplacedelete" class="tsd-kind-icon">batch<wbr>Replace<wbr>Delete</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="modules.html#createcontext" class="tsd-kind-icon">create<wbr>Context</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#deletebyid" class="tsd-kind-icon">delete<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#deletechildbyid" class="tsd-kind-icon">delete<wbr>Child<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#find" class="tsd-kind-icon">find</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#findbyid" class="tsd-kind-icon">find<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#findbyidwithchildren" class="tsd-kind-icon">find<wbr>ById<wbr>With<wbr>Children</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#findchildbyid" class="tsd-kind-icon">find<wbr>Child<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#findchildren" class="tsd-kind-icon">find<wbr>Children</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#insert" class="tsd-kind-icon">insert</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#replace" class="tsd-kind-icon">replace</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#updatebyid" class="tsd-kind-icon">update<wbr>ById</a>
-					</li>
-					<li class=" tsd-kind-function tsd-has-type-parameter">
-						<a href="modules.html#updatechildbyid" class="tsd-kind-icon">update<wbr>Child<wbr>ById</a>
-					</li>
-				</ul>
-			</nav>
-		</div>
-	</div>
-</div>
-<footer class="with-border-bottom">
-	<div class="container">
-		<h2>Legend</h2>
-		<div class="tsd-legend-group">
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
-			</ul>
-		</div>
-	</div>
-</footer>
-<div class="container tsd-generator">
-	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
-</div>
-<div class="overlay"></div>
-<script src="assets/js/main.js"></script>
-</body>
-</html>
+<p>which will print out the queries it executes.</p>
+
+<a href="#motivation" id="motivation" style="color: inherit; text-decoration: none;">
+  <h2>Motivation</h2>
+</a>
+<p>Apparently to use DynamoDB efficiently, you must:</p>
+<ul>
+<li>purge yourself of any sensible knowledge of database design such as normalisation</li>
+<li>know exactly how your application will access its data for now and into the future</li>
+<li>pack multiple values into the same field in order to implement fast composite-key and
+hierarchical data lookups</li>
+<li>mix multiple data structures together in the same table, distinguished only by
+prefixes and values</li>
+</ul>
+<p>Once you&#39;ve accepted all that is horrible as best practice, only then you may then build highly
+performant and scalable web applications.</p>
+<p>The next stumbling block is DynamoDB&#39;s API: it does not make this easy. Combining multiple
+records from different data types sharing indexes in the same logical table requires
+discipline and attention to detail.</p>
+<p>Most DynamoDB applications will attempt to avoid this by using separate tables
+for each type of data, using secondary indexes liberally and by naming their keys
+intuitively based on the data being modelled. <strong>This is actually fine</strong>: it makes working
+with the API less painful but it makes it harder to optimise for cost and performance.</p>
+<p>This library is an attempt at a compromise - it presents a Mongo-like
+API for looking up data, but still relies on you to identify and declare your access
+patterns up front.</p>
+<p>You can query your data as if your storage engine knows how to work out
+what index to use, but it will fail hard if it can&#39;t find that index, which is
+(counterintuitively) what you want with DynamoDB.</p>
+<p>You can use it for single or multi-table designs (in reality, there is no such thing
+as single-table designs, because there will be at least one access pattern that is
+so different from your others that it would affect the performance of them if they
+shared an index or table).</p>
+
+<a href="#limitations" id="limitations" style="color: inherit; text-decoration: none;">
+  <h2>Limitations</h2>
+</a>
+<p>This is a list of current limitations:</p>
+<ul>
+<li><em>Opinionated</em> - the library follows popular practice on implementing a single-table design,
+but it makes some assumptions about how you want to store your data</li>
+<li><em>No projection expression support</em> </li>
+<li><em>No support for projected indexes</em> - all GSIs are assumed to project all the data. This
+library may support in the future splitting up your document so that you can use projected indexes to
+limit data in some indexes.</li>
+<li><em>Only string types for values used to build indexes.</em> Obviously numbers are also useful for sort key expressions, but they require more
+sophisticated handling than the library currently supports</li>
+<li><em>Batch Read/Write and Transaction Support is still in progress</em></li>
+<li><em>No write sharding support for low-variance partition keys.</em> (NOTE: This isn&#39;t important for most use cases)
+If you have hot partition keys with a small set of values e.g. <code>status=(starting, started, stopping, stopped deleted)</code>
+and you query them on one of those values relentlessly, you will get a
+hot partition. The normal solution is to add a suffix spread between a given
+set of values (e.g. 0-19) so that when it is queried on status the query can
+be split over 20 partitions instead of one.</li>
+</ul>
+
+<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+  <h2>Contributing</h2>
+</a>
+<p>Open an Issue (<strong>especially before you write any code</strong>) and share your
+thoughts / plans / ideas before you do anything substantial.</p>
+<p>Abuse, harrassment, and anything else that is becoming unproductive will be closed
+without further engagement.</p>
+
+<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+  <h2>License</h2>
+</a>
+<p>Copyright 2019-2022 Christopher Armstrong</p>
+<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+<p>  <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</div></div><div class="col-4 col-menu menu-sticky-wrap menu-highlight"><nav class="tsd-navigation primary"><ul><li class="current"><a href="modules.html">Exports</a></li></ul></nav><nav class="tsd-navigation secondary menu-sticky"><ul><li class="tsd-kind-class"><a href="classes/CollectionNotFoundException.html" class="tsd-kind-icon">Collection<wbr/>Not<wbr/>Found<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/ConfigurationException.html" class="tsd-kind-icon">Configuration<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/ConflictException.html" class="tsd-kind-icon">Conflict<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/IndexNotFoundException.html" class="tsd-kind-icon">Index<wbr/>Not<wbr/>Found<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidBatchReplaceDeleteDescriptorException.html" class="tsd-kind-icon">Invalid<wbr/>Batch<wbr/>Replace<wbr/>Delete<wbr/>Descriptor<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidCompositeConditionException.html" class="tsd-kind-icon">Invalid<wbr/>Composite<wbr/>Condition<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidIdException.html" class="tsd-kind-icon">Invalid<wbr/>Id<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidIndexedFieldValueException.html" class="tsd-kind-icon">Invalid<wbr/>Indexed<wbr/>Field<wbr/>Value<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidParentIdException.html" class="tsd-kind-icon">Invalid<wbr/>Parent<wbr/>Id<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidQueryException.html" class="tsd-kind-icon">Invalid<wbr/>Query<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidUpdateValueException.html" class="tsd-kind-icon">Invalid<wbr/>Update<wbr/>Value<wbr/>Exception</a></li><li class="tsd-kind-class"><a href="classes/InvalidUpdatesException.html" class="tsd-kind-icon">Invalid<wbr/>Updates<wbr/>Exception</a></li><li class="tsd-kind-interface"><a href="interfaces/AccessPattern.html" class="tsd-kind-icon">Access<wbr/>Pattern</a></li><li class="tsd-kind-interface"><a href="interfaces/ChildCollection.html" class="tsd-kind-icon">Child<wbr/>Collection</a></li><li class="tsd-kind-interface"><a href="interfaces/CollectionLayout.html" class="tsd-kind-icon">Collection<wbr/>Layout</a></li><li class="tsd-kind-interface"><a href="interfaces/RootCollection.html" class="tsd-kind-icon">Root<wbr/>Collection</a></li><li class="tsd-kind-type-alias"><a href="modules.html#BatchFindByIdDescriptor" class="tsd-kind-icon">Batch<wbr/>Find<wbr/>By<wbr/>Id<wbr/>Descriptor</a></li><li class="tsd-kind-type-alias"><a href="modules.html#BatchFindByIdsResponse" class="tsd-kind-icon">Batch<wbr/>Find<wbr/>By<wbr/>Ids<wbr/>Response</a></li><li class="tsd-kind-type-alias"><a href="modules.html#BatchReplaceDeleteDescriptor" class="tsd-kind-icon">Batch<wbr/>Replace<wbr/>Delete<wbr/>Descriptor</a></li><li class="tsd-kind-type-alias"><a href="modules.html#BatchReplaceDeleteResponse" class="tsd-kind-icon">Batch<wbr/>Replace<wbr/>Delete<wbr/>Response</a></li><li class="tsd-kind-type-alias"><a href="modules.html#Collection" class="tsd-kind-icon">Collection</a></li><li class="tsd-kind-type-alias"><a href="modules.html#CompositeCondition" class="tsd-kind-icon">Composite<wbr/>Condition</a></li><li class="tsd-kind-type-alias"><a href="modules.html#Context" class="tsd-kind-icon">Context</a></li><li class="tsd-kind-type-alias"><a href="modules.html#DeleteChange" class="tsd-kind-icon">Delete<wbr/>Change</a></li><li class="tsd-kind-type-alias"><a href="modules.html#DocumentWithId" class="tsd-kind-icon">Document<wbr/>With<wbr/>Id</a></li><li class="tsd-kind-type-alias"><a href="modules.html#FindChildrenOptions" class="tsd-kind-icon">Find<wbr/>Children<wbr/>Options</a></li><li class="tsd-kind-type-alias tsd-has-type-parameter"><a href="modules.html#FindChildrenResults" class="tsd-kind-icon">Find<wbr/>Children<wbr/>Results</a></li><li class="tsd-kind-type-alias"><a href="modules.html#FindOptions" class="tsd-kind-icon">Find<wbr/>Options</a></li><li class="tsd-kind-type-alias"><a href="modules.html#FindQuery" class="tsd-kind-icon">Find<wbr/>Query</a></li><li class="tsd-kind-type-alias tsd-has-type-parameter"><a href="modules.html#FindResults" class="tsd-kind-icon">Find<wbr/>Results</a></li><li class="tsd-kind-type-alias"><a href="modules.html#KeyPath" class="tsd-kind-icon">Key<wbr/>Path</a></li><li class="tsd-kind-type-alias"><a href="modules.html#NormaliserFunction" class="tsd-kind-icon">Normaliser<wbr/>Function</a></li><li class="tsd-kind-type-alias"><a href="modules.html#PrimaryIndexLayout" class="tsd-kind-icon">Primary<wbr/>Index<wbr/>Layout</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SecondaryIndexLayout" class="tsd-kind-icon">Secondary<wbr/>Index<wbr/>Layout</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SetChange" class="tsd-kind-icon">Set<wbr/>Change</a></li><li class="tsd-kind-type-alias"><a href="modules.html#SetValuesDocument" class="tsd-kind-icon">Set<wbr/>Values<wbr/>Document</a></li><li class="tsd-kind-type-alias"><a href="modules.html#UpdateChangesDocument" class="tsd-kind-icon">Update<wbr/>Changes<wbr/>Document</a></li><li class="tsd-kind-type-alias"><a href="modules.html#Updates" class="tsd-kind-icon">Updates</a></li><li class="tsd-kind-type-alias tsd-has-type-parameter"><a href="modules.html#WrappedDocument" class="tsd-kind-icon">Wrapped<wbr/>Document</a></li><li class="tsd-kind-function"><a href="modules.html#batchFindByIds" class="tsd-kind-icon">batch<wbr/>Find<wbr/>By<wbr/>Ids</a></li><li class="tsd-kind-function"><a href="modules.html#batchReplaceDelete" class="tsd-kind-icon">batch<wbr/>Replace<wbr/>Delete</a></li><li class="tsd-kind-function"><a href="modules.html#createContext" class="tsd-kind-icon">create<wbr/>Context</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#deleteById" class="tsd-kind-icon">delete<wbr/>By<wbr/>Id</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#deleteChildById" class="tsd-kind-icon">delete<wbr/>Child<wbr/>By<wbr/>Id</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#find" class="tsd-kind-icon">find</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#findById" class="tsd-kind-icon">find<wbr/>By<wbr/>Id</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#findByIdWithChildren" class="tsd-kind-icon">find<wbr/>By<wbr/>Id<wbr/>With<wbr/>Children</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#findChildById" class="tsd-kind-icon">find<wbr/>Child<wbr/>By<wbr/>Id</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#findChildren" class="tsd-kind-icon">find<wbr/>Children</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#insert" class="tsd-kind-icon">insert</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#replace" class="tsd-kind-icon">replace</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#updateById" class="tsd-kind-icon">update<wbr/>By<wbr/>Id</a></li><li class="tsd-kind-function tsd-has-type-parameter"><a href="modules.html#updateChildById" class="tsd-kind-icon">update<wbr/>Child<wbr/>By<wbr/>Id</a></li></ul></nav></div></div></div><footer class="with-border-bottom"><div class="container"><h2>Legend</h2><div class="tsd-legend-group"><ul class="tsd-legend"><li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li></ul><ul class="tsd-legend"><li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li></ul></div><h2>Settings</h2><p>Theme <select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></p></div></footer><div class="container tsd-generator"><p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div><div class="overlay"></div><script src="assets/main.js"></script></body></html>
