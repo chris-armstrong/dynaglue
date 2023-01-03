@@ -1,4 +1,5 @@
-import { Converter, Key } from 'aws-sdk/clients/dynamodb';
+import { convertToNative } from '@aws-sdk/util-dynamodb';
+import { Key } from '../base/common';
 import { InternalProcessingException } from '../base/exceptions';
 import { CollectionLayout } from '../base/layout';
 import { SEPARATOR } from '../base/util';
@@ -30,12 +31,8 @@ export const parseKey = (
   layout: CollectionLayout,
   key: Key
 ): ItemIdDescriptor => {
-  const partitionKey = Converter.output(key[layout.primaryKey.partitionKey], {
-    convertEmptyValues: false,
-  });
-  const sortKey = Converter.output(key[layout.primaryKey.sortKey], {
-    convertEmptyValues: false,
-  });
+  const partitionKey = convertToNative(key[layout.primaryKey.partitionKey]);
+  const sortKey = convertToNative(key[layout.primaryKey.sortKey]);
   // The following checks are for sanity and should not occur in any real application that
   // has setup the layout correctly
   if (!partitionKey || !sortKey)

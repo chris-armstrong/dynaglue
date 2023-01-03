@@ -1,3 +1,5 @@
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 import {
   isEqualKey,
   findAccessPattern,
@@ -6,11 +8,9 @@ import {
   find,
 } from './find';
 import { AccessPattern, KeyPath } from '../base/access_pattern';
-import { DynamoDB } from 'aws-sdk/clients/all';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { InvalidQueryException } from '../base/exceptions';
-import { Converter } from 'aws-sdk/clients/dynamodb';
 import { Collection } from '../base/collection';
 
 describe('isEqualKey', () => {
@@ -253,9 +253,11 @@ describe('find', () => {
 
   test('when there is no matching access pattern it throws', () => {
     const ddb = createDynamoMock('query', {});
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
-    expect(
+    return expect(
       find(context, 'test-collection', { email: 'test@example.com' })
     ).rejects.toThrowError(InvalidQueryException);
   });
@@ -263,9 +265,11 @@ describe('find', () => {
   test('when an access pattern matches it runs the query correctly', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
@@ -273,35 +277,39 @@ describe('find', () => {
     };
 
     const result = await find(context, 'test-collection', query);
-    expect(ddb.query).toHaveBeenCalled();
-    expect(ddb.query).lastCalledWith(
+    expect(ddb.send).toHaveBeenCalled();
+    expect(ddb.send).lastCalledWith(
       expect.objectContaining({
-        TableName: layout.tableName,
-        IndexName: 'index1',
-        ExpressionAttributeNames: {
-          '#indexPartitionKey': layout.findKeys[0].partitionKey,
-          '#indexSortKey': layout.findKeys[0].sortKey,
-        },
-        ExpressionAttributeValues: {
-          ':value0': Converter.input('test-collection|-|NSW'),
-          ':value1': Converter.input('test-collection|-|AU'),
-        },
-        KeyConditionExpression:
-          '#indexPartitionKey = :value1 AND begins_with(#indexSortKey, :value0)',
+        input: expect.objectContaining({
+          TableName: layout.tableName,
+          IndexName: 'index1',
+          ExpressionAttributeNames: {
+            '#indexPartitionKey': layout.findKeys[0].partitionKey,
+            '#indexSortKey': layout.findKeys[0].sortKey,
+          },
+          ExpressionAttributeValues: {
+            ':value0': convertToAttr('test-collection|-|NSW'),
+            ':value1': convertToAttr('test-collection|-|AU'),
+          },
+          KeyConditionExpression:
+            '#indexPartitionKey = :value1 AND begins_with(#indexSortKey, :value0)',
+        }),
       })
     );
     expect(result).toEqual({ items: [testItem1.value], nextToken: undefined });
 
-    const params = ddb.query.mock.calls[0][0];
+    const params = ddb.send.mock.calls[0][0].input;
     expect(params.TableName).toEqual('test-table');
   });
 
   it('should pass on a nextToken when specified', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
@@ -312,32 +320,40 @@ describe('find', () => {
       [layout.primaryKey.sortKey]: { S: 'b' },
     };
     await find(context, 'test-collection', query, nextToken);
-    expect(ddb.query).lastCalledWith(
-      expect.objectContaining({ ExclusiveStartKey: nextToken })
+    expect(ddb.send).lastCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({ ExclusiveStartKey: nextToken }),
+      })
     );
   });
 
   it('should pass on a limit parameter when specified', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
       'location.state': 'NSW',
     };
     await find(context, 'test-collection', query, undefined, { limit: 5 });
-    expect(ddb.query).lastCalledWith(expect.objectContaining({ Limit: 5 }));
+    expect(ddb.send).lastCalledWith(
+      expect.objectContaining({ input: expect.objectContaining({ Limit: 5 }) })
+    );
   });
 
   it('should integrate a filter expression if given', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
@@ -351,14 +367,16 @@ describe('find', () => {
       limit: 5,
       filter: filterExpression,
     });
-    expect(ddb.query).lastCalledWith(
+    expect(ddb.send).lastCalledWith(
       expect.objectContaining({
-        FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
-        ExpressionAttributeNames: expect.objectContaining({
-          '#attr0': 'location',
-        }),
-        ExpressionAttributeValues: expect.objectContaining({
-          ':value2': Converter.input('c'),
+        input: expect.objectContaining({
+          FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
+          ExpressionAttributeNames: expect.objectContaining({
+            '#attr0': 'location',
+          }),
+          ExpressionAttributeValues: expect.objectContaining({
+            ':value2': convertToAttr('c'),
+          }),
         }),
       })
     );
@@ -367,9 +385,11 @@ describe('find', () => {
   it('should correctly handle other query operators', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
@@ -380,43 +400,50 @@ describe('find', () => {
       limit: 5,
       queryOperator: 'gte',
     });
-    expect(ddb.query).lastCalledWith(
+    expect(ddb.send).lastCalledWith(
       expect.objectContaining({
-        KeyConditionExpression:
-          '#indexPartitionKey = :value1 AND #indexSortKey >= :value0',
-        IndexName: 'index2',
-        ExpressionAttributeValues: expect.objectContaining({
-          ':value1': Converter.input('test-collection|-|AU'),
-          ':value0': Converter.input('test-collection|-|2021-01-20'),
+        input: expect.objectContaining({
+          KeyConditionExpression:
+            '#indexPartitionKey = :value1 AND #indexSortKey >= :value0',
+          IndexName: 'index2',
+          ExpressionAttributeValues: expect.objectContaining({
+            ':value1': convertToAttr('test-collection|-|AU'),
+            ':value0': convertToAttr('test-collection|-|2021-01-20'),
+          }),
         }),
       })
     );
   });
+
   it('should correctly handle the between operator', async () => {
     const testItem1 = { value: { _id: 'testValue1' } };
     const ddb = createDynamoMock('query', {
-      Items: [Converter.marshall(testItem1)],
+      Items: [marshall(testItem1)],
     });
-    const context = createContext(ddb as unknown as DynamoDB, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const query = {
       'location.country': 'AU',
-      updatedAt: ['2021-01-20', '2021-02-20'],
+      updatedAt: ['2021-01-20', '2021-02-20'] as [string, string],
     };
 
     await find(context, 'test-collection', query, undefined, {
       limit: 5,
       queryOperator: 'between',
     });
-    expect(ddb.query).lastCalledWith(
+    expect(ddb.send).lastCalledWith(
       expect.objectContaining({
-        KeyConditionExpression:
-          '#indexPartitionKey = :value2 AND #indexSortKey BETWEEN :value0 AND :value1',
-        IndexName: 'index2',
-        ExpressionAttributeValues: expect.objectContaining({
-          ':value2': Converter.input('test-collection|-|AU'),
-          ':value0': Converter.input('test-collection|-|2021-01-20'),
-          ':value1': Converter.input('test-collection|-|2021-02-20'),
+        input: expect.objectContaining({
+          KeyConditionExpression:
+            '#indexPartitionKey = :value2 AND #indexSortKey BETWEEN :value0 AND :value1',
+          IndexName: 'index2',
+          ExpressionAttributeValues: expect.objectContaining({
+            ':value2': convertToAttr('test-collection|-|AU'),
+            ':value0': convertToAttr('test-collection|-|2021-01-20'),
+            ':value1': convertToAttr('test-collection|-|2021-02-20'),
+          }),
         }),
       })
     );

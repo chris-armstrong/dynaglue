@@ -15,13 +15,14 @@ import { Collection } from '../base/collection';
 import { createContext } from '../context';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 import newId from '../base/new_id';
-import {
-  Converter,
-  UpdateItemOutput,
-  UpdateItemInput,
-} from 'aws-sdk/clients/dynamodb';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import { CollectionLayout, SecondaryIndexLayout } from '../base/layout';
+import {
+  DynamoDBClient,
+  UpdateItemInput,
+  UpdateItemOutput,
+} from '@aws-sdk/client-dynamodb';
+import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 
 const layoutForIndex = (index: number): SecondaryIndexLayout => ({
   indexName: `index${index}`,
@@ -506,8 +507,10 @@ describe('updateById', () => {
   it('should throw InvalidUpdatesException if the updates object is empty', async () => {
     const testId = newId();
     const ddbMock = createDynamoMock('updateItem', {});
-    const context = createContext(ddbMock, [collectionWithNoAPs]);
-    expect(
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
+    return expect(
       updateById(context, collectionWithNoAPs.name, testId, {})
     ).rejects.toThrowError(InvalidUpdatesException);
   });
@@ -515,8 +518,10 @@ describe('updateById', () => {
   it('should throw InvalidUpdateValueException if one of the updates is empty', async () => {
     const testId = newId();
     const ddbMock = createDynamoMock('updateItem', {});
-    const context = createContext(ddbMock, [collectionWithNoAPs]);
-    expect(
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
+    return expect(
       updateById(context, collectionWithNoAPs.name, testId, {
         value1: undefined,
         value2: {},
@@ -535,11 +540,13 @@ describe('updateById', () => {
       somethingElse: false,
     };
     const ddbMock = createDynamoMock('updateItem', {
-      Attributes: Converter.marshall({
+      Attributes: marshall({
         value: createdValue,
       } as UpdateItemOutput),
     });
-    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
     const results = await updateById(
       context,
       collectionWithNoAPs.name,
@@ -550,27 +557,31 @@ describe('updateById', () => {
       }
     );
     expect(results).toEqual(createdValue);
-    expect(ddbMock.updateItem).toBeCalledTimes(1);
-    expect(ddbMock.updateItem).toBeCalledWith({
-      TableName: layout.tableName,
-      UpdateExpression:
-        'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1',
-      Key: {
-        pk0: { S: `test-collection|-|${testId}` },
-        sk0: { S: `test-collection|-|${testId}` },
-      },
-      ExpressionAttributeNames: {
-        '#value': 'value',
-        '#attr0': 'name',
-      },
-      ExpressionAttributeValues: {
-        ':value0': { S: 'new name' },
-        ':value1': {
-          L: [{ N: '1' }, { N: '2' }, { N: '4' }],
-        },
-      },
-      ReturnValues: 'ALL_NEW',
-    } as UpdateItemInput);
+    expect(ddbMock.send).toBeCalledTimes(1);
+    expect(ddbMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': {
+              L: [{ N: '1' }, { N: '2' }, { N: '4' }],
+            },
+          },
+          ReturnValues: 'ALL_NEW',
+        } as UpdateItemInput,
+      })
+    );
   });
 
   it('should clear sparse key index values as expected', async () => {
@@ -584,11 +595,13 @@ describe('updateById', () => {
       somethingElse: false,
     };
     const ddbMock = createDynamoMock('updateItem', {
-      Attributes: Converter.marshall({
+      Attributes: marshall({
         value: createdValue,
       } as UpdateItemOutput),
     });
-    const context = createContext(ddbMock, [collectionWithAPs]);
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithAPs,
+    ]);
     const results = await updateById(
       context,
       collectionWithNoAPs.name,
@@ -598,22 +611,26 @@ describe('updateById', () => {
       }
     );
     expect(results).toEqual(createdValue);
-    expect(ddbMock.updateItem).toBeCalledWith({
-      TableName: layout.tableName,
-      UpdateExpression:
-        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile.email, sk3, sk4',
-      ExpressionAttributeNames: { '#value': 'value' },
-      ExpressionAttributeValues: {
-        ':value0': { S: 'test-collection' },
-        ':value1': { S: 'test-collection' },
-      },
-      ReturnValues: 'ALL_NEW',
-      ConditionExpression: undefined,
-      Key: {
-        pk0: { S: `test-collection|-|${testId}` },
-        sk0: { S: `test-collection|-|${testId}` },
-      },
-    });
+    expect(ddbMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile.email, sk3, sk4',
+          ExpressionAttributeNames: { '#value': 'value' },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'test-collection' },
+            ':value1': { S: 'test-collection' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+        },
+      })
+    );
   });
 
   it('should clear index values across multiple indexes on a top-level update', async () => {
@@ -627,11 +644,13 @@ describe('updateById', () => {
       somethingElse: false,
     };
     const ddbMock = createDynamoMock('updateItem', {
-      Attributes: Converter.marshall({
+      Attributes: marshall({
         value: createdValue,
       } as UpdateItemOutput),
     });
-    const context = createContext(ddbMock, [collectionWithAPs]);
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithAPs,
+    ]);
     const results = await updateById(
       context,
       collectionWithNoAPs.name,
@@ -641,22 +660,26 @@ describe('updateById', () => {
       }
     );
     expect(results).toEqual(createdValue);
-    expect(ddbMock.updateItem).toBeCalledWith({
-      TableName: layout.tableName,
-      UpdateExpression:
-        'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile, sk2, sk3, sk4',
-      ExpressionAttributeNames: { '#value': 'value' },
-      ExpressionAttributeValues: {
-        ':value0': { S: 'test-collection' },
-        ':value1': { S: 'test-collection' },
-      },
-      ReturnValues: 'ALL_NEW',
-      ConditionExpression: undefined,
-      Key: {
-        pk0: { S: `test-collection|-|${testId}` },
-        sk0: { S: `test-collection|-|${testId}` },
-      },
-    });
+    expect(ddbMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET pk3 = :value0, pk4 = :value1 REMOVE #value.profile, sk2, sk3, sk4',
+          ExpressionAttributeNames: { '#value': 'value' },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'test-collection' },
+            ':value1': { S: 'test-collection' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+        },
+      })
+    );
   });
 
   it('should handle updates to multiple access patterns', async () => {
@@ -671,7 +694,7 @@ describe('updateById', () => {
       department: 'department 2',
     };
     const ddbMock = createDynamoMock('updateItem', {
-      Attributes: Converter.marshall({
+      Attributes: marshall({
         value: createdValue,
       } as UpdateItemOutput),
     });
@@ -679,7 +702,9 @@ describe('updateById', () => {
       ...collectionWithAPs,
       layout: { ...layout, indexKeySeparator: '**' },
     };
-    const context = createContext(ddbMock, [customCollectionWithAPs]);
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      customCollectionWithAPs,
+    ]);
     const results = await updateById(
       context,
       customCollectionWithAPs.name,
@@ -694,36 +719,43 @@ describe('updateById', () => {
       }
     );
     expect(results).toEqual(createdValue);
-    expect(ddbMock.updateItem).toHaveBeenCalledWith({
-      TableName: layout.tableName,
-      UpdateExpression:
-        'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
-        '#value.department = :value2, sk1 = :value3, pk1 = :value4, ' +
-        'pk2 = :value5, sk3 = :value6, pk3 = :value7, pk4 = :value8, ' +
-        'sk4 = :value9 REMOVE sk2',
-      Key: {
-        pk0: { S: `test-collection**${testId}` },
-        sk0: { S: `test-collection**${testId}` },
-      },
-      ExpressionAttributeNames: {
-        '#value': 'value',
-        '#attr0': 'name',
-      },
-      ExpressionAttributeValues: {
-        ':value0': { S: 'new name' },
-        ':value1': Converter.input({ email: 'email@email.com', enabled: true }),
-        ':value2': { S: 'department 2' },
-        ':value3': { S: `test-collection**new name` },
-        ':value4': { S: 'test-collection' },
-        ':value5': { S: `test-collection**department 2` },
-        ':value6': { S: `test-collection**email@email.com` },
-        ':value7': { S: 'test-collection' },
-        ':value8': { S: `test-collection**email@email.com` },
-        ':value9': { S: 'test-collection' },
-      },
-      ReturnValues: 'ALL_NEW',
-      ConditionExpression: undefined,
-    } as UpdateItemInput);
+    expect(ddbMock.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
+            '#value.department = :value2, sk1 = :value3, pk1 = :value4, ' +
+            'pk2 = :value5, sk3 = :value6, pk3 = :value7, pk4 = :value8, ' +
+            'sk4 = :value9 REMOVE sk2',
+          Key: {
+            pk0: { S: `test-collection**${testId}` },
+            sk0: { S: `test-collection**${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': convertToAttr({
+              email: 'email@email.com',
+              enabled: true,
+            }),
+            ':value2': { S: 'department 2' },
+            ':value3': { S: `test-collection**new name` },
+            ':value4': { S: 'test-collection' },
+            ':value5': { S: `test-collection**department 2` },
+            ':value6': { S: `test-collection**email@email.com` },
+            ':value7': { S: 'test-collection' },
+            ':value8': { S: `test-collection**email@email.com` },
+            ':value9': { S: 'test-collection' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+        } as UpdateItemInput,
+      })
+    );
   });
 
   it('should handle basic $set/$delete operations', async () => {
@@ -738,11 +770,13 @@ describe('updateById', () => {
       expiresAt: new Date().toISOString(),
     };
     const ddbMock = createDynamoMock('updateItem', {
-      Attributes: Converter.marshall({
+      Attributes: marshall({
         value: createdValue,
       } as UpdateItemOutput),
     });
-    const context = createContext(ddbMock, [collectionWithNoAPs]);
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
     const results = await updateById(
       context,
       collectionWithNoAPs.name,
@@ -757,31 +791,35 @@ describe('updateById', () => {
       }
     );
     expect(results).toEqual(createdValue);
-    expect(ddbMock.updateItem).toBeCalledTimes(1);
-    expect(ddbMock.updateItem).toBeCalledWith({
-      TableName: layout.tableName,
-      ConditionExpression: undefined,
-      UpdateExpression:
-        'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1, #value.profile.#attr1 = :value2 REMOVE #value.somethingElse, #value.expiresAt, ttlattr',
-      Key: {
-        pk0: { S: `test-collection|-|${testId}` },
-        sk0: { S: `test-collection|-|${testId}` },
-      },
-      ExpressionAttributeNames: {
-        '#value': 'value',
-        '#attr0': 'name',
-        '#attr1': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':value0': { S: 'new name' },
-        ':value1': {
-          L: [{ N: '1' }, { N: '2' }, { N: '4' }],
-        },
-        ':value2': {
-          M: { disabled: { BOOL: true } },
-        },
-      },
-      ReturnValues: 'ALL_NEW',
-    } as UpdateItemInput);
+    expect(ddbMock.send).toBeCalledTimes(1);
+    expect(ddbMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          ConditionExpression: undefined,
+          UpdateExpression:
+            'SET #value.profile.#attr0 = :value0, #value.topLevelValue = :value1, #value.profile.#attr1 = :value2 REMOVE #value.somethingElse, #value.expiresAt, ttlattr',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+            '#attr1': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': {
+              L: [{ N: '1' }, { N: '2' }, { N: '4' }],
+            },
+            ':value2': {
+              M: { disabled: { BOOL: true } },
+            },
+          },
+          ReturnValues: 'ALL_NEW',
+        } as UpdateItemInput,
+      })
+    );
   });
 });

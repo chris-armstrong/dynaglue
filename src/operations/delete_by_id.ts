@@ -1,4 +1,5 @@
-import { Converter, DeleteItemInput } from 'aws-sdk/clients/dynamodb';
+import { DeleteItemCommand, DeleteItemInput } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Context } from '../context';
 import {
   unwrap,
@@ -41,7 +42,7 @@ export async function deleteById<DocumentType extends DocumentWithId>(
   }
   const request: DeleteItemInput = {
     TableName: collection.layout.tableName,
-    Key: Converter.marshall(
+    Key: marshall(
       {
         [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
           collectionName,
@@ -54,7 +55,7 @@ export async function deleteById<DocumentType extends DocumentWithId>(
           collection.layout.indexKeySeparator
         ),
       },
-      { convertEmptyValues: false }
+      { convertEmptyValues: false, removeUndefinedValues: true }
     ),
     ReturnValues: 'ALL_OLD',
     ConditionExpression: conditionExpression,
@@ -62,11 +63,10 @@ export async function deleteById<DocumentType extends DocumentWithId>(
     ExpressionAttributeValues: valueMapper.get(),
   };
   debugDynamo('DeleteItem', request);
-  const result = await context.ddb.deleteItem(request).promise();
+  const command = new DeleteItemCommand(request);
+  const result = await context.ddb.send(command);
   if (result.Attributes) {
-    const wrapped = Converter.unmarshall(result.Attributes, {
-      convertEmptyValues: false,
-    });
+    const wrapped = unmarshall(result.Attributes);
     return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;

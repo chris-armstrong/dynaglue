@@ -1,9 +1,9 @@
 import {
   BatchWriteItemInput,
   WriteRequest,
-  Converter,
-  BatchWriteItemRequestMap,
-} from 'aws-sdk/clients/dynamodb';
+  BatchWriteItemCommand,
+} from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import {
   getCollection,
@@ -97,10 +97,9 @@ export const batchReplaceDelete = async (
         // replace item
         request = {
           PutRequest: {
-            Item: Converter.marshall(
-              toWrapped(collection, descriptor.replaceItem),
-              { convertEmptyValues: false }
-            ),
+            Item: marshall(toWrapped(collection, descriptor.replaceItem), {
+              convertEmptyValues: false,
+            }),
           },
         };
       } else {
@@ -129,12 +128,12 @@ export const batchReplaceDelete = async (
         );
         request = {
           DeleteRequest: {
-            Key: Converter.marshall(
+            Key: marshall(
               {
                 [collection.layout.primaryKey.partitionKey]: partitionKeyValue,
                 [collection.layout.primaryKey.sortKey]: sortKeyValue,
               },
-              { convertEmptyValues: false }
+              { convertEmptyValues: false, removeUndefinedValues: true }
             ),
           },
         };
@@ -143,14 +142,14 @@ export const batchReplaceDelete = async (
     }
   );
 
-  const requestItems: BatchWriteItemRequestMap = tableRequestItemTuples.reduce(
+  const requestItems = tableRequestItemTuples.reduce(
     (riMap, [table, request]) => {
       const items = riMap[table] ?? [];
       riMap[table] = items;
       items.push(request);
       return riMap;
     },
-    {} as BatchWriteItemRequestMap
+    {} as { [key: string]: WriteRequest [] },
   );
 
   const request: BatchWriteItemInput = {
@@ -158,9 +157,8 @@ export const batchReplaceDelete = async (
   };
 
   debugDynamo('batchWriteItem', request);
-  const { UnprocessedItems = {} } = await ctx.ddb
-    .batchWriteItem(request)
-    .promise();
+  const command = new BatchWriteItemCommand(request);
+  const { UnprocessedItems = {} } = await ctx.ddb.send(command);
 
   const unprocessedDescriptors: BatchReplaceDeleteDescriptor[] = [];
   for (const [tableName, unprocessed] of Object.entries(UnprocessedItems)) {
@@ -172,23 +170,25 @@ export const batchReplaceDelete = async (
     }
     for (const item of unprocessed) {
       const { PutRequest, DeleteRequest } = item;
-      if (PutRequest) {
+      if (PutRequest?.Item) {
         const key = parseKey(tableMapping, PutRequest.Item);
-        const wrapped = Converter.unmarshall(PutRequest.Item, {
-          convertEmptyValues: false,
-        }) as WrappedDocument<DocumentWithId>;
+        const wrapped = unmarshall(
+          PutRequest.Item
+        ) as WrappedDocument<DocumentWithId>;
         const document = unwrap(wrapped);
         unprocessedDescriptors.push({
           op: 'replace',
           replaceItem: document,
           collection: key.collection,
         });
-      } else if (DeleteRequest) {
+      } else if (DeleteRequest?.Key) {
         const key = parseKey(tableMapping, DeleteRequest.Key);
         unprocessedDescriptors.push({
           op: 'delete',
           ...key,
         });
+      } else {
+        throw new Error('Unknown unprocessed item: ' + JSON.stringify(item));
       }
     }
   }

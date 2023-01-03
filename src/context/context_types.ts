@@ -1,4 +1,4 @@
-import { Types as DynamoDB } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   CollectionDefinition,
   ChildCollectionDefinition,
@@ -11,7 +11,7 @@ import {
  * **This type should be considered opaque and subject to change.**
  */
 export interface DynaglueContext {
-  ddb: DynamoDB;
+  ddb: DynamoDBClient;
   definitions: Map<string, CollectionDefinition>;
   rootDefinitions: Map<string, RootCollectionDefinition>;
   childDefinitions: Map<string, ChildCollectionDefinition>;

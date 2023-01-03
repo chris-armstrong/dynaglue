@@ -1,5 +1,5 @@
-import DynamoDB from 'aws-sdk/clients/dynamodb';
 import { startDb, stopDb, createTables } from 'jest-dynalite';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 import type { ChildCollection, RootCollection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
@@ -15,10 +15,9 @@ describe('E2E tests', () => {
   beforeAll(createTables);
   afterAll(stopDb, 5000);
 
-  const createDynamoDB = (): DynamoDB =>
-    new DynamoDB({
+  const createDynamoDB = (): DynamoDBClient =>
+    new DynamoDBClient({
       endpoint: process.env.MOCK_DYNAMODB_ENDPOINT,
-      sslEnabled: false,
       region: 'local',
     });
 

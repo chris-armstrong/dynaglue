@@ -1,8 +1,9 @@
+import { QueryCommand, QueryInput } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import isEqual from 'lodash/isEqual';
-import { Key, QueryInput, Converter } from 'aws-sdk/clients/dynamodb';
 
 import { Context } from '../context';
-import { DocumentWithId, WrappedDocument } from '../base/common';
+import { DocumentWithId, Key, WrappedDocument } from '../base/common';
 import {
   getCollection,
   unwrap,
@@ -381,15 +382,12 @@ export async function find<DocumentType extends DocumentWithId>(
     FilterExpression: filterExpression,
   };
   debugDynamo('Query', queryRequest);
-  const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb
-    .query(queryRequest)
-    .promise();
+  const command = new QueryCommand(queryRequest);
+  const { Items: items, LastEvaluatedKey: lastEvaluatedKey } = await ctx.ddb.send(command);
   const unwrappedItems = items
     ? items.map((item) =>
         unwrap(
-          Converter.unmarshall(item, {
-            convertEmptyValues: false,
-          }) as WrappedDocument<DocumentType>
+          unmarshall(item) as WrappedDocument<DocumentType>
         )
       )
     : [];

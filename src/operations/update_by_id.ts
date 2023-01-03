@@ -1,12 +1,7 @@
+import { UpdateItemCommand, UpdateItemInput } from '@aws-sdk/client-dynamodb';
 import get from 'lodash/get';
 import createDebug from 'debug';
 import { Context } from '../context';
-import {
-  UpdateItemInput,
-  Converter,
-  AttributeMap,
-  Key,
-} from 'aws-sdk/clients/dynamodb';
 import {
   getRootCollection,
   assemblePrimaryKeyValue,
@@ -16,7 +11,7 @@ import {
   transformTTLValue,
 } from '../base/util';
 import { KeyPath } from '../base/access_pattern';
-import { WrappedDocument, DocumentWithId } from '../base/common';
+import { WrappedDocument, DocumentWithId, Key } from '../base/common';
 import {
   InvalidUpdatesException,
   InvalidUpdateValueException,
@@ -34,6 +29,7 @@ import {
 import { CompositeCondition } from '../base/conditions';
 import { parseCompositeCondition } from '../base/conditions_parser';
 import { isEqualKey } from './find';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -504,11 +500,9 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
 
   debugDynamo('UpdateItem', updateItem);
 
-  const result = await ctx.ddb.updateItem(updateItem).promise();
-  const unmarshalledAttributes = Converter.unmarshall(
-    result.Attributes as AttributeMap,
-    { convertEmptyValues: false }
-  );
+  const command = new UpdateItemCommand(updateItem);
+  const result = await ctx.ddb.send(command);
+  const unmarshalledAttributes = unmarshall(result.Attributes!);
   const updatedDocument = unwrap(
     unmarshalledAttributes as WrappedDocument<DocumentType>
   );

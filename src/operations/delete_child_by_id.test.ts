@@ -1,10 +1,10 @@
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { CollectionNotFoundException } from '../base/exceptions';
 import { deleteChildById } from './delete_child_by_id';
 import { createContext } from '../context';
-import { DynamoDB } from 'aws-sdk/clients/all';
-import { Converter } from 'aws-sdk/clients/dynamodb';
 import { createDynamoMock } from '../../testutil/dynamo_mock';
 import { Collection } from '../base/collection';
+import { marshall } from '@aws-sdk/util-dynamodb';
 
 describe('deleteChildById', () => {
   const layout = {
@@ -26,22 +26,18 @@ describe('deleteChildById', () => {
   };
 
   test('throws when the collection does not exist', () => {
-    const context = createContext({} as DynamoDB, [
+    const context = createContext({} as DynamoDBClient, [
       rootCollection,
       childCollection,
     ]);
-    expect(
+    return expect(
       deleteChildById(context, 'not-a-collection', 'idvalue', 'rootid')
     ).rejects.toThrowError(CollectionNotFoundException);
   });
 
   test('returns undefined when there is no old value', async () => {
-    const mock = {
-      deleteItem: jest
-        .fn()
-        .mockReturnValue({ promise: jest.fn().mockResolvedValue({}) }),
-    };
-    const context = createContext(mock as unknown as DynamoDB, [
+    const mock = createDynamoMock('deleteItem', {});
+    const context = createContext(mock as unknown as DynamoDBClient, [
       rootCollection,
       childCollection,
     ]);
@@ -52,7 +48,7 @@ describe('deleteChildById', () => {
       'rootid'
     );
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'root-collection|-|rootid' },
@@ -70,9 +66,9 @@ describe('deleteChildById', () => {
     };
 
     const mock = createDynamoMock('deleteItem', {
-      Attributes: Converter.marshall({ value }, { convertEmptyValues: false }),
+      Attributes: marshall({ value }, { convertEmptyValues: false, removeUndefinedValues: true }),
     });
-    const context = createContext(mock as unknown as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDBClient, [
       rootCollection,
       childCollection,
     ]);
@@ -83,7 +79,7 @@ describe('deleteChildById', () => {
       'rootid'
     );
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'root-collection|-|rootid' },
@@ -99,13 +95,13 @@ describe('deleteChildById', () => {
     const customLayout = { ...layout, indexKeySeparator: '#' };
     const customRootCollection = { ...rootCollection, layout: customLayout };
     const customChildCollection = { ...childCollection, layout: customLayout };
-    const context = createContext(mock as unknown as DynamoDB, [
+    const context = createContext(mock as unknown as DynamoDBClient, [
       customRootCollection,
       customChildCollection,
     ]);
     await deleteChildById(context, 'test-collection', 'idvalue', 'rootid');
 
-    expect(mock.deleteItem.mock.calls[0][0]).toEqual({
+    expect(mock.send.mock.calls[0][0].input).toEqual({
       TableName: 'testtable',
       Key: {
         id: { S: 'root-collection#rootid' },

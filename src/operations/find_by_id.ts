@@ -1,4 +1,5 @@
-import { Converter, GetItemInput } from 'aws-sdk/clients/dynamodb';
+import { GetItemCommand, GetItemInput } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Context } from '../context';
 import {
   unwrap,
@@ -31,7 +32,7 @@ export async function findById<DocumentType extends DocumentWithId>(
   const request: GetItemInput = {
     TableName: collection.layout.tableName,
     ConsistentRead: options?.consistentRead,
-    Key: Converter.marshall(
+    Key: marshall(
       {
         [collection.layout.primaryKey.partitionKey]: assemblePrimaryKeyValue(
           collectionName,
@@ -44,15 +45,14 @@ export async function findById<DocumentType extends DocumentWithId>(
           collection.layout.indexKeySeparator
         ),
       },
-      { convertEmptyValues: false }
+      { convertEmptyValues: false, removeUndefinedValues: true }
     ),
   };
   debugDynamo('GetItem', request);
-  const result = await context.ddb.getItem(request).promise();
+  const command = new GetItemCommand(request);
+  const result = await context.ddb.send(command);
   if (result.Item) {
-    const wrapped = Converter.unmarshall(result.Item, {
-      convertEmptyValues: false,
-    });
+    const wrapped = unmarshall(result.Item);
     return unwrap(wrapped as WrappedDocument<DocumentType>);
   }
   return undefined;

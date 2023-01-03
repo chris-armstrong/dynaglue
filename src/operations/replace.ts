@@ -1,4 +1,5 @@
-import { Converter, PutItemInput } from 'aws-sdk/clients/dynamodb';
+import { PutItemCommand, PutItemInput } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { Context } from '../context';
 import { toWrapped, getCollection } from '../base/util';
 import { DocumentWithId } from '../base/common';
@@ -43,13 +44,14 @@ export async function replace<DocumentType extends DocumentWithId>(
 
   const request: PutItemInput = {
     TableName: collection.layout.tableName,
-    Item: Converter.marshall(wrapped),
+    Item: marshall(wrapped, { convertEmptyValues: false, removeUndefinedValues: true }),
     ReturnValues: 'NONE',
     ConditionExpression: conditionExpression,
     ExpressionAttributeNames: nameMapper.get(),
     ExpressionAttributeValues: valueMapper.get(),
   };
   debugDynamo('PutItem', request);
-  await context.ddb.putItem(request).promise();
+  const command = new PutItemCommand(request);
+  await context.ddb.send(command);
   return wrapped.value;
 }

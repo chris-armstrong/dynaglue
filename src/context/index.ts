@@ -1,4 +1,4 @@
-import DynamoDB from 'aws-sdk/clients/dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Collection } from '../base/collection';
 import { ConfigurationException } from '../base/exceptions';
 import { validateFindKeys } from './validators';
@@ -34,7 +34,7 @@ export type Context = Opaque<'DynaglueContext', DynaglueContext>;
  *  @throws {ConfigurationException} when there is a configuration issue in the given collections
  */
 export function createContext(
-  dynamodb: DynamoDB,
+  dynamodb: DynamoDBClient,
   collections: Collection[]
 ): Context {
   const definitions = new Map();

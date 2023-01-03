@@ -1,5 +1,3 @@
-import { PutItemInput, Converter } from 'aws-sdk/clients/dynamodb';
-import { AWSError } from 'aws-sdk/lib/error';
 import { Context } from '../context';
 import {
   getCollection,
@@ -10,6 +8,8 @@ import { ConflictException } from '../base/exceptions';
 import get from 'lodash/get';
 import { DocumentWithId } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
+import { PutItemCommand, PutItemInput } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 
 /**
  * Insert a value into a collection. Adds an _id field to the value
@@ -33,7 +33,7 @@ export async function insert<DocumentType extends DocumentWithId>(
   if (collection.type === 'child') {
     request = {
       TableName: collection.layout.tableName,
-      Item: Converter.marshall(wrapped, { convertEmptyValues: false }),
+      Item: marshall(wrapped, { convertEmptyValues: false, removeUndefinedValues: true }),
       ReturnValues: 'NONE',
       ConditionExpression:
         'attribute_not_exists(#parentIdAttribute) and attribute_not_exists(#childIdAttribute)',
@@ -53,7 +53,7 @@ export async function insert<DocumentType extends DocumentWithId>(
   } else {
     request = {
       TableName: collection.layout.tableName,
-      Item: Converter.marshall(wrapped, { convertEmptyValues: false }),
+      Item: marshall(wrapped, { convertEmptyValues: false, removeUndefinedValues: true }),
       ReturnValues: 'NONE',
       ConditionExpression: 'attribute_not_exists(#idAttribute)',
       ExpressionAttributeNames: {
@@ -67,9 +67,10 @@ export async function insert<DocumentType extends DocumentWithId>(
   }
   try {
     debugDynamo('PutItem', request);
-    await context.ddb.putItem(request).promise();
+    const command = new PutItemCommand(request);
+    await context.ddb.send(command);
   } catch (error) {
-    if ((error as AWSError).code === 'ConditionalCheckFailedException') {
+    if ((error as Error).name === 'ConditionalCheckFailedException') {
       throw new ConflictException(
         'An item with this _id already exists',
         wrapped.value._id

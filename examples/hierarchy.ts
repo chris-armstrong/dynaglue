@@ -1,4 +1,4 @@
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Collection, createContext, insert, find, Context } from '../dist';
 
 const DYNAMODB_ENDPOINT =
@@ -209,7 +209,7 @@ const populateLocations = (ctx: Context) => {
 };
 
 async function main() {
-  const ddb = new DynamoDB({
+  const ddb = new DynamoDBClient({
     endpoint: DYNAMODB_ENDPOINT,
     region: 'us-east-1',
   });
