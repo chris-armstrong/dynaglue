@@ -7,10 +7,17 @@ to query and update.
 npm install dynaglue
 ```
 
+You also need to have the AWS SDK v3 for DynamoDB installed in your project (it is a peer dependency):
+
+```sh
+npm install @aws-sdk/client-dynamodb
+```
+
 ## Rationale
 
 Querying and storing data in single-table DynamoDB designs **is hard**. Keeping indexes up-to-date and
-constructing DynamoDB queries and update expressions is time-consuming and error-prone.
+constructing DynamoDB queries and update expressions requires verbose code and that is easy to make
+mistakes and forget things.
 
 *dynaglue* takes the hassle out of managing your data with a straightforward way to declare its mapping 
 onto your table's indexes, and wraps it all up with simple and foolproof Mongo-like API.
@@ -19,7 +26,7 @@ See [Motivation](#Motivation) (below) for a more detailed explanation.
 
 ## Benefits
 
-* Adds a rigourous model that makes it easy to implement numerous single-table patterns
+* Adds a rigorous model that makes it easy to implement numerous single-table patterns
 * Simple, Mongo-like interface to update and query your data
 * Easy to use query and filter expression syntax
 * Supports most of the DynamoDB functionality
@@ -28,7 +35,8 @@ See [Motivation](#Motivation) (below) for a more detailed explanation.
 ## Getting Started
 
 A comprehensive [Getting Started Guide](https://www.chrisarmstrong.dev/posts/dynaglue-getting-started-guide) is
-available explaining how to install and use dynaglue in a new project as well as all its current features.
+available explaining how to install and use dynaglue in a new project as well as all its current features (note
+it currently references the AWS v2 SDK - the current version requires AWS SDK v3).
 
 See the [examples directory](https://github.com/chris-armstrong/dynaglue/tree/master/examples) for a more
 concise overview of its features in action.
@@ -39,6 +47,8 @@ also contains useful information about the operations and types you need to use 
 ## Status
 
 dynaglue is reasonably complete with a stable API. It is being improved over time and is used in production.
+
+The current version uses AWS SDK v3, which is a peer-dependency.
 
 There are some specific areas that could be improved, such as full transactions support, projection expressions, and returning capacity numbers.
 
@@ -70,7 +80,7 @@ const usersCollection = {
     { indexName: 'gs3', partitionKeys: [['team', 'id']], sortKeys: [['team', 'employeeCode']] },
   ],
 };
-const ddb = new AWS.DynamoDB();
+const ddb = new DynamoDBClient();
 const ctx = createContext(ddb, [usersCollection]);
 
 // Insert users into collection (auto-generated IDs)
@@ -212,12 +222,12 @@ This is a list of current limitations:
 Open an Issue (**especially before you write any code**) and share your
 thoughts / plans / ideas before you do anything substantial.
 
-Abuse, harrassment, and anything else that is becoming unproductive will be closed
+Abuse, harassment, and anything else that is becoming unproductive will be closed
 without further engagement.
 
 ## License
 
-Copyright 2019-2022 Christopher Armstrong
+Copyright 2019-2023 Christopher Armstrong
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
