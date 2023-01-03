@@ -1,11 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  Collection,
-  createContext,
-  insert,
-  find,
-  Context,
-} from '../dist';
+import { Collection, createContext, insert, find, Context } from '../dist';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
