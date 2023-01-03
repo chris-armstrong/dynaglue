@@ -1,9 +1,12 @@
 language: 'node_js'
+arch: amd64
+os: linux
+dist: focal # Default "xenial" (Ubuntu 16.04) has unsupported glibc for nodejs builds available with nvm
 node_js:
+  - 14
   - 16
   - 18
   - 19
-  - 20
 script:
   - npm run build
   - npm test
