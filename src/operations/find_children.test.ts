@@ -568,4 +568,60 @@ describe('findChildren', () => {
       })
     );
   });
+
+  it('should integrate a filter expression if given', async () => {
+    const item2 = marshall({ value: address2 }, { convertEmptyValues: false });
+    const item3 = marshall({ value: address3 }, { convertEmptyValues: false });
+    const item4 = marshall({ value: address4 }, { convertEmptyValues: false });
+    const dynamoMock = createDynamoMock('query', {
+      Items: [item2, item3, item4],
+      LastEvaluatedKey: {
+        S: 'address-2',
+      },
+    });
+    const context = createContext(dynamoMock as unknown as DynamoDBClient, [
+      rootCollection,
+      childCollection,
+    ]);
+
+    const result = await findChildren(
+      context,
+      'addresses',
+      'user-1',
+      undefined,
+      { filter: { 'location.suburb': { $beginsWith: 'c'} } }
+    );
+    expect(result).toEqual({
+      items: [address2, address3, address4],
+      nextToken: {
+        S: 'address-2',
+      },
+    });
+
+    expect(dynamoMock.send).toBeCalledTimes(1);
+    expect(dynamoMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          TableName: layout.tableName,
+          ExpressionAttributeNames: expect.objectContaining({
+            '#attr0': 'location',
+          }),
+          ExpressionAttributeValues: {
+            ':value0': {
+              S: 'users|-|user-1',
+            },
+            ':value1': {
+              S: 'addresses|-|',
+            },
+            ':value2': {
+              S: 'c',
+            },
+          },
+          KeyConditionExpression:
+            'pk1 = :value0 AND begins_with(sk1, :value1)',
+          FilterExpression: 'begins_with(#value.#attr0.suburb,:value2)',
+        }),
+      })
+    );
+  });
 });
