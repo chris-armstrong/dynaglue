@@ -12,6 +12,7 @@ import { CompositeCondition } from '../base/conditions';
 import { createNameMapper, createValueMapper } from '../base/mappers';
 import { InvalidRangeOperatorException } from '../base/exceptions';
 import { decrementLast, incrementLast } from '../base/lexo';
+import { parseCompositeCondition } from '../base/conditions_parser';
 
 /**
  * The results of a [[findChildren]] operation.
@@ -235,6 +236,16 @@ export async function findChildren<DocumentType extends DocumentWithId>(
     )}, ${valueMapper.map(childCollectionPrefix)})`;
   }
   const keyConditionExpression = `${partitionKeyExpression} AND ${sortKeyExpression}`;
+
+  let filterExpression;
+  if (options?.filter) {
+    filterExpression = parseCompositeCondition(options.filter, {
+      nameMapper,
+      valueMapper,
+      parsePath: [],
+    });
+  }
+  
   const request: QueryInput = {
     TableName: childCollection.layout.tableName,
     KeyConditionExpression: keyConditionExpression,
@@ -243,6 +254,7 @@ export async function findChildren<DocumentType extends DocumentWithId>(
     ExclusiveStartKey: nextToken,
     Limit: options?.limit,
     ScanIndexForward: options?.scanForward ?? true,
+    FilterExpression: filterExpression,
   };
 
   debugDynamo('Query', request);
