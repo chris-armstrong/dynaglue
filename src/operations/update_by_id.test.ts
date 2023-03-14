@@ -93,6 +93,9 @@ describe('createUpdateActionForKey', () => {
     const updates: StrictChangesDocument = {
       $set: [[['profile'], { name: 'Chris Armstrong' }]],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -113,6 +116,9 @@ describe('createUpdateActionForKey', () => {
     const updates: StrictChangesDocument = {
       $set: [[['staffCount'], 5]],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -129,6 +135,9 @@ describe('createUpdateActionForKey', () => {
     const updates: StrictChangesDocument = {
       $set: [[['staffCount'], 5]],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -148,6 +157,9 @@ describe('createUpdateActionForKey', () => {
         [['type'], 'A'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
 
     const keyPaths = [['profile', 'phoneNumber']];
@@ -173,6 +185,9 @@ describe('createUpdateActionForKey', () => {
         [['type'], 'A'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     const keyPaths = [];
     expect(
@@ -193,6 +208,9 @@ describe('createUpdateActionForKey', () => {
         [['userType'], 'AAA'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -217,6 +235,9 @@ describe('createUpdateActionForKey', () => {
         [['userType'], 'AAA'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -240,6 +261,9 @@ describe('createUpdateActionForKey', () => {
         [['userType'], 'AAA'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     expect(
       createUpdateActionForKey(
@@ -273,6 +297,9 @@ describe('createUpdateActionForTTLKey', () => {
       [['direct', 'path'], expiryDate.getTime()],
     ],
     $delete: [],
+    $addToSet: [],
+    $deleteFromSet: [],
+    $addValue: [],
   };
 
   it('should return undefined when there is no matching update path', () => {
@@ -347,14 +374,17 @@ describe('mapAccessPatterns', () => {
         [['name'], 'new name'],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       collectionWithNoAPs,
       mappers,
       updates
     );
     expect(setActions).toEqual([]);
-    expect(deleteActions).toEqual([]);
+    expect(removeActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toBeUndefined();
   });
@@ -370,14 +400,17 @@ describe('mapAccessPatterns', () => {
         [['x', 'y'], 8],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       collectionWithAPs,
       mappers,
       updates
     );
     expect(setActions).toEqual(['sk1 = :value0', 'pk1 = :value1']);
-    expect(deleteActions).toEqual([]);
+    expect(removeActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
@@ -396,18 +429,21 @@ describe('mapAccessPatterns', () => {
         [['x', 'y'], 8],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
     const customCollectionWithAPs = {
       ...collectionWithAPs,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       customCollectionWithAPs,
       mappers,
       updates
     );
     expect(setActions).toEqual(['sk1 = :value0', 'pk1 = :value1']);
-    expect(deleteActions).toEqual([]);
+    expect(removeActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection#a new name' },
@@ -432,8 +468,11 @@ describe('mapAccessPatterns', () => {
         ],
       ],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       collectionWithAPs,
       mappers,
       updates
@@ -446,7 +485,7 @@ describe('mapAccessPatterns', () => {
       'pk3 = :value4',
       'pk4 = :value5',
     ]);
-    expect(deleteActions).toEqual(['sk3', 'sk4']);
+    expect(removeActions).toEqual(['sk3', 'sk4']);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection|-|a new name' },
@@ -466,14 +505,17 @@ describe('mapAccessPatterns', () => {
     const updates: StrictChangesDocument = {
       $set: [[['profile'], {}]],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       collectionWithAPs,
       mappers,
       updates
     );
     expect(setActions).toEqual(['pk3 = :value0', 'pk4 = :value1']);
-    expect(deleteActions).toEqual(['sk2', 'sk3', 'sk4']);
+    expect(removeActions).toEqual(['sk2', 'sk3', 'sk4']);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
       ':value0': { S: 'test-collection' },
@@ -489,13 +531,16 @@ describe('mapAccessPatterns', () => {
     const updates: StrictChangesDocument = {
       $set: [[['profile'], { email: 'Chris@example.com' }]],
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
-    const { setActions, deleteActions } = mapAccessPatterns(
+    const { setActions, removeActions } = mapAccessPatterns(
       collectionWithAPs,
       mappers,
       updates
     );
-    expect(deleteActions).toContain('sk2');
+    expect(removeActions).toContain('sk2');
     expect(setActions).toContain('pk3 = :value1');
     expect(setActions).toContain('sk3 = :value0');
     expect(setActions).toContain('pk4 = :value2');
@@ -504,7 +549,7 @@ describe('mapAccessPatterns', () => {
 });
 
 describe('updateById', () => {
-  it('should throw InvalidUpdatesException if the updates object is empty', async () => {
+  it('should throw InvalidUpdatesException if the updates object contains unknown operator', async () => {
     const testId = newId();
     const ddbMock = createDynamoMock('updateItem', {});
     const context = createContext(ddbMock as unknown as DynamoDBClient, [
@@ -512,6 +557,17 @@ describe('updateById', () => {
     ]);
     return expect(
       updateById(context, collectionWithNoAPs.name, testId, {})
+    ).rejects.toThrowError(InvalidUpdatesException);
+  });
+
+  it('should throw InvalidUpdatesException if the updates object is empty', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', {});
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
+    return expect(
+      updateById(context, collectionWithNoAPs.name, testId, { $setValues: {} })
     ).rejects.toThrowError(InvalidUpdatesException);
   });
 
@@ -523,8 +579,7 @@ describe('updateById', () => {
     ]);
     return expect(
       updateById(context, collectionWithNoAPs.name, testId, {
-        value1: undefined,
-        value2: {},
+        $setValues: { value1: undefined, value2: {} },
       })
     ).rejects.toThrowError(InvalidUpdateValueException);
   });
@@ -552,8 +607,7 @@ describe('updateById', () => {
       collectionWithNoAPs.name,
       testId,
       {
-        'profile.name': 'new name',
-        topLevelValue: [1, 2, 4],
+        $setValues: { 'profile.name': 'new name', topLevelValue: [1, 2, 4] },
       }
     );
     expect(results).toEqual(createdValue);
@@ -607,7 +661,7 @@ describe('updateById', () => {
       collectionWithNoAPs.name,
       testId,
       {
-        $delete: ['profile.email'],
+        $remove: ['profile.email'],
       }
     );
     expect(results).toEqual(createdValue);
@@ -656,7 +710,7 @@ describe('updateById', () => {
       collectionWithNoAPs.name,
       testId,
       {
-        $delete: ['profile'],
+        $remove: ['profile'],
       }
     );
     expect(results).toEqual(createdValue);
@@ -710,12 +764,14 @@ describe('updateById', () => {
       customCollectionWithAPs.name,
       testId,
       {
-        name: 'new name',
-        profile: {
-          email: 'email@email.com',
-          enabled: true,
+        $setValues: {
+          name: 'new name',
+          profile: {
+            email: 'email@email.com',
+            enabled: true,
+          },
+          department: 'department 2',
         },
-        department: 'department 2',
       }
     );
     expect(results).toEqual(createdValue);
@@ -787,7 +843,7 @@ describe('updateById', () => {
           ['topLevelValue', [1, 2, 4]],
           ['profile.status', { disabled: true }],
         ],
-        $delete: [['somethingElse'], ['expiresAt']],
+        $remove: [['somethingElse'], ['expiresAt']],
       }
     );
     expect(results).toEqual(createdValue);
@@ -816,6 +872,56 @@ describe('updateById', () => {
             ':value2': {
               M: { disabled: { BOOL: true } },
             },
+          },
+          ReturnValues: 'ALL_NEW',
+        } as UpdateItemInput,
+      })
+    );
+  });
+
+  it('should handle basic $addValue operations correctly', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      profile: {
+        name: 'new name',
+      },
+      count: 3,
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithNoAPs,
+    ]);
+    const results = await updateById(
+      context,
+      collectionWithNoAPs.name,
+      testId,
+      {
+        $addValue: [['count', 5]],
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.send).toBeCalledTimes(1);
+    expect(ddbMock.send).toBeCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          ConditionExpression: undefined,
+          UpdateExpression: 'ADD #value.#attr0 :value0',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'count',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { N: '5' },
           },
           ReturnValues: 'ALL_NEW',
         } as UpdateItemInput,

@@ -88,6 +88,7 @@ export const createValueMapper = (): ValueMapper => {
       const valueKey = `:value${currentIndex++}`;
       const convertedValue = convertToAttr(value, {
         convertEmptyValues: false,
+        removeUndefinedValues: true,
       });
       valueMap.set(valueKey, convertedValue);
       return valueKey;

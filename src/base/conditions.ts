@@ -1,9 +1,4 @@
 /**
- * The DynamoDB `Set` type
- */
-export type DynamoDBSet = Set<unknown>;
-
-/**
  * The value for a condition expression
  */
 export type ConditionValue = any;

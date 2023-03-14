@@ -46,13 +46,16 @@ export {
   InvalidUpdateValueException,
   InvalidUpdatesException,
 } from './base/exceptions';
-export type { WrappedDocument, DocumentWithId } from './base/common';
+export type { WrappedDocument, DocumentWithId, DynamoDBSet } from './base/common';
 export type {
   SetValuesDocument,
   Updates,
   SetChange,
-  DeleteChange,
-  UpdateChangesDocument,
+  RemoveChange,
+  AppendDeleteSetChange,
+  AddValueChange,
+  OperationUpdates,
+  ChangesUpdates,
 } from './operations/update_by_id';
 export type { FindQuery, FindOptions, FindResults } from './operations/find';
 export type {

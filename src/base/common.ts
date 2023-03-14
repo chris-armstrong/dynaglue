@@ -21,3 +21,8 @@ export type WrappedDocument<DocumentType extends DocumentWithId> = {
  * A DynamoDB primary key
  */
 export type Key = { [key: string]: AttributeValue };
+
+/**
+ * The DynamoDB `Set` type
+ */
+export type DynamoDBSet = Set<unknown>;

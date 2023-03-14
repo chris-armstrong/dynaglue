@@ -11,7 +11,7 @@ import {
   transformTTLValue,
 } from '../base/util';
 import { KeyPath } from '../base/access_pattern';
-import { WrappedDocument, DocumentWithId, Key } from '../base/common';
+import { WrappedDocument, DocumentWithId, Key, DynamoDBSet } from '../base/common';
 import {
   InvalidUpdatesException,
   InvalidUpdateValueException,
@@ -43,7 +43,7 @@ const debug = createDebug('dynaglue:operations:updateById');
  * update composite index values.
  */
 export type SetValuesDocument = {
-  [path: string]: any;
+  [path: string]: unknown;
 };
 
 /**
@@ -58,20 +58,30 @@ export type SetValuesDocument = {
  * * *new_value* is the value to update the property path to (it cannot be
  *   undefined -- if you want to clear the value, see [[DeleteChange]])
  */
-export type SetChange = [string | KeyPath, any];
+export type SetChange = [string | KeyPath, unknown];
 
 /**
  * A property path to delete on a document as part of a [[UpdateChangesDocument]],
  * specified either as a dotted string path (e.g. `'profile.name'`) or a [[KeyPath]]
  */
-export type DeleteChange = string | KeyPath;
+export type RemoveChange = string | KeyPath;
+
+/**
+ * Add a number to a number property. Use negative values to subtract.
+ */
+export type AddValueChange =  [string | KeyPath, number]
+
+/**
+ * Append or delete the values from from to a set property.
+ */
+export type AppendDeleteSetChange = [string | KeyPath, DynamoDBSet];
 
 /**
  * A set of changes to perform in an [[updateById]] or [[updateChildById]]
  * operation as an object. Each property is optional, but at
  * least one change must be specified.
  */
-export type UpdateChangesDocument = {
+export type OperationUpdates = {
   /**
    * The list of key paths to set a value. This is a list
    * of tuples, in the form [key_path, new_value]. The
@@ -84,8 +94,36 @@ export type UpdateChangesDocument = {
    * may be specified in string form e.g. `'profile.name'` or
    * array form e.g. `['profile', 'name']`
    */
-  $delete?: DeleteChange[];
+  $remove?: RemoveChange[];
+
+  /**
+   * A set of key path + value pairs for which number
+   * properties are to be added to.
+   *
+   * Key paths are specified in string (e.g. `profile.count`) or array (e.g. `['profile', 'count']) form.
+   */
+  $addValue?: AddValueChange[];
+
+  /**
+   * A set of key path + value pairs for which set
+   * properties are to be appended.
+   *
+   * Key paths are specified in string (e.g. `profile.roles`) or array (e.g. `['profile', 'roles']) form.
+   */
+  $addToSet?: AppendDeleteSetChange[];
+
+  /**
+   * A set of key path + value pairs for which set
+   * properties are to be appended.
+   *
+   * Key paths are specified in string (e.g. `profile.roles`) or array (e.g. `['profile', 'roles']) form.
+   */
+  $deleteFromSet?: AppendDeleteSetChange[];
 };
+
+export type ChangesUpdates = {
+  $setValues: SetValuesDocument;
+}
 
 /**
  * The set of updates to apply to a document. This can be
@@ -94,7 +132,7 @@ export type UpdateChangesDocument = {
  * * an an object of key paths to values to set e.g. `{ 'profile.name': 'new name', 'status': 3 }`
  * * an operator object of changes to perform (see [[UpdateChangesDocument]])
  */
-export type Updates = SetValuesDocument | UpdateChangesDocument;
+export type Updates = OperationUpdates | ChangesUpdates;
 
 const makeKeyPath = (pathOrPathArray: string | KeyPath): KeyPath =>
   typeof pathOrPathArray === 'string'
@@ -106,9 +144,16 @@ export type StrictSetChange = [KeyPath, any];
 /** @internal */
 export type StrictDeleteChange = KeyPath;
 /** @internal */
+export type StrictAppendDeleteSetChange = [KeyPath, DynamoDBSet];
+/** @internal */
+export type StrictAddValueChange = [KeyPath, number];
+/** @internal */
 export type StrictChangesDocument = {
   $set: StrictSetChange[];
   $delete: StrictDeleteChange[];
+  $addToSet: StrictAppendDeleteSetChange[];
+  $deleteFromSet: StrictAppendDeleteSetChange[];
+  $addValue: StrictAddValueChange[];
 };
 
 /**
@@ -119,25 +164,51 @@ export type StrictChangesDocument = {
 export const normaliseUpdates = (
   updatesToPerform: Updates
 ): StrictChangesDocument => {
-  if (updatesToPerform.$set || updatesToPerform.$delete) {
-    const changesDocument = updatesToPerform as UpdateChangesDocument;
+  if (
+    '$set' in updatesToPerform ||
+    '$remove' in updatesToPerform ||
+    '$addValue' in updatesToPerform ||
+    '$addToSet' in updatesToPerform ||
+    '$deleteFromSet' in updatesToPerform
+  ) {
+    const changesDocument = updatesToPerform as OperationUpdates;
     return {
       $set:
-        changesDocument.$set?.map((setUpdate) => [
-          makeKeyPath(setUpdate[0]),
-          setUpdate[1],
+        changesDocument.$set?.map(([path, value]) => [
+          makeKeyPath(path),
+          value,
         ]) ?? [],
-      $delete: changesDocument.$delete?.map(makeKeyPath) ?? [],
+      $delete: changesDocument.$remove?.map(makeKeyPath) ?? [],
+      $addToSet:
+        changesDocument.$addToSet?.map(([path, value]) => [
+          makeKeyPath(path),
+          value,
+        ]) ?? [],
+      $deleteFromSet:
+        changesDocument.$deleteFromSet?.map(([path, value]) => [
+          makeKeyPath(path),
+          value,
+        ]) ?? [],
+      $addValue:
+        changesDocument.$addValue?.map(([path, value]) => [
+          makeKeyPath(path),
+          value,
+        ]) ?? [],
     };
-  } else {
-    const updatesDocument = updatesToPerform as Updates;
+  } else if ('$setValues' in updatesToPerform) {
+    const updatesDocument = updatesToPerform.$setValues;
     return {
       $set: Object.entries(updatesDocument).map(([key, value]) => [
         makeKeyPath(key),
         value,
       ]),
       $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
     };
+  } else {
+    throw new InvalidUpdatesException('Unknown change set provided for update: must be one of OperationUpdates or ChangesUpdates');
   }
 };
 
@@ -295,10 +366,10 @@ export const mapAccessPatterns = (
   changes: StrictChangesDocument
 ): {
   setActions: string[];
-  deleteActions: string[];
+  removeActions: string[];
 } => {
   const expressionSetActions: string[] = [];
-  const expressionDeleteActions: string[] = [];
+  const expressionRemoveActions: string[] = [];
   const { accessPatterns = [], ttlKeyPath } = collection;
   for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
     let partitionKeyUpdateSet: boolean | undefined = undefined;
@@ -347,7 +418,7 @@ export const mapAccessPatterns = (
           expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
         } else {
           const nameMapping = nameMapper.map(update.attributeName);
-          expressionDeleteActions.push(nameMapping);
+          expressionRemoveActions.push(nameMapping);
         }
       }
     } else if (typeof partitionKeyUpdateSet !== 'undefined' && layout.sortKey) {
@@ -366,7 +437,7 @@ export const mapAccessPatterns = (
         );
         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
       } else {
-        expressionDeleteActions.push(nameMapping);
+        expressionRemoveActions.push(nameMapping);
       }
     }
 
@@ -398,13 +469,13 @@ export const mapAccessPatterns = (
         const valueMapping = valueMapper.map(updateAction.value);
         expressionSetActions.push(`${nameMapping} = ${valueMapping}`);
       } else {
-        expressionDeleteActions.push(nameMapping);
+        expressionRemoveActions.push(nameMapping);
       }
     }
   }
   return {
     setActions: expressionSetActions,
-    deleteActions: expressionDeleteActions,
+    removeActions: expressionRemoveActions,
   };
 };
 
@@ -423,7 +494,13 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
   options: { condition?: CompositeCondition }
 ): Promise<DocumentType> {
   const changes = normaliseUpdates(updatesToPerform);
-  if (changes.$set.length === 0 && changes.$delete.length === 0) {
+  if (
+    changes.$set.length === 0 &&
+    changes.$delete.length === 0 &&
+    changes.$addToSet.length === 0 &&
+    changes.$addValue.length === 0 &&
+    changes.$deleteFromSet.length === 0
+  ) {
     throw new InvalidUpdatesException(
       'There must be at least one update path in the updates object'
     );
@@ -431,7 +508,9 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
   let expressionSetActions: string[] = [];
-  let expressionDeleteActions: string[] = [];
+  let expressionRemoveActions: string[] = [];
+  const expressionAddActions: string[] = [];
+  const expressionDeleteActions: string[] = [];
 
   for (const [path, newValue] of changes.$set.values()) {
     if (typeof newValue === 'undefined') {
@@ -456,17 +535,50 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
       nameMapper.map('value', '#value'),
       ...path.map((part) => nameMapper.map(part)),
     ];
-    expressionDeleteActions.push(`${expressionAttributeNameParts.join('.')}`);
+    expressionRemoveActions.push(`${expressionAttributeNameParts.join('.')}`);
+  }
+
+  for (const [path, val] of changes.$addToSet) {
+    const expressionAttributeNameParts = [
+      nameMapper.map('value', '#value'),
+      ...path.map((part) => nameMapper.map(part)),
+    ];
+    const valueName = valueMapper.map(val);
+    expressionAddActions.push(
+      `${expressionAttributeNameParts.join('.')} ${valueName}`
+    );
+  }
+
+  for (const [path, val] of changes.$deleteFromSet) {
+    const expressionAttributeNameParts = [
+      nameMapper.map('value', '#value'),
+      ...path.map((part) => nameMapper.map(part)),
+    ];
+    const valueName = valueMapper.map(val);
+    expressionDeleteActions.push(
+      `${expressionAttributeNameParts.join('.')} ${valueName}`
+    );
+  }
+
+  for (const [path, val] of changes.$addValue) {
+    const expressionAttributeNameParts = [
+      nameMapper.map('value', '#value'),
+      ...path.map((part) => nameMapper.map(part)),
+    ];
+    const valueName = valueMapper.map(val);
+    expressionAddActions.push(
+      `${expressionAttributeNameParts.join('.')} ${valueName}`
+    );
   }
 
   const {
     setActions: additionalSetActions,
-    deleteActions: additionalDeleteActions,
+    removeActions: additionalRemoveActions,
   } = mapAccessPatterns(collection, { nameMapper, valueMapper }, changes);
   expressionSetActions = [...expressionSetActions, ...additionalSetActions];
-  expressionDeleteActions = [
-    ...expressionDeleteActions,
-    ...additionalDeleteActions,
+  expressionRemoveActions = [
+    ...expressionRemoveActions,
+    ...additionalRemoveActions,
   ];
 
   let conditionExpression;
@@ -484,8 +596,14 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
     (expressionSetActions.length
       ? ` SET ${expressionSetActions.join(', ')}`
       : '') +
+    (expressionRemoveActions.length
+      ? ` REMOVE ${expressionRemoveActions.join(', ')}`
+      : '') +
+    (expressionAddActions.length
+      ? ` ADD ${expressionAddActions.join(', ')}`
+      : '') +
     (expressionDeleteActions.length
-      ? ` REMOVE ${expressionDeleteActions.join(', ')}`
+      ? ` DELETE ${expressionDeleteActions.join(', ')}`
       : '');
 
   const updateItem: UpdateItemInput = {

@@ -9,6 +9,7 @@ import { updateById } from '../operations/update_by_id';
 import { find } from '../operations/find';
 import { findChildren } from './find_children';
 import { findByIdWithChildren } from './find_by_id_with_children';
+import newId from '../base/new_id';
 
 describe('E2E tests', () => {
   beforeAll(startDb, 10000);
@@ -90,8 +91,10 @@ describe('E2E tests', () => {
     expect(findByEmailResults.items?.[0]).toEqual(inserted);
 
     const updated = await updateById(context, 'staff', inserted._id, {
-      name: 'other name',
-      profile: {},
+      $setValues: {
+        name: 'other name',
+        profile: {},
+      },
     });
     const findNameResults2 = await find(context, 'staff', {
       name: 'other name',
@@ -325,6 +328,41 @@ describe('E2E tests', () => {
       })
     ).resolves.toEqual({
       items: [dr6, dr5],
+    });
+  });
+
+  it('should perform updateById ADD operations as expected', async () => {
+    const dynamodb = createDynamoDB();
+    const staff1 = {
+      _id: newId(),
+      name: 'Chris',
+      updatedAt: '2021-01-21T01',
+
+      counts: {
+        logins: 3,
+        access_passes: 5,
+      },
+      roles: new Set(['support', 'supervisor']),
+    };
+
+    const ctx = createContext(dynamodb, [staffDefinition]);
+    await Promise.all([insert(ctx, 'staff', staff1)]);
+    const updated = await updateById(ctx, 'staff', staff1._id, {
+      $addValue: [
+        ['counts.logins', 2],
+        [['counts', 'access_passes'], -1],
+        ['logouts', 3],
+      ],
+      $addToSet: [[['roles'], new Set(['bunny', 'possum'])]],
+    });
+    expect(updated).toEqual({
+      ...staff1,
+      counts: {
+        logins: 5,
+        access_passes: 4,
+      },
+      logouts: 3,
+      roles: new Set(['support', 'bunny', 'supervisor', 'possum']),
     });
   });
 });
