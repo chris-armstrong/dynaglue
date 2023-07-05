@@ -112,8 +112,12 @@ export const getCollection = (
  *
  * Converts a TTL value from a document
  * to a DynamoDB compatible TTL value (UNIX date in seconds stored as a number)
+ *
+ * If the value does not conform to the type below or if
+ * it is a string but not a ISO date string, it will not
+ * be transformed.
  */
-export const transformTTLValue = (ttlValue: any): number | undefined => {
+export const transformTTLValue = (ttlValue: Date | number | string): number | undefined => {
   let transformedValue;
   if (typeof ttlValue === 'object' && ttlValue instanceof Date) {
     transformedValue = Math.ceil(ttlValue.getTime() / 1000);
@@ -185,7 +189,7 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
  */
 export const toWrapped = <DocumentType extends DocumentWithId>(
   collection: CollectionDefinition,
-  value: { [key: string]: any }
+  value: { [key: string]: unknown }
 ): WrappedDocument<DocumentType> => {
   let updatedValue: DocumentType;
   if (typeof value._id !== 'undefined') {

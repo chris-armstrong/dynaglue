@@ -122,6 +122,7 @@ export const batchFindByIds = async (
       Keys: [],
     };
     req[tuple[0]] = keyAndsAttrs;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     keyAndsAttrs.Keys!.push(tuple[1]);
     return req;
   }, {} as { [collection: string]: KeysAndAttributes });

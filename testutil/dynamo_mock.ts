@@ -6,7 +6,7 @@ export const createAWSError = (code: string, message: string): Error =>
   Object.assign(new Error(message), { name: code });
 
 export function createDynamoMock(
-  methodName: string,
+  _: string, // methodName
   returnValue: Record<string, unknown>
 ): DynamoMock<typeof returnValue> {
   const mockFunction = jest.fn().mockResolvedValue(returnValue);
@@ -18,8 +18,8 @@ export function createDynamoMock(
 export function createDynamoMockError(
   methodName: string,
   error: Error
-): DynamoMock<any> {
+): DynamoMock<unknown> {
   return {
-    send: jest.fn().mockRejectedValue(error),
+    send: jest.fn().mockRejectedValue(Object.assign(error, { methodName})),
   };
 }

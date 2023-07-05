@@ -25,7 +25,7 @@ import { parseCompositeCondition } from '../base/conditions_parser';
 export async function replace<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
-  value: Record<string, any>,
+  value: Record<string, unknown>,
   options: { condition?: CompositeCondition } = {}
 ): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
