@@ -237,3 +237,9 @@ export class InvalidRangeOperatorException extends VError {
     super({ name: 'invalid_range_operator', info: { operator } }, message);
   }
 }
+
+export class IndexAccessPatternTypeException extends VError {
+  constructor(message: string) {
+    super({ name: 'index_access_pattern_type'}, message);
+  }
+}

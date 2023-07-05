@@ -7,7 +7,7 @@ import {
   find,
   deleteById,
   replace,
-} from '../../dist';
+} from '../../src';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';

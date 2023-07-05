@@ -295,6 +295,7 @@ export const createUpdateActionForKey = (
     value: assembleIndexedValue(
       keyType,
       collectionName,
+      keyPaths,
       updateValues,
       separator
     ),
@@ -432,6 +433,7 @@ export const mapAccessPatterns = (
             'sort',
             collection.name,
             [],
+            [],
             collection.layout.indexKeySeparator
           )
         );
@@ -449,6 +451,7 @@ export const mapAccessPatterns = (
         assembleIndexedValue(
           'partition',
           collection.name,
+          [],
           [],
           collection.layout.indexKeySeparator
         )

@@ -1,9 +1,9 @@
 import {
   parseCompositeCondition,
-  InvalidCompositeConditionException,
 } from './conditions_parser';
+import { InvalidCompositeConditionException } from './exceptions';
 import { createNameMapper, createValueMapper } from './mappers';
-import { BetweenCondition, KeyPathsAndClause } from './conditions';
+import { BetweenCondition, CompositeCondition, KeyPathsAndClause } from './conditions';
 import { ConditionParseContext } from './conditions_types';
 
 describe('parseCompositeCondition', () => {
@@ -86,7 +86,7 @@ describe('parseCompositeCondition', () => {
     it('should throw on an invalid $between value', () => {
       const context = nc();
       expect(() =>
-        parseCompositeCondition({ x: { $between: null } }, context)
+        parseCompositeCondition({ x: { $between: null as unknown as ({ $gte: unknown, $lte: unknown }) } }, context)
       ).toThrowError(InvalidCompositeConditionException);
       expect(() =>
         parseCompositeCondition(
@@ -136,7 +136,7 @@ describe('parseCompositeCondition', () => {
 
     it('should on an invalid $in value', () => {
       expect(() =>
-        parseCompositeCondition({ x: { $in: null } }, nc())
+        parseCompositeCondition({ x: { $in: null as unknown as unknown[] } }, nc())
       ).toThrowError(InvalidCompositeConditionException);
     });
   });
@@ -221,7 +221,7 @@ describe('parseCompositeCondition', () => {
 
   it('should handle AND correctly', () => {
     const context = nc();
-    const expression = {
+    const expression: CompositeCondition = {
       $and: [
         { x: { $eq: true }, y: { $gt: 7 } },
         { username: { $beginsWith: 'example1' } },
@@ -234,7 +234,7 @@ describe('parseCompositeCondition', () => {
 
   it('should handle OR correctly', () => {
     const context = nc();
-    const expression = {
+    const expression: CompositeCondition = {
       $or: [
         { username: { $beginsWith: 'example1' } },
         { x: { $eq: true }, y: { $gt: 7 } },
@@ -257,7 +257,7 @@ describe('parseCompositeCondition', () => {
 
   it('should handle combined OR and AND and NOT correctly', () => {
     const context = nc();
-    const expression = {
+    const expression: CompositeCondition = {
       $and: [
         { $or: [{ 'point.x': { $lt: 0 } }, { 'point.y': { $lt: 0 } }] },
         { $not: { range: { $gte: 1.0 } } },

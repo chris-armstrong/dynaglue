@@ -10,7 +10,7 @@ import {
   updateById,
   ChildCollection,
   RootCollection,
-} from '../dist';
+} from '../src';
 
 const DYNAMODB_ENDPOINT =
   process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
@@ -128,10 +128,12 @@ async function main(): Promise<void> {
   console.log('deleted address 1', deleteAddress1);
 
   const newObject = await updateById(ctx, 'users', user1._id, {
-    name: 'James Mannheim',
-    password: 'test-password',
-    group: 'red',
-    type: 'blue',
+    $setValues: {
+      name: 'James Mannheim',
+      password: 'test-password',
+      group: 'red',
+      type: 'blue',
+    },
   });
   console.log('updated user 1', newObject);
 }

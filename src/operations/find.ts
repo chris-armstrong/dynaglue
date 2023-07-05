@@ -166,6 +166,7 @@ export const assembleQueryValue = (
     return assembleIndexedValue(
       type === 'sort2' ? 'sort' : type,
       collectionName,
+      paths,
       values,
       separator
     );
