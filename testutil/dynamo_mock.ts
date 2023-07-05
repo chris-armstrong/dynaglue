@@ -20,6 +20,6 @@ export function createDynamoMockError(
   error: Error
 ): DynamoMock<unknown> {
   return {
-    send: jest.fn().mockRejectedValue(Object.assign(error, { methodName})),
+    send: jest.fn().mockRejectedValue(Object.assign(error, { methodName })),
   };
 }

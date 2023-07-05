@@ -46,7 +46,11 @@ export {
   InvalidUpdateValueException,
   InvalidUpdatesException,
 } from './base/exceptions';
-export type { WrappedDocument, DocumentWithId, DynamoDBSet } from './base/common';
+export type {
+  WrappedDocument,
+  DocumentWithId,
+  DynamoDBSet,
+} from './base/common';
 export type {
   SetValuesDocument,
   Updates,
