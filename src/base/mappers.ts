@@ -59,7 +59,7 @@ export const createNameMapper = (): NameMapper => {
  * @internal
  */
 export type ValueMapper = {
-  map(value: any): string;
+  map(value: unknown): string;
   get(): { [mappedName: string]: AttributeValue } | undefined;
 };
 
@@ -84,7 +84,7 @@ export const createValueMapper = (): ValueMapper => {
      * it internally, and return the `:value` reference that
      * can be used in expressions
      */
-    map(value: any): string {
+    map(value: unknown): string {
       const valueKey = `:value${currentIndex++}`;
       const convertedValue = convertToAttr(value, {
         convertEmptyValues: false,

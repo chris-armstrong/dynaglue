@@ -25,7 +25,7 @@ import { marshall } from '@aws-sdk/util-dynamodb';
 export async function insert<DocumentType extends DocumentWithId>(
   context: Context,
   collectionName: string,
-  value: Record<string, any>
+  value: Record<string, unknown>
 ): Promise<DocumentType> {
   const collection = getCollection(context, collectionName);
   const wrapped = toWrapped<DocumentType>(collection, value);

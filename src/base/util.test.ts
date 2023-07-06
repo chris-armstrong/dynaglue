@@ -10,11 +10,7 @@ import {
   transformTTLValue,
   SEPARATOR,
 } from './util';
-import {
-  PersistenceException,
-  InvalidIdException,
-  InvalidParentIdException,
-} from './exceptions';
+import { InvalidIdException, InvalidIndexedFieldValueException, InvalidParentIdException } from './exceptions';
 import { KeyPath } from './access_pattern';
 import {
   ChildCollectionDefinition,
@@ -28,54 +24,78 @@ jest.mock('./new_id', () => ({
 
 describe('assembleIndexedValue', () => {
   test('returns just the collection name for an empty list of values', () => {
-    expect(assembleIndexedValue('partition', 'collection', [])).toBe(
+    expect(assembleIndexedValue('partition', 'collection', [], [])).toBe(
       'collection'
     );
-    expect(assembleIndexedValue('sort', 'collection', [])).toBe('collection');
+    expect(assembleIndexedValue('sort', 'collection', [], [])).toBe(
+      'collection'
+    );
   });
 
   test('returns undefined for a list of undefined values', () => {
     expect(
-      assembleIndexedValue('partition', 'collection', [undefined, undefined])
+      assembleIndexedValue(
+        'partition',
+        'collection',
+        [['value'], ['some', 'thing']],
+        [undefined, undefined]
+      )
     ).toEqual('collection');
     expect(
-      assembleIndexedValue('sort', 'collection', [undefined])
+      assembleIndexedValue('sort', 'collection', [['value']], [undefined])
     ).toBeUndefined();
   });
 
   test('returns a separated list of index values when present', () => {
     expect(
-      assembleIndexedValue('partition', 'collection-name', ['value1'])
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        [['value']],
+        ['value1']
+      )
     ).toBe('collection-name|-|value1');
     expect(
-      assembleIndexedValue('partition', 'collection-name', [
-        'value1',
-        'value22',
-      ])
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        [['path', 'one'], ['pathtwo']],
+        ['value1', 'value22']
+      )
     ).toBe('collection-name|-|value1|-|value22');
     expect(
-      assembleIndexedValue('partition', 'collection-name', [
-        undefined,
-        'value22',
-      ])
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        [['path', 'one'], ['pathtwo']],
+        [undefined, 'value22']
+      )
     ).toBe('collection-name|-||-|value22');
     expect(
-      assembleIndexedValue('sort', 'collection-name', [
-        'something',
-        'else',
-        undefined,
-      ])
+      assembleIndexedValue(
+        'sort',
+        'collection-name',
+        [['path', 'one'], ['pathtwo']],
+        ['something', 'else', undefined]
+      )
     ).toBe('collection-name|-|something|-|else|-|');
   });
 
   test('works with a custom separator', () => {
     expect(
-      assembleIndexedValue('partition', 'collection-name', ['value1'], '#')
+      assembleIndexedValue(
+        'partition',
+        'collection-name',
+        [['path', 'one']],
+        ['value1'],
+        '#'
+      )
     ).toBe('collection-name#value1');
     expect(
       assembleIndexedValue(
         'partition',
         'collection-name',
+        [['path', 'one'], ['pathtwo']],
         ['value1', 'value22'],
         '!'
       )
@@ -84,6 +104,7 @@ describe('assembleIndexedValue', () => {
       assembleIndexedValue(
         'partition',
         'collection-name',
+        [['path', 'one'], ['pathtwo']],
         [undefined, 'value22'],
         'oOo'
       )
@@ -110,7 +131,7 @@ describe('constructKeyValue', () => {
         {},
         testValue
       )
-    ).toThrow(PersistenceException);
+    ).toThrow(InvalidIndexedFieldValueException);
   });
 
   test('extracts and transforms key paths correctly', () => {
@@ -193,7 +214,7 @@ describe('constructKeyValue', () => {
         SEPARATOR,
         [['options', 'expiry']],
         {},
-        { options: { expiry: new Date() }, _id: undefined }
+        { options: { expiry: new Date() }, _id: 'id1' }
       )
     ).toBe(Math.ceil(Date.now() / 1000));
   });

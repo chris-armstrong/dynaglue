@@ -16,7 +16,7 @@ export class ConflictException extends VError {
  * valid (_id values must be a string).
  */
 export class InvalidIdException extends VError {
-  constructor(id: any) {
+  constructor(id: unknown) {
     super(
       { info: { id }, name: 'invalid_id.error' },
       'The provided document has an invalid ID'
@@ -30,7 +30,7 @@ export class InvalidIdException extends VError {
  */
 export class InvalidParentIdException extends VError {
   constructor(
-    parentId: any,
+    parentId: unknown,
     collectionName: string,
     parentCollectionName: string
   ) {
@@ -118,7 +118,7 @@ export class InvalidIndexedFieldValueException extends VError {
 export class InvalidQueryException extends VError {
   constructor(
     message: string,
-    { collection, query }: { collection: string; query: Record<string, any> }
+    { collection, query }: { collection: string; query: Record<string, unknown> }
   ) {
     super(
       {
@@ -227,7 +227,7 @@ export class InvalidCompositeConditionException extends VError {
  * [[batchReplaceDelete]]
  */
 export class InvalidBatchReplaceDeleteDescriptorException extends VError {
-  constructor(message: string, info?: Record<string, any>) {
+  constructor(message: string, info?: Record<string, unknown>) {
     super({ name: 'invalid_batch_replace_descriptor', info }, message);
   }
 }
@@ -235,5 +235,11 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
 export class InvalidRangeOperatorException extends VError {
   constructor(message: string, operator: string) {
     super({ name: 'invalid_range_operator', info: { operator } }, message);
+  }
+}
+
+export class IndexAccessPatternTypeException extends VError {
+  constructor(message: string) {
+    super({ name: 'index_access_pattern_type'}, message);
   }
 }

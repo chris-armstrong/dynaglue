@@ -3,6 +3,7 @@ import isISOString from 'validator/lib/isISO8601';
 import { Context } from '../context';
 import {
   CollectionNotFoundException,
+  IndexAccessPatternTypeException,
   InvalidIdException,
   InvalidIndexedFieldValueException,
   InvalidParentIdException,
@@ -56,7 +57,8 @@ export const assemblePrimaryKeyValue = (
 export const assembleIndexedValue = (
   keyType: 'partition' | 'sort',
   collectionName: string,
-  values: (string | undefined)[],
+  valuePaths: KeyPath[],
+  values: unknown[],
   separator: string = SEPARATOR
 ): IndexedValue => {
   if (values.length === 0) {
@@ -66,8 +68,16 @@ export const assembleIndexedValue = (
     // sparse key? - keep the value blank to avoid showing up in searches
     return keyType === 'partition' ? collectionName : undefined;
   }
+
   return `${collectionName}${separator}${values
-    .map((x) => (typeof x === 'string' ? x : ''))
+    .map((x, index) => {
+      if (typeof x === 'string') return x;
+      if (typeof x === 'undefined') return '';
+      const keyPath = valuePaths[index];
+      throw new IndexAccessPatternTypeException(
+        `Could not assemble access pattern components on ${keyType} key with key path ${describeKeyPath(keyPath)} of collection ${collectionName} as some input values were not strings`
+      );
+    })
     .join(separator)}`;
 };
 
@@ -112,8 +122,12 @@ export const getCollection = (
  *
  * Converts a TTL value from a document
  * to a DynamoDB compatible TTL value (UNIX date in seconds stored as a number)
+ *
+ * The value must be a {Date}, a number or a string in ISO format
+ * for it to be transformed into a TTL integer - otherwise undefined
+ * is returned.
  */
-export const transformTTLValue = (ttlValue: any): number | undefined => {
+export const transformTTLValue = (ttlValue: unknown): number | undefined => {
   let transformedValue;
   if (typeof ttlValue === 'object' && ttlValue instanceof Date) {
     transformedValue = Math.ceil(ttlValue.getTime() / 1000);
@@ -175,7 +189,7 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
     return transformedValue;
   });
 
-  return assembleIndexedValue(type, collectionName, values, separator);
+  return assembleIndexedValue(type, collectionName, valuePaths, values, separator);
 };
 
 /**
@@ -185,7 +199,7 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
  */
 export const toWrapped = <DocumentType extends DocumentWithId>(
   collection: CollectionDefinition,
-  value: { [key: string]: any }
+  value: { [key: string]: unknown }
 ): WrappedDocument<DocumentType> => {
   let updatedValue: DocumentType;
   if (typeof value._id !== 'undefined') {

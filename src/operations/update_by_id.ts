@@ -140,7 +140,7 @@ const makeKeyPath = (pathOrPathArray: string | KeyPath): KeyPath =>
     : pathOrPathArray;
 
 /** @internal */
-export type StrictSetChange = [KeyPath, any];
+export type StrictSetChange = [KeyPath, unknown];
 /** @internal */
 export type StrictDeleteChange = KeyPath;
 /** @internal */
@@ -226,7 +226,7 @@ export const getValueForUpdatePath = (
   matchingUpdatePath: KeyPath,
   keyPath: KeyPath,
   changes: StrictChangesDocument
-): any => {
+): unknown => {
   // Work out if this was a $set update (in which case we get the index) or
   // a delete path (which we perform by deduction)
   const setPathIndex = changes.$set.findIndex(([setPath]) =>
@@ -295,6 +295,7 @@ export const createUpdateActionForKey = (
     value: assembleIndexedValue(
       keyType,
       collectionName,
+      keyPaths,
       updateValues,
       separator
     ),
@@ -346,7 +347,7 @@ export const findCollectionIndex = (
  */
 export type Action = {
   action: string;
-  expressionAttributeValue: [string, any];
+  expressionAttributeValue: [string, unknown];
   expressionAttributeNames: [string, string][];
 };
 
@@ -432,6 +433,7 @@ export const mapAccessPatterns = (
             'sort',
             collection.name,
             [],
+            [],
             collection.layout.indexKeySeparator
           )
         );
@@ -449,6 +451,7 @@ export const mapAccessPatterns = (
         assembleIndexedValue(
           'partition',
           collection.name,
+          [],
           [],
           collection.layout.indexKeySeparator
         )
@@ -620,6 +623,7 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
 
   const command = new UpdateItemCommand(updateItem);
   const result = await ctx.ddb.send(command);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const unmarshalledAttributes = unmarshall(result.Attributes!);
   const updatedDocument = unwrap(
     unmarshalledAttributes as WrappedDocument<DocumentType>

@@ -23,6 +23,7 @@ import {
   UpdateItemOutput,
 } from '@aws-sdk/client-dynamodb';
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
+import { KeyPath } from '../base/access_pattern';
 
 const layoutForIndex = (index: number): SecondaryIndexLayout => ({
   indexName: `index${index}`,
@@ -189,7 +190,7 @@ describe('createUpdateActionForKey', () => {
       $deleteFromSet: [],
       $addValue: [],
     };
-    const keyPaths = [];
+    const keyPaths: KeyPath[] = [];
     expect(
       createUpdateActionForKey(
         collectionName,

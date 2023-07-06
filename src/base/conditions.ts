@@ -1,7 +1,7 @@
 /**
  * The value for a condition expression
  */
-export type ConditionValue = any;
+export type ConditionValue = unknown;
 
 /**
  * A DynamoDB type, for the $type condition operator (see [[TypeCondition]])
