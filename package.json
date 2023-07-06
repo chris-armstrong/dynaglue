@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "dynaglue",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "dynaglue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,9 @@
     "prettier:write": "prettier --write **/*.ts",
     "test:watch": "jest --watch"
   },
-  "engines": { "node": ">=16"},
+  "engines": {
+    "node": ">=16"
+  },
   "author": "Chris Armstrong",
   "license": "Apache-2.0",
   "devDependencies": {
