@@ -27,6 +27,11 @@ export type FindChildrenResults<DocumentType extends DocumentWithId> = {
   nextToken?: Key;
 };
 
+/**
+ * The range expression to use on the sort key (`_id`) when
+ * querying for child collection objects with
+ * {@link findChildren}.
+ */
 export type KeyRangeExpression =
   | {
       op: 'gte' | 'gt' | 'lte' | 'lt' | 'begins_with';
