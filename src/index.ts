@@ -26,6 +26,7 @@ export type {
   AccessPattern,
   KeyPath,
   NormaliserFunction,
+  AccessPatternOptions,
 } from './base/access_pattern';
 export type {
   Collection,
@@ -50,6 +51,7 @@ export type {
   WrappedDocument,
   DocumentWithId,
   DynamoDBSet,
+  Key,
 } from './base/common';
 export type {
   SetValuesDocument,
@@ -61,17 +63,48 @@ export type {
   OperationUpdates,
   ChangesUpdates,
 } from './operations/update_by_id';
-export type { FindQuery, FindOptions, FindResults } from './operations/find';
+export type {
+  FindQuery,
+  FindOptions,
+  FindResults,
+  QueryOperator,
+} from './operations/find';
+export type { FindByIdWithChildrenResult } from './operations/find_by_id_with_children';
 export type {
   FindChildrenOptions,
   FindChildrenResults,
+  KeyRangeExpression,
 } from './operations/find_children';
-export type { CompositeCondition } from './base/conditions';
+export type {
+  AndCondition,
+  OrCondition,
+  NotCondition,
+  KeyPathsAndClause,
+  CompositeCondition,
+  ComparisonCondition,
+  EqCondition,
+  NotEqCondition,
+  GtCondition,
+  LtCondition,
+  GtEqCondition,
+  LtEqCondition,
+  BetweenCondition,
+  InCondition,
+  ExistsCondition,
+  TypeCondition,
+  BeginsWithCondition,
+  ContainsCondition,
+  ConditionValue,
+  DynamoDBType,
+} from './base/conditions';
 export type {
   BatchFindByIdDescriptor,
   BatchFindByIdsResponse,
 } from './operations/batch_find_by_ids';
 export type {
+  BatchReplaceDescriptor,
+  BatchDeleteDescriptor,
   BatchReplaceDeleteDescriptor,
   BatchReplaceDeleteResponse,
 } from './operations/batch_replace_delete';
+export type { ParseElement } from './base/conditions_types';

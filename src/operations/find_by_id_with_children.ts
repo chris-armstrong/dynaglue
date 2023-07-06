@@ -174,8 +174,10 @@ export type FindByIdWithChildrenResult<DocumentType extends DocumentWithId> = {
  * and scanning in the default index order. In both cases, we won't be
  * scanning over unnecessary objects.
  *
+ * @category Query
+ *
  * @param ctx the dynaglue context object
- * @param rootObjectCollectionName the root object collection
+ * @param rootCollectionName the root object collection
  * @param rootObjectId the root object ID
  * @param childCollectionNames the child collections to return - defaults to all child collections
  * @param nextToken the pagination token, to request the next page of results

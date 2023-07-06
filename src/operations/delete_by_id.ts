@@ -14,6 +14,9 @@ import { parseCompositeCondition } from '../base/conditions_parser';
 
 /**
  * Delete a root object using its `_id` field
+ *
+ * @category Mutation
+ *
  * @param context the context object
  * @param collectionName the name of the collection
  * @param id the object to remove

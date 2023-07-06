@@ -267,6 +267,8 @@ export type FindOptions = {
  * - `{ state: '...', 'street.name': '...' }`
  * - `{ city: '...', 'street.name': '...', 'street.number': '...' }`
  *
+ * @category Query
+ *
  *
  * @param ctx the context object
  * @param collectionName the collection name

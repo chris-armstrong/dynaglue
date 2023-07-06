@@ -12,6 +12,8 @@ import debugDynamo from '../debug/debugDynamo';
 /**
  * Retrieve a top-level document by its `_id` field.
  *
+ * @category Query
+ *
  * @param context the context object
  * @param collectionName name of the collection to search
  * @param id the `_id` value of the root document

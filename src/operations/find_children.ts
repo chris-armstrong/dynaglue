@@ -74,6 +74,8 @@ export type FindChildrenOptions = {
  * value of the previous call until it comes back undefined in order
  * to retrieve all the values.
  *
+ * @category Query
+ *
  * @param ctx the context
  * @param childCollectionName name of the child object collection
  * @param rootObjectId the `_id` of the root object

@@ -16,6 +16,8 @@ import { marshall } from '@aws-sdk/util-dynamodb';
  * if one is not provided using the `bson` ID generator (similar to
  * MongoDB IDs).
  *
+ * @category Mutation
+ *
  * @param context the context to use
  * @param collectionName name of the collection
  * @param value value to insert

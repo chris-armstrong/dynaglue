@@ -634,6 +634,7 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
 /**
  * Update a document using its `_id`.
  *
+ *
  * This operation allows you to do a partial update of a collection document i.e. without
  * specifying all the values (it uses DynamoDB`s `UpdateItem` operation).
  *
@@ -643,14 +644,22 @@ export async function updateInternal<DocumentType extends DocumentWithId>(
  * of this, you must specify all the key values in an access pattern to ensure indexes are
  * updated consistently.
  *
- * @param ctx the context
+ * @param ctx context
  * @param collectionName the collection to update
- * @param objectId the `_id` value of the object to update
+ * @param objectId the _id value of the object to update
  * @param updates the set of updates to apply.
+ * @param options options to apply (including conditional checks)
+ * 
  * @returns the updated object value in its entirety.
- * @throws {CollectionNotFoundException} collection not found
- * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
- * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
+ * 
+ * @throws {@link CollectionNotFoundException} collection not found
+ * @throws {@link InvalidUpdatesException} thrown when the updates object is invalid or incomplete
+ * @throws {@link InvalidUpdateValueException} thrown when one of the update values is an invalid type
+ *
+ * @typeParam DocumentType your document type - used to set return type
+ * @category Mutation
+ *
+ *
  */
 export async function updateById<DocumentType extends DocumentWithId>(
   ctx: Context,

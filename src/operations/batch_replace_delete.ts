@@ -70,10 +70,27 @@ export type BatchReplaceDeleteDescriptor =
 /** @internal */
 type TableRequestItemTuple = [string, WriteRequest];
 
+/**
+ * Response from {@link batchReplaceDelete}. Contains
+ * unprocessed items.
+ */
 export type BatchReplaceDeleteResponse = {
+  /**
+   * The items that were not processed in this call. You will
+   * need to resubmit them to the API in a subsequent call.
+   */
   unprocessedDescriptors: BatchReplaceDeleteDescriptor[];
 };
 
+/**
+ * Replace multiple items in bulk (effectively a bulk
+ * `replaceItem()` call).
+ * 
+ * You can update multiple items across different
+ * tables and collections in the same call.
+ *
+ * @category Batch Operations
+ */
 export const batchReplaceDelete = async (
   ctx: Context,
   descriptors: BatchReplaceDeleteDescriptor[]

@@ -14,6 +14,8 @@ import { parseCompositeCondition } from '../base/conditions_parser';
  * This operation differs from [[insert]] in that it does not check for the existence
  * of a document with the same `_id` value - it will replace whatever is there.
  *
+ * @category Mutation
+ *
  * @param context the context
  * @param collectionName the collection to update
  * @param value the document to insert or replace

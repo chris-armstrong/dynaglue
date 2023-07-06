@@ -15,6 +15,8 @@ import { parseCompositeCondition } from '../base/conditions_parser';
 /**
  * Delete a child object using its `_id` field and its parents `_id`.
  *
+ * @category Mutation
+ *
  * @param context the context object
  * @param collectionName the name of the collection
  * @param id the child object to remove

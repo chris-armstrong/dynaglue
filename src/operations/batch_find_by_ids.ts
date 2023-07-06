@@ -50,9 +50,20 @@ export type BatchFindByIdsResponse = {
     [collection: string]: DocumentWithId[];
   };
 
+  /**
+   * Unprocessed keys - you will need to submit
+   * another request for these subsequently
+   */
   unprocessedDescriptors: BatchFindByIdDescriptor[];
 };
 
+/**
+ * Find multiple items by their primary key
+ * in bulk. May specify items over multiple
+ * tables and collections.
+ *
+ * @category Batch Operations
+ */
 export const batchFindByIds = async (
   ctx: Context,
   items: BatchFindByIdDescriptor[],

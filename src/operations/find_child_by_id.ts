@@ -17,6 +17,8 @@ import debugDynamo from '../debug/debugDynamo';
  * an extra index, and enables the `findChildren` method to retrieve
  * all the children of a root object in the same call.
  *
+ * @category Query
+ *
  * @param context the context object
  * @param collectionName name of the collection to search
  * @param id the `_id` value

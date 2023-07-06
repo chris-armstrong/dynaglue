@@ -16,17 +16,19 @@ import { CompositeCondition } from '../base/conditions';
  * of this, you must specify all the key values in an access pattern to ensure indexes are
  * updated consistently.
  *
- * @param ctx the context
+ * @category Mutation
+ *
+ * @param context the context
  * @param collectionName the collection to update
- * @param objectId the `_id` value of the object to update
- * @param parentObjectId: the `_id` value of the parent object
+ * @param objectId the _id value of the object to update
+ * @param parentObjectId: the _id value of the parent object
  * @param updates the set of updates to apply.
  * @param options options to apply
  * @param options.condition an optional conditional expression that must be satifisfied for the update to proceed
  * @returns the updated object value in its entirety.
- * @throws {CollectionNotFoundException} collection not found
- * @throws {InvalidUpdatesException} thrown when the updates object is invalid or incomplete
- * @throws {InvalidUpdateValueException} thrown when one of the update values is an invalid type
+ * @throws {@link CollectionNotFoundException} collection not found
+ * @throws {@link InvalidUpdatesException} thrown when the updates object is invalid or incomplete
+ * @throws {@link InvalidUpdateValueException} thrown when one of the update values is an invalid type
  */
 export async function updateChildById<DocumentType extends DocumentWithId>(
   context: Context,
