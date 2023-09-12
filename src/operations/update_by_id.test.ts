@@ -80,8 +80,8 @@ const collectionWithRequiredPaths: Collection = {
     {
       indexName: 'index1',
       partitionKeys: [['department'], ['profile', 'email']],
-      sortKeys: [['county'], ['state'], ['town']],
-      requiredPaths: [['department'], ['county'], ['state']],
+      sortKeys: [['country'], ['state'], ['town']],
+      requiredPaths: [['department'], ['country'], ['state']],
     },
   ],
 };
@@ -520,7 +520,7 @@ describe('mapAccessPatterns', () => {
       $set: [
         // optional parts are missing
         [['department'], 'eng'],
-        [['county'], 'AU'],
+        [['country'], 'AU'],
         [['state'], 'NSW'],
       ],
       $delete: [],
@@ -550,7 +550,7 @@ describe('mapAccessPatterns', () => {
     const updates: StrictChangesDocument = {
       $set: [
         [['profile', 'email'], 'test@example.com'], // department is required
-        [['county'], 'AU'],
+        [['country'], 'AU'],
         [['state'], 'NSW'],
       ],
       $delete: [],
@@ -571,7 +571,7 @@ describe('mapAccessPatterns', () => {
     const updates: StrictChangesDocument = {
       $set: [
         [['department'], 'eng'],
-        [['county'], 'AU'], // state is required
+        [['country'], 'AU'], // state is required
       ],
       $delete: [],
       $addToSet: [],
@@ -702,6 +702,109 @@ describe('updateById', () => {
         $setValues: { value1: undefined, value2: {} },
       })
     ).rejects.toThrowError(InvalidUpdateValueException);
+  });
+
+  it('should throw InvalidIndexedFieldValueException if one of the required paths is missing (pk)', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', {});
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    return expect(
+      updateById(context, collectionWithRequiredPaths.name, testId, {
+        $setValues: { 'profile.email': 'test@example.com' }, // department is missing
+      })
+    ).rejects.toThrowError(InvalidIndexedFieldValueException);
+  });
+
+  it('should throw InvalidIndexedFieldValueException if one of the required paths is missing (sk)', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', {});
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    return expect(
+      updateById(context, collectionWithRequiredPaths.name, testId, {
+        $setValues: { country: 'AU' }, // state is missing
+      })
+    ).rejects.toThrowError(InvalidIndexedFieldValueException);
+  });
+
+  it('should handle set updates with required paths', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+        enabled: true,
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    const results = await updateById(
+      context,
+      collectionWithRequiredPaths.name,
+      testId,
+      {
+        $setValues: {
+          name: 'new name',
+          profile: {
+            email: 'email@email.com',
+            enabled: true,
+          },
+          department: 'department 2',
+          country: 'AU',
+          state: 'NSW',
+        },
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
+            '#value.department = :value2, #value.country = :value3, ' +
+            '#value.#attr1 = :value4, pk1 = :value5, sk1 = :value6',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+            '#attr1': 'state',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': convertToAttr({
+              email: 'email@email.com',
+              enabled: true,
+            }),
+            ':value2': { S: 'department 2' },
+            ':value3': { S: 'AU' },
+            ':value4': { S: 'NSW' },
+            ':value5': {
+              S: 'test-collection|-|department 2|-|email@email.com',
+            },
+            ':value6': { S: 'test-collection|-|AU|-|NSW|-|' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+        } as UpdateItemInput,
+      })
+    );
   });
 
   it('should handle basic set updates', async () => {
