@@ -74,7 +74,7 @@ const collectionWithAPs: Collection = {
   ],
 };
 
-const collectionWithCompositeAPs: Collection = {
+const collectionWithRequiredPaths: Collection = {
   ...collectionWithNoAPs,
   accessPatterns: [
     {
@@ -529,7 +529,7 @@ describe('mapAccessPatterns', () => {
       $addValue: [],
     };
     const { setActions, removeActions } = mapAccessPatterns(
-      collectionWithCompositeAPs,
+      collectionWithRequiredPaths,
       mappers,
       updates
     );
@@ -559,7 +559,7 @@ describe('mapAccessPatterns', () => {
       $addValue: [],
     };
     expect(() =>
-      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
@@ -579,7 +579,7 @@ describe('mapAccessPatterns', () => {
       $addValue: [],
     };
     expect(() =>
-      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
@@ -596,7 +596,7 @@ describe('mapAccessPatterns', () => {
       $addValue: [],
     };
     expect(() =>
-      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
@@ -613,7 +613,7 @@ describe('mapAccessPatterns', () => {
       $addValue: [],
     };
     expect(() =>
-      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
