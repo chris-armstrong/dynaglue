@@ -16,6 +16,7 @@ import {
   InvalidUpdatesException,
   InvalidUpdateValueException,
   IndexNotFoundException,
+  InvalidIndexedFieldValueException,
 } from '../base/exceptions';
 import { Collection } from '../base/collection';
 import { SecondaryIndexLayout } from '../base/layout';
@@ -30,6 +31,7 @@ import { CompositeCondition } from '../base/conditions';
 import { parseCompositeCondition } from '../base/conditions_parser';
 import { isEqualKey } from './find';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { isEqual } from 'lodash';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -69,7 +71,7 @@ export type RemoveChange = string | KeyPath;
 /**
  * Add a number to a number property. Use negative values to subtract.
  */
-export type AddValueChange =  [string | KeyPath, number]
+export type AddValueChange = [string | KeyPath, number];
 
 /**
  * Append or delete the values from from to a set property.
@@ -123,7 +125,7 @@ export type OperationUpdates = {
 
 export type ChangesUpdates = {
   $setValues: SetValuesDocument;
-}
+};
 
 /**
  * The set of updates to apply to a document. This can be
@@ -208,7 +210,9 @@ export const normaliseUpdates = (
       $addValue: [],
     };
   } else {
-    throw new InvalidUpdatesException('Unknown change set provided for update: must be one of OperationUpdates or ChangesUpdates');
+    throw new InvalidUpdatesException(
+      'Unknown change set provided for update: must be one of OperationUpdates or ChangesUpdates'
+    );
   }
 };
 
@@ -249,7 +253,8 @@ export const createUpdateActionForKey = (
   keyPaths: KeyPath[],
   indexLayout: SecondaryIndexLayout,
   changes: StrictChangesDocument,
-  separator?: string
+  separator?: string,
+  requiredPaths?: KeyPath[]
 ):
   | { attributeName: string; value?: string; valueErasure: boolean }
   | undefined => {
@@ -284,10 +289,17 @@ export const createUpdateActionForKey = (
   );
   const updateValues = keyPaths.map((keyPath, index) => {
     const matchingUpdatePath = matchingUpdatePaths[index];
-    if (!matchingUpdatePath) {
-      return undefined;
+    const updateValue = matchingUpdatePath
+      ? getValueForUpdatePath(matchingUpdatePath, keyPath, changes)
+      : undefined;
+    const isRequired = requiredPaths?.find((r) => isEqual(r, keyPath));
+    if (isRequired && typeof updateValue === 'undefined') {
+      throw new InvalidIndexedFieldValueException(
+        'Update does not provide required part of index',
+        { collection: collectionName, keyPath }
+      );
     }
-    return getValueForUpdatePath(matchingUpdatePath, keyPath, changes);
+    return updateValue;
   });
 
   return {
@@ -372,7 +384,12 @@ export const mapAccessPatterns = (
   const expressionSetActions: string[] = [];
   const expressionRemoveActions: string[] = [];
   const { accessPatterns = [], ttlKeyPath } = collection;
-  for (const { indexName, partitionKeys, sortKeys } of accessPatterns) {
+  for (const {
+    indexName,
+    partitionKeys,
+    sortKeys,
+    requiredPaths,
+  } of accessPatterns) {
     let partitionKeyUpdateSet: boolean | undefined = undefined;
     let sortKeyUpdated = false;
     const layout = findCollectionIndex(collection, indexName);
@@ -383,7 +400,8 @@ export const mapAccessPatterns = (
         partitionKeys,
         layout,
         changes,
-        collection.layout.indexKeySeparator
+        collection.layout.indexKeySeparator,
+        requiredPaths
       );
       if (update) {
         partitionKeyUpdateSet = !update.valueErasure;
@@ -404,7 +422,8 @@ export const mapAccessPatterns = (
         sortKeys,
         layout,
         changes,
-        collection.layout.indexKeySeparator
+        collection.layout.indexKeySeparator,
+        requiredPaths
       );
       if (update) {
         debug(

@@ -119,4 +119,43 @@ describe('buildAndValidateAccessPatterns', () => {
       },
     ]);
   });
+
+  test('builds extract keys properly from a correctly defined set of access patterns with required paths', () => {
+    const collection: Collection = {
+      name: 'staff',
+      layout: multiIndexLayout,
+      accessPatterns: [
+        { indexName: 'index1', partitionKeys: [['email']] },
+        {
+          indexName: 'index2',
+          partitionKeys: [['department']],
+          sortKeys: [['discipline'], ['location']],
+          requiredPaths: [['department'], ['discipline']],
+        },
+      ],
+    };
+
+    expect(buildAndValidateAccessPatterns(collection)).toEqual([
+      {
+        type: 'partition',
+        key: 'partkey1',
+        valuePaths: [['email']],
+        options: {},
+      },
+      {
+        type: 'partition',
+        key: 'partkey2',
+        valuePaths: [['department']],
+        options: {},
+        requiredPaths: [['department'], ['discipline']],
+      },
+      {
+        type: 'sort',
+        key: 'sortkey2',
+        valuePaths: [['discipline'], ['location']],
+        options: {},
+        requiredPaths: [['department'], ['discipline']],
+      },
+    ]);
+  });
 });

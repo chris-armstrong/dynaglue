@@ -134,6 +134,27 @@ describe('constructKeyValue', () => {
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
+  test('throws when required value path is missing', () => {
+    const valuePaths = [['topLevel1'], ['required']];
+
+    const testValue = {
+      _id: 'id-1',
+      topLevel1: 'test',
+    };
+
+    expect(() =>
+      constructKeyValue(
+        'partition',
+        'test-collection',
+        SEPARATOR,
+        valuePaths,
+        {},
+        testValue,
+        [['required']]
+      )
+    ).toThrow(InvalidIndexedFieldValueException);
+  });
+
   test('extracts and transforms key paths correctly', () => {
     const valuePaths = [['topLevel1'], ['nested', 'value2']];
 
@@ -404,6 +425,71 @@ describe('toWrapped', () => {
         value,
         type: 'locations_descriptors',
       });
+    });
+  });
+
+  describe('with required index part', () => {
+    const rootCollectionWithRequiredParts: RootCollectionDefinition = {
+      name: 'locations',
+      layout,
+      accessPatterns: [
+        {
+          indexName: 'gs1',
+          partitionKeys: [countryValuePath],
+          sortKeys: [stateValuePath, cityValuePath],
+          requiredPaths: [countryValuePath, stateValuePath, cityValuePath],
+        },
+      ],
+      wrapperExtractKeys: [
+        {
+          key: 'gs1part',
+          type: 'partition',
+          valuePaths: [countryValuePath],
+          requiredPaths: [countryValuePath, stateValuePath, cityValuePath],
+          options: {},
+        },
+        {
+          key: 'gs1sort',
+          type: 'sort',
+          valuePaths: [stateValuePath, cityValuePath],
+          requiredPaths: [countryValuePath, stateValuePath, cityValuePath],
+          options: {},
+        },
+      ],
+    };
+    test('generates a wrapped value with a generated ID for a collection value', () => {
+      const value = {
+        name: 'Sydney City',
+        address: { country: 'AU', state: 'NSW', city: 'Sydney' },
+      };
+      expect(toWrapped(rootCollectionWithRequiredParts, value)).toEqual({
+        id: 'locations|-|test-id',
+        sid: 'locations|-|test-id',
+        gs1part: 'locations|-|AU',
+        gs1sort: 'locations|-|NSW|-|Sydney',
+        value: { ...value, _id: 'test-id' },
+        type: 'locations',
+      });
+    });
+
+    test('throws if required properties are missing (pk)', () => {
+      const value = {
+        name: 'Sydney City',
+        address: { state: 'NSW', city: 'Sydney' },
+      };
+      expect(() => toWrapped(rootCollectionWithRequiredParts, value)).toThrow(
+        InvalidIndexedFieldValueException
+      );
+    });
+
+    test('throws if required properties are missing (sk)', () => {
+      const value = {
+        name: 'Sydney City',
+        address: { country: 'AU', city: 'Sydney' },
+      };
+      expect(() => toWrapped(rootCollectionWithRequiredParts, value)).toThrow(
+        InvalidIndexedFieldValueException
+      );
     });
   });
 

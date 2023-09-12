@@ -50,6 +50,10 @@ export interface AccessPattern {
    * but you don't want a sort key, populate it with an empty array
    */
   sortKeys?: KeyPath[];
+  /** Key paths [[KeyPath|key paths]] specified as required must be present in documents
+   * stored in the associated [[Collection]].
+   */
+  requiredPaths?: KeyPath[];
   /** Options for the index, such as string normalisers */
   options?: AccessPatternOptions;
 }

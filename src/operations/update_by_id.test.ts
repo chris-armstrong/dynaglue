@@ -10,6 +10,7 @@ import {
   InvalidUpdatesException,
   IndexNotFoundException,
   InvalidUpdateValueException,
+  InvalidIndexedFieldValueException,
 } from '../base/exceptions';
 import { Collection } from '../base/collection';
 import { createContext } from '../context';
@@ -69,6 +70,18 @@ const collectionWithAPs: Collection = {
       options: {
         stringNormalizer: (_, value) => value.trim().toLowerCase(),
       },
+    },
+  ],
+};
+
+const collectionWithCompositeAPs: Collection = {
+  ...collectionWithNoAPs,
+  accessPatterns: [
+    {
+      indexName: 'index1',
+      partitionKeys: [['department'], ['profile', 'email']],
+      sortKeys: [['county'], ['state'], ['town']],
+      requiredPaths: [['department'], ['county'], ['state']],
     },
   ],
 };
@@ -496,6 +509,112 @@ describe('mapAccessPatterns', () => {
       ':value4': { S: 'test-collection' },
       ':value5': { S: 'test-collection' },
     });
+  });
+
+  it('should handle partial index update', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [
+        // optional parts are missing
+        [['department'], 'eng'],
+        [['county'], 'AU'],
+        [['state'], 'NSW'],
+      ],
+      $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    const { setActions, removeActions } = mapAccessPatterns(
+      collectionWithCompositeAPs,
+      mappers,
+      updates
+    );
+    expect(setActions).toEqual(['pk1 = :value0', 'sk1 = :value1']);
+    expect(removeActions).toEqual([]);
+    expect(mappers.nameMapper.get()).toBeUndefined();
+    expect(mappers.valueMapper.get()).toEqual({
+      ':value0': { S: 'test-collection|-|eng|-|' },
+      ':value1': { S: 'test-collection|-|AU|-|NSW|-|' },
+    });
+  });
+
+  it('should fail partial index update if it is required index part (pk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['profile', 'email'], 'test@example.com'], // department is required
+        [['county'], 'AU'],
+        [['state'], 'NSW'],
+      ],
+      $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should fail partial index update if it is required index part (sk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [
+        [['department'], 'eng'],
+        [['county'], 'AU'], // state is required
+      ],
+      $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should fail partial index update if required index part is deleted (pk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [],
+      $delete: [['department']], // department is required
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should fail partial index update if required index part is deleted (sk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [],
+      $delete: [['state']], // state is required
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithCompositeAPs, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
   });
 
   it('should handle deletions on a GSI partition key', () => {
