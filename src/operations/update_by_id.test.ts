@@ -9,7 +9,6 @@ import {
 import {
   InvalidUpdatesException,
   IndexNotFoundException,
-  InvalidUpdateValueException,
   InvalidIndexedFieldValueException,
 } from '../base/exceptions';
 import { Collection } from '../base/collection';

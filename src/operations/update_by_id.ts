@@ -31,7 +31,7 @@ import { CompositeCondition } from '../base/conditions';
 import { parseCompositeCondition } from '../base/conditions_parser';
 import { isEqualKey } from './find';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { groupBy, isEqual, partition } from 'lodash';
+import { isEqual, partition } from 'lodash';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
