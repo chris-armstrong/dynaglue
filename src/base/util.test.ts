@@ -155,6 +155,31 @@ describe('constructKeyValue', () => {
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
+  test.each([undefined, null, ''])(
+    'throws when required value path is falsy',
+    (falsy) => {
+      const valuePaths = [['topLevel1'], ['required']];
+
+      const testValue = {
+        _id: 'id-1',
+        topLevel1: 'test',
+        required: falsy,
+      };
+
+      expect(() =>
+        constructKeyValue(
+          'partition',
+          'test-collection',
+          SEPARATOR,
+          valuePaths,
+          {},
+          testValue,
+          [['required']]
+        )
+      ).toThrow(InvalidIndexedFieldValueException);
+    }
+  );
+
   test('extracts and transforms key paths correctly', () => {
     const valuePaths = [['topLevel1'], ['nested', 'value2']];
 

@@ -585,7 +585,7 @@ describe('mapAccessPatterns', () => {
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
-  it('should fail partial index update if it is required index part (pk)', () => {
+  it('should fail partial index update if required index part is missing (pk)', () => {
     const mappers = {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
@@ -595,6 +595,7 @@ describe('mapAccessPatterns', () => {
         [['profile', 'email'], 'test@example.com'], // department is required
         [['country'], 'AU'],
         [['state'], 'NSW'],
+        [['town'], 'Sydney'],
       ],
       $delete: [],
       $addToSet: [],
@@ -606,15 +607,43 @@ describe('mapAccessPatterns', () => {
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
-  it('should fail partial index update if it is required index part (sk)', () => {
+  it.each([null, undefined, ''])(
+    'should fail partial index update if required paths are falsy (pk)',
+    (falsy) => {
+      const mappers = {
+        nameMapper: createNameMapper(),
+        valueMapper: createValueMapper(),
+      };
+      const updates: StrictChangesDocument = {
+        $set: [
+          [['profile', 'email'], 'test@example.com'],
+          [['department'], falsy],
+          [['country'], 'AU'],
+          [['state'], 'NSW'],
+          [['town'], 'Sydney'],
+        ],
+        $delete: [],
+        $addToSet: [],
+        $deleteFromSet: [],
+        $addValue: [],
+      };
+      expect(() =>
+        mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
+      ).toThrow(InvalidIndexedFieldValueException);
+    }
+  );
+
+  it('should fail partial index update if required index part is missing (sk)', () => {
     const mappers = {
       nameMapper: createNameMapper(),
       valueMapper: createValueMapper(),
     };
     const updates: StrictChangesDocument = {
       $set: [
+        [['profile', 'email'], 'test@example.com'],
         [['department'], 'eng'],
         [['country'], 'AU'], // state is required
+        [['town'], 'Sydney'],
       ],
       $delete: [],
       $addToSet: [],
@@ -625,6 +654,32 @@ describe('mapAccessPatterns', () => {
       mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
+
+  it.each([null, undefined, ''])(
+    'should fail partial index update if required paths are falsy (sk)',
+    (falsy) => {
+      const mappers = {
+        nameMapper: createNameMapper(),
+        valueMapper: createValueMapper(),
+      };
+      const updates: StrictChangesDocument = {
+        $set: [
+          [['department'], 'eng'],
+          [['profile', 'email'], 'test@example.com'],
+          [['country'], 'AU'],
+          [['state'], falsy],
+          [['town'], 'Sydney'],
+        ],
+        $delete: [],
+        $addToSet: [],
+        $deleteFromSet: [],
+        $addValue: [],
+      };
+      expect(() =>
+        mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
+      ).toThrow(InvalidIndexedFieldValueException);
+    }
+  );
 
   it('should fail partial index update if required index part is deleted (pk)', () => {
     const mappers = {
