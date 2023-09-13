@@ -789,19 +789,6 @@ describe('updateById', () => {
     ).rejects.toThrowError(InvalidUpdatesException);
   });
 
-  it('should throw InvalidUpdateValueException if one of the updates is empty', async () => {
-    const testId = newId();
-    const ddbMock = createDynamoMock('updateItem', {});
-    const context = createContext(ddbMock as unknown as DynamoDBClient, [
-      collectionWithNoAPs,
-    ]);
-    return expect(
-      updateById(context, collectionWithNoAPs.name, testId, {
-        $setValues: { value1: undefined, value2: {} },
-      })
-    ).rejects.toThrowError(InvalidUpdateValueException);
-  });
-
   it('should throw InvalidIndexedFieldValueException if one of the required paths is missing (pk)', async () => {
     const testId = newId();
     const ddbMock = createDynamoMock('updateItem', {});
@@ -816,7 +803,7 @@ describe('updateById', () => {
   });
 
   // undefined is not allowed for update -> only null and empty string considered
-  it.each([null, ''])(
+  it.each([null, undefined, ''])(
     'should throw InvalidIndexedFieldValueException if one of the required paths is falsy (pk)',
     async (falsy) => {
       const testId = newId();
@@ -836,7 +823,7 @@ describe('updateById', () => {
   );
 
   // undefined is not allowed for update -> only null and empty string considered
-  it.each([null, ''])(
+  it.each([null, undefined, ''])(
     'should throw InvalidIndexedFieldValueException if one of the required paths is falsy (sk)',
     async (falsy) => {
       const testId = newId();
@@ -974,7 +961,7 @@ describe('updateById', () => {
     );
   });
 
-  // undefined is not allowed for update -> only null and empty string considered
+  // undefined is treated as $delete -> only null and empty string considered
   it.each([null, ''])(
     'should handle set updates with index paths defined as falsy',
     async (falsy) => {
@@ -1058,6 +1045,86 @@ describe('updateById', () => {
       );
     }
   );
+
+  it('should handle set updates with index paths defined as undefined', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      name: 'new name',
+      profile: {
+        enabled: true,
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    const results = await updateById(
+      context,
+      collectionWithRequiredPaths.name,
+      testId,
+      {
+        $setValues: {
+          name: 'new name',
+          profile: {
+            email: undefined,
+            enabled: true,
+          },
+          department: 'department 2',
+          country: 'AU',
+          state: 'NSW',
+          town: undefined,
+        },
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
+            '#value.department = :value2, #value.country = :value3, ' +
+            '#value.#attr1 = :value4, pk1 = :value5, sk1 = :value6 ' +
+            'REMOVE #value.town',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+            '#attr1': 'state',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': convertToAttr(
+              {
+                enabled: true,
+              },
+              { removeUndefinedValues: true }
+            ),
+            ':value2': { S: 'department 2' },
+            ':value3': { S: 'AU' },
+            ':value4': { S: 'NSW' },
+            ':value5': {
+              S: 'test-collection|-|department 2|-|',
+            },
+            ':value6': { S: 'test-collection|-|AU|-|NSW|-|' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+        } as UpdateItemInput,
+      })
+    );
+  });
 
   it('should handle basic set updates', async () => {
     const testId = newId();

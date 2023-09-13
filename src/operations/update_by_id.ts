@@ -31,7 +31,7 @@ import { CompositeCondition } from '../base/conditions';
 import { parseCompositeCondition } from '../base/conditions_parser';
 import { isEqualKey } from './find';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { isEqual } from 'lodash';
+import { groupBy, isEqual, partition } from 'lodash';
 
 /** @internal */
 const debug = createDebug('dynaglue:operations:updateById');
@@ -199,12 +199,13 @@ export const normaliseUpdates = (
     };
   } else if ('$setValues' in updatesToPerform) {
     const updatesDocument = updatesToPerform.$setValues;
+    const [withUndefined, withoutUndefined] = partition(
+      Object.entries(updatesDocument),
+      ([, value]) => typeof value === 'undefined'
+    );
     return {
-      $set: Object.entries(updatesDocument).map(([key, value]) => [
-        makeKeyPath(key),
-        value,
-      ]),
-      $delete: [],
+      $set: withoutUndefined.map(([key, value]) => [makeKeyPath(key), value]),
+      $delete: withUndefined.map(([key]) => makeKeyPath(key)),
       $addToSet: [],
       $deleteFromSet: [],
       $addValue: [],
