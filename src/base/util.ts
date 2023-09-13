@@ -73,7 +73,7 @@ export const assembleIndexedValue = (
   return `${collectionName}${separator}${values
     .map((x, index) => {
       if (typeof x === 'string') return x;
-      if (typeof x === 'undefined') return '';
+      if (typeof x === 'undefined' || x === null) return '';
       const keyPath = valuePaths[index];
       throw new IndexAccessPatternTypeException(
         `Could not assemble access pattern components on ${keyType} key with key path ${describeKeyPath(

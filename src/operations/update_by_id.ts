@@ -283,6 +283,15 @@ export const createUpdateActionForKey = (
     );
     return undefined;
   }
+  const missingPathIndex = matchingUpdatePaths.findIndex(
+    (updatePath) => typeof updatePath === 'undefined'
+  );
+  if (missingPathIndex !== -1) {
+    throw new InvalidIndexedFieldValueException(
+      'All index paths must be defined if touching index',
+      { collection: collectionName, keyPath: keyPaths[missingPathIndex] }
+    );
+  }
   debug(
     'createUpdateActionForKey: key to be updated matchingUpdatePaths=%o',
     matchingUpdatePaths

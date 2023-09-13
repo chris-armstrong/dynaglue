@@ -103,7 +103,7 @@ describe('createUpdateActionForKey', () => {
     ['userType'],
   ];
 
-  it('should return just the collection name when there is blank values for all the partition key paths', () => {
+  it('should fail if touches some index paths but does not specify all of them', () => {
     const updates: StrictChangesDocument = {
       $set: [[['profile'], { name: 'Chris Armstrong' }]],
       $delete: [],
@@ -111,7 +111,7 @@ describe('createUpdateActionForKey', () => {
       $deleteFromSet: [],
       $addValue: [],
     };
-    expect(
+    expect(() =>
       createUpdateActionForKey(
         collectionName,
         'partition',
@@ -119,11 +119,7 @@ describe('createUpdateActionForKey', () => {
         indexLayout,
         updates
       )
-    ).toEqual({
-      attributeName: indexLayout.partitionKey,
-      value: collectionName,
-      valueErasure: true,
-    });
+    ).toThrow(InvalidIndexedFieldValueException);
   });
 
   it('should return undefined when there is no updates to the partition key in the set of updates', () => {
@@ -518,10 +514,11 @@ describe('mapAccessPatterns', () => {
     };
     const updates: StrictChangesDocument = {
       $set: [
-        // optional parts are missing
         [['department'], 'eng'],
+        [['profile', 'email'], 'test@example.com'],
         [['country'], 'AU'],
         [['state'], 'NSW'],
+        [['town'], 'Sydney'],
       ],
       $delete: [],
       $addToSet: [],
@@ -537,9 +534,55 @@ describe('mapAccessPatterns', () => {
     expect(removeActions).toEqual([]);
     expect(mappers.nameMapper.get()).toBeUndefined();
     expect(mappers.valueMapper.get()).toEqual({
-      ':value0': { S: 'test-collection|-|eng|-|' },
-      ':value1': { S: 'test-collection|-|AU|-|NSW|-|' },
+      ':value0': { S: 'test-collection|-|eng|-|test@example.com' },
+      ':value1': { S: 'test-collection|-|AU|-|NSW|-|Sydney' },
     });
+  });
+
+  it('should fail partial index update if some of index paths are not specified (pk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [
+        // optional parts are missing
+        [['department'], 'eng'],
+        [['country'], 'AU'],
+        [['state'], 'NSW'],
+        [['town'], 'Sydney'],
+      ],
+      $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should fail partial index update if some of index paths are not specified (sk)', () => {
+    const mappers = {
+      nameMapper: createNameMapper(),
+      valueMapper: createValueMapper(),
+    };
+    const updates: StrictChangesDocument = {
+      $set: [
+        // optional parts are missing
+        [['department'], 'eng'],
+        [['profile', 'email'], 'test@example.com'],
+        [['country'], 'AU'],
+        [['state'], 'NSW'],
+      ],
+      $delete: [],
+      $addToSet: [],
+      $deleteFromSet: [],
+      $addValue: [],
+    };
+    expect(() =>
+      mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
+    ).toThrow(InvalidIndexedFieldValueException);
   });
 
   it('should fail partial index update if it is required index part (pk)', () => {
@@ -730,6 +773,47 @@ describe('updateById', () => {
     ).rejects.toThrowError(InvalidIndexedFieldValueException);
   });
 
+  it('should throw if updates index without specifying all paths (pk)', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', {});
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    await expect(() =>
+      updateById(context, collectionWithRequiredPaths.name, testId, {
+        $setValues: {
+          name: 'new name',
+          department: 'department 2', // profile.email is missing
+          country: 'AU',
+          state: 'NSW',
+          town: 'Sydney',
+        },
+      })
+    ).rejects.toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should throw if updates index without specifying all paths (sk)', async () => {
+    const testId = newId();
+    const ddbMock = createDynamoMock('updateItem', {});
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    await expect(() =>
+      updateById(context, collectionWithRequiredPaths.name, testId, {
+        $setValues: {
+          name: 'new name',
+          profile: {
+            email: 'email@email.com',
+            enabled: true,
+          },
+          department: 'department 2',
+          country: 'AU',
+          state: 'NSW', // town is missing
+        },
+      })
+    ).rejects.toThrow(InvalidIndexedFieldValueException);
+  });
+
   it('should handle set updates with required paths', async () => {
     const testId = newId();
     const createdValue = {
@@ -742,6 +826,7 @@ describe('updateById', () => {
       department: 'department 2',
       country: 'AU',
       state: 'NSW',
+      town: 'Sydney',
     };
     const ddbMock = createDynamoMock('updateItem', {
       Attributes: marshall({
@@ -765,6 +850,7 @@ describe('updateById', () => {
           department: 'department 2',
           country: 'AU',
           state: 'NSW',
+          town: 'Sydney',
         },
       }
     );
@@ -776,7 +862,8 @@ describe('updateById', () => {
           UpdateExpression:
             'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
             '#value.department = :value2, #value.country = :value3, ' +
-            '#value.#attr1 = :value4, pk1 = :value5, sk1 = :value6',
+            '#value.#attr1 = :value4, #value.town = :value5, ' +
+            'pk1 = :value6, sk1 = :value7',
           Key: {
             pk0: { S: `test-collection|-|${testId}` },
             sk0: { S: `test-collection|-|${testId}` },
@@ -795,10 +882,92 @@ describe('updateById', () => {
             ':value2': { S: 'department 2' },
             ':value3': { S: 'AU' },
             ':value4': { S: 'NSW' },
-            ':value5': {
+            ':value5': { S: 'Sydney' },
+            ':value6': {
               S: 'test-collection|-|department 2|-|email@email.com',
             },
-            ':value6': { S: 'test-collection|-|AU|-|NSW|-|' },
+            ':value7': { S: 'test-collection|-|AU|-|NSW|-|Sydney' },
+          },
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: undefined,
+        } as UpdateItemInput,
+      })
+    );
+  });
+
+  it('should handle set updates with index paths defined as null', async () => {
+    const testId = newId();
+    const createdValue = {
+      _id: testId,
+      name: 'new name',
+      profile: {
+        email: null,
+        enabled: true,
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+      town: null,
+    };
+    const ddbMock = createDynamoMock('updateItem', {
+      Attributes: marshall({
+        value: createdValue,
+      } as UpdateItemOutput),
+    });
+    const context = createContext(ddbMock as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+    const results = await updateById(
+      context,
+      collectionWithRequiredPaths.name,
+      testId,
+      {
+        $setValues: {
+          name: 'new name',
+          profile: {
+            email: null,
+            enabled: true,
+          },
+          department: 'department 2',
+          country: 'AU',
+          state: 'NSW',
+          town: null,
+        },
+      }
+    );
+    expect(results).toEqual(createdValue);
+    expect(ddbMock.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: {
+          TableName: layout.tableName,
+          UpdateExpression:
+            'SET #value.#attr0 = :value0, #value.profile = :value1, ' +
+            '#value.department = :value2, #value.country = :value3, ' +
+            '#value.#attr1 = :value4, #value.town = :value5, ' +
+            'pk1 = :value6, sk1 = :value7',
+          Key: {
+            pk0: { S: `test-collection|-|${testId}` },
+            sk0: { S: `test-collection|-|${testId}` },
+          },
+          ExpressionAttributeNames: {
+            '#value': 'value',
+            '#attr0': 'name',
+            '#attr1': 'state',
+          },
+          ExpressionAttributeValues: {
+            ':value0': { S: 'new name' },
+            ':value1': convertToAttr({
+              email: null,
+              enabled: true,
+            }),
+            ':value2': { S: 'department 2' },
+            ':value3': { S: 'AU' },
+            ':value4': { S: 'NSW' },
+            ':value5': { NULL: true },
+            ':value6': {
+              S: 'test-collection|-|department 2|-|',
+            },
+            ':value7': { S: 'test-collection|-|AU|-|NSW|-|' },
           },
           ReturnValues: 'ALL_NEW',
           ConditionExpression: undefined,
