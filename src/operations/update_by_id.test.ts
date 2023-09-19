@@ -606,32 +606,6 @@ describe('mapAccessPatterns', () => {
     ).toThrow(InvalidIndexedFieldValueException);
   });
 
-  it.each([null, undefined, ''])(
-    'should fail partial index update if required paths are falsy (pk)',
-    (falsy) => {
-      const mappers = {
-        nameMapper: createNameMapper(),
-        valueMapper: createValueMapper(),
-      };
-      const updates: StrictChangesDocument = {
-        $set: [
-          [['profile', 'email'], 'test@example.com'],
-          [['department'], falsy],
-          [['country'], 'AU'],
-          [['state'], 'NSW'],
-          [['town'], 'Sydney'],
-        ],
-        $delete: [],
-        $addToSet: [],
-        $deleteFromSet: [],
-        $addValue: [],
-      };
-      expect(() =>
-        mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
-      ).toThrow(InvalidIndexedFieldValueException);
-    }
-  );
-
   it('should fail partial index update if required index part is missing (sk)', () => {
     const mappers = {
       nameMapper: createNameMapper(),
@@ -653,32 +627,6 @@ describe('mapAccessPatterns', () => {
       mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
     ).toThrow(InvalidIndexedFieldValueException);
   });
-
-  it.each([null, undefined, ''])(
-    'should fail partial index update if required paths are falsy (sk)',
-    (falsy) => {
-      const mappers = {
-        nameMapper: createNameMapper(),
-        valueMapper: createValueMapper(),
-      };
-      const updates: StrictChangesDocument = {
-        $set: [
-          [['department'], 'eng'],
-          [['profile', 'email'], 'test@example.com'],
-          [['country'], 'AU'],
-          [['state'], falsy],
-          [['town'], 'Sydney'],
-        ],
-        $delete: [],
-        $addToSet: [],
-        $deleteFromSet: [],
-        $addValue: [],
-      };
-      expect(() =>
-        mapAccessPatterns(collectionWithRequiredPaths, mappers, updates)
-      ).toThrow(InvalidIndexedFieldValueException);
-    }
-  );
 
   it('should fail partial index update if required index part is deleted (pk)', () => {
     const mappers = {
@@ -800,43 +748,6 @@ describe('updateById', () => {
       })
     ).rejects.toThrowError(InvalidIndexedFieldValueException);
   });
-
-  // undefined is not allowed for update -> only null and empty string considered
-  it.each([null, undefined, ''])(
-    'should throw InvalidIndexedFieldValueException if one of the required paths is falsy (pk)',
-    async (falsy) => {
-      const testId = newId();
-      const ddbMock = createDynamoMock('updateItem', {});
-      const context = createContext(ddbMock as unknown as DynamoDBClient, [
-        collectionWithRequiredPaths,
-      ]);
-      return expect(
-        updateById(context, collectionWithRequiredPaths.name, testId, {
-          $setValues: {
-            'profile.email': 'test@example.com',
-            department: falsy,
-          },
-        })
-      ).rejects.toThrowError(InvalidIndexedFieldValueException);
-    }
-  );
-
-  // undefined is not allowed for update -> only null and empty string considered
-  it.each([null, undefined, ''])(
-    'should throw InvalidIndexedFieldValueException if one of the required paths is falsy (sk)',
-    async (falsy) => {
-      const testId = newId();
-      const ddbMock = createDynamoMock('updateItem', {});
-      const context = createContext(ddbMock as unknown as DynamoDBClient, [
-        collectionWithRequiredPaths,
-      ]);
-      return expect(
-        updateById(context, collectionWithRequiredPaths.name, testId, {
-          $setValues: { country: 'AU', state: falsy, town: 'Sydney' }, // state is missing
-        })
-      ).rejects.toThrowError(InvalidIndexedFieldValueException);
-    }
-  );
 
   it('should throw if updates index without specifying all paths (pk)', async () => {
     const testId = newId();

@@ -188,7 +188,7 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
     }
     const isRequired = requiredPaths?.find((r) => isEqual(r, valuePath));
     // by this line it can only be undefined or string
-    if (isRequired && !extractedValue) {
+    if (isRequired && typeof extractedValue === 'undefined') {
       throw new InvalidIndexedFieldValueException(
         'Required indexed value was not provided',
         { collection: collectionName, keyPath: valuePath }

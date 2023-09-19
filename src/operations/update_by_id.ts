@@ -303,7 +303,7 @@ export const createUpdateActionForKey = (
       ? getValueForUpdatePath(matchingUpdatePath, keyPath, changes)
       : undefined;
     const isRequired = requiredPaths?.find((r) => isEqual(r, keyPath));
-    if (isRequired && !updateValue) {
+    if (isRequired && typeof updateValue === 'undefined') {
       throw new InvalidIndexedFieldValueException(
         'Update does not provide required part of index',
         { collection: collectionName, keyPath }
