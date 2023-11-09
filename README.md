@@ -209,7 +209,7 @@ This is a list of current limitations:
   limit data in some indexes.
 * *Only string types for values used to build indexes.* Obviously numbers are also useful for sort key expressions, but they require more
   sophisticated handling than the library currently supports
-* *Batch Read/Write and Transaction Support is still in progress*
+* *Transaction Support is still in progress*
 * *No write sharding support for low-variance partition keys.* (NOTE: This isn't important for most use cases)
   If you have hot partition keys with a small set of values e.g. `status=(starting, started, stopping, stopped deleted)`
   and you query them on one of those values relentlessly, you will get a
