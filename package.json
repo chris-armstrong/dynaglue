@@ -12,6 +12,7 @@
     "doc": "typedoc --tsconfig tsconfig.json src/index.ts",
     "lint": "eslint '**/*.ts'",
     "test": "jest",
+    "test-local": "LOCAL_DYNAMODB_ENDPOINT=http://localhost:8000 npm run test",
     "prettier:check": "prettier -c **/*.ts",
     "prettier:write": "prettier --write **/*.ts",
     "test:watch": "jest --watch"
