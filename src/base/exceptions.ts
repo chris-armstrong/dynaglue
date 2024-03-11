@@ -128,7 +128,10 @@ export class InvalidIndexedFieldValueException extends VError {
 export class InvalidQueryException extends VError {
   constructor(
     message: string,
-        { collection, query }: { collection: string; query: Record<string, unknown> }
+    {
+      collection,
+      query,
+    }: { collection: string; query: Record<string, unknown> }
   ) {
     super(
       {
@@ -261,7 +264,7 @@ export class InvalidRangeOperatorException extends VError {
 
 export class IndexAccessPatternTypeException extends VError {
   constructor(message: string) {
-    super({ name: 'index_access_pattern_type'}, message);
+    super({ name: 'index_access_pattern_type' }, message);
   }
 }
 
@@ -272,6 +275,16 @@ export class IndexAccessPatternTypeException extends VError {
 export class IdempotentParameterMismatchException extends VError {
   constructor(message: string) {
     super({ name: 'idempotent_parameter_mismatch' }, message);
+  }
+}
+
+/**
+ * Transaction request cannot include multiple operations on one item
+ */
+
+export class TransactionValidationException extends VError {
+  constructor(message: string) {
+    super({ name: 'transaction_validation' }, message);
   }
 }
 /**

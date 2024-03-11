@@ -15,6 +15,7 @@ import {
 import { TransactionWriteRequest, transactionWrite } from './transact_write';
 import debug from 'debug';
 import { DebugTestsNamespace, debugDynamoTests } from '../debug';
+import { TransactionValidationException } from '../base/exceptions';
 
 const TableDefinitions = [
   {
@@ -177,6 +178,32 @@ describe('transactions', () => {
     ]);
   });
 
+  test('write a transaction to ddb consisting multiple ops for same item', async () => {
+    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
+      collection,
+    ]);
+
+    const request = [
+      {
+        collectionName: collection.name,
+        value: {
+          _id: 'test-sh',
+          lastName: 'Holmes',
+          firstName: 'Sherlock',
+          email: 'sh@sh.sh',
+        }, // an update to existing user
+      },
+      {
+        collectionName: collection.name,
+        id: 'test-sh',
+      }, // a deletion
+    ] as TransactionWriteRequest[];
+
+    expect(transactionWrite(context, request)).rejects.toThrowError(
+      TransactionValidationException
+    );
+  });
+
   test('write a transaction to ddb consisting multiple ops', async () => {
     const context = createContext(localDDBClient as unknown as DynamoDBClient, [
       collection,
@@ -208,7 +235,7 @@ describe('transactions', () => {
       }, // a deletion
     ] as TransactionWriteRequest[];
 
-    transactionWrite(context, request);
+    await transactionWrite(context, request);
   });
 
   test('fetch inserted, updated(replaced) or deleted items using transaction', async () => {

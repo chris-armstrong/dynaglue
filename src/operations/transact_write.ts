@@ -9,6 +9,7 @@ import {
   InvalidFindDescriptorException,
   TransactionCanceledException,
   TransactionConflictException,
+  TransactionValidationException,
 } from '../base/exceptions';
 import { Context } from '../context';
 import debugDynamo from '../debug/debugDynamo';
@@ -118,7 +119,11 @@ export const transactionWrite = async (
   } catch (error) {
     console.error('Error in writing transactions to DynamoDB : ', error);
 
-    // ToDo :: below 2 can be merged
+    if ((error as Error).name === 'ValidationException') {
+      throw new TransactionValidationException(
+        'Multiple operations are included for same item id'
+      );
+    }
     if ((error as Error).name === 'TransactionCanceledException') {
       throw new TransactionCanceledException(
         'The entire transaction request was canceled'
