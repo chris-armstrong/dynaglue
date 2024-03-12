@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "dynaglue",
-  "version": "1.1.1",
+  "version": "1.2.0-aplha.1",
   "description": "dynaglue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,6 +12,7 @@
     "doc": "typedoc --tsconfig tsconfig.json src/index.ts",
     "lint": "eslint '**/*.ts'",
     "test": "jest",
+    "test-local": "LOCAL_DYNAMODB_ENDPOINT=http://localhost:8000 npm run test",
     "prettier:check": "prettier -c **/*.ts",
     "prettier:write": "prettier --write **/*.ts",
     "test:watch": "jest --watch"
