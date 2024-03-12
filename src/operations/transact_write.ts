@@ -1,11 +1,14 @@
 import {
   Delete,
   Put,
+  ReturnConsumedCapacity,
+  ReturnItemCollectionMetrics,
   TransactWriteItem,
   TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb';
 import { CompositeCondition } from '../base/conditions';
 import {
+  IdempotentParameterMismatchException,
   InvalidFindDescriptorException,
   TransactionCanceledException,
   TransactionConflictException,
@@ -15,6 +18,7 @@ import { Context } from '../context';
 import debugDynamo from '../debug/debugDynamo';
 import { createDeleteByIdRequest } from './delete_by_id';
 import { createReplaceByIdRequest } from './replace';
+import objectHash from 'object-hash';
 
 /**
  * @param collectionName the collection to update
@@ -67,7 +71,12 @@ const isTransactionDeleteRequest = (
  */
 export const transactionWrite = async (
   context: Context,
-  transactionWriteRequests: TransactionWriteRequest[]
+  transactionWriteRequests: TransactionWriteRequest[],
+  options: {
+    ReturnConsumedCapacity?: ReturnConsumedCapacity | string;
+    ReturnItemCollectionMetrics?: ReturnItemCollectionMetrics | string;
+    ClientRequestToken?: string;
+  } = {}
 ): Promise<void> => {
   if (!transactionWriteRequests || transactionWriteRequests.length === 0) {
     throw new InvalidFindDescriptorException(
@@ -109,16 +118,22 @@ export const transactionWrite = async (
     }
   ) as unknown as TransactWriteItem[];
 
+  if (!options.ClientRequestToken) {
+    options.ClientRequestToken = objectHash(transactWriteItem, {
+      algorithm: 'md5',
+      encoding: 'base64',
+    });
+  }
+
   try {
-    const request = { TransactItems: transactWriteItem };
+    const request = { TransactItems: transactWriteItem, ...options };
 
     debugDynamo('transactWriteItems', JSON.stringify(request));
 
     const command = new TransactWriteItemsCommand(request);
+
     await context.ddb.send(command);
   } catch (error) {
-    console.error('Error in writing transactions to DynamoDB : ', error);
-
     if ((error as Error).name === 'ValidationException') {
       throw new TransactionValidationException(
         'Multiple operations are included for same item id'
@@ -132,6 +147,11 @@ export const transactionWrite = async (
     if ((error as Error).name === 'TransactionConflictException') {
       throw new TransactionConflictException(
         'Another transaction or request is in progress for one of the requested item'
+      );
+    }
+    if ((error as Error).name === 'IdempotentParameterMismatchException') {
+      throw new IdempotentParameterMismatchException(
+        'Another transaction or request with same client token'
       );
     }
     throw error;

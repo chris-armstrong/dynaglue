@@ -15,7 +15,11 @@ import {
 import { TransactionWriteRequest, transactionWrite } from './transact_write';
 import debug from 'debug';
 import { DebugTestsNamespace, debugDynamoTests } from '../debug';
-import { TransactionValidationException } from '../base/exceptions';
+import {
+  IdempotentParameterMismatchException,
+  TransactionValidationException,
+} from '../base/exceptions';
+import objectHash from 'object-hash';
 
 const TableDefinitions = [
   {
@@ -179,42 +183,10 @@ describe('transactions', () => {
       ];
       const result = await transactFindByIds(context, items);
 
-      debugDynamoTests(
-        'fetched items using transactFindByIds',
-        JSON.stringify(result)
-      );
-
       expect(result).toEqual([
         { name: 'Sherlock', email: 'sh@sh.com', _id: 'test-sh' },
         { name: 'Moriarty', email: 'moriarty@jim.com', _id: 'test-id' },
       ]);
-    });
-
-    test('write a transaction to ddb consisting multiple ops for same item', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
-      const request = [
-        {
-          collectionName: collection.name,
-          value: {
-            _id: 'test-sh',
-            lastName: 'Holmes',
-            firstName: 'Sherlock',
-            email: 'sh@sh.sh',
-          }, // an update to existing user
-        },
-        {
-          collectionName: collection.name,
-          id: 'test-sh',
-        }, // a deletion
-      ] as TransactionWriteRequest[];
-
-      expect(transactionWrite(context, request)).rejects.toThrowError(
-        TransactionValidationException
-      );
     });
 
     test('write a transaction to ddb consisting multiple ops', async () => {
@@ -249,7 +221,16 @@ describe('transactions', () => {
         }, // a deletion
       ] as TransactionWriteRequest[];
 
-      await transactionWrite(context, request);
+      /*
+       * passing custom token as running tests again and again with same payload results
+       * in same token and hence assertion fails
+       */
+      const ClientRequestToken = objectHash(new Date().getTime(), {
+        algorithm: 'md5',
+        encoding: 'base64',
+      });
+
+      await transactionWrite(context, request, { ClientRequestToken });
     });
 
     test('fetch inserted, updated(replaced) or deleted items using transaction', async () => {
@@ -289,6 +270,99 @@ describe('transactions', () => {
           email: 'jw@sh.sh',
         },
       ]);
+    });
+
+    test('write a transaction to ddb consisting multiple ops for same item', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const request = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-id-1',
+            firstName: 'Neo',
+            email: 'neo@matrix.com',
+          }, // an update to existing user
+        },
+        {
+          collectionName: collection.name,
+          id: 'test-id-1',
+        }, // a deletion
+      ] as TransactionWriteRequest[];
+
+      expect(transactionWrite(context, request)).rejects.toThrowError(
+        TransactionValidationException
+      );
+    });
+
+    test('writing same transaction twice with same `ClientRequestToken` to ddb', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const request = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-bob',
+            lastName: 'Bob',
+            firstName: 'Sponge',
+            email: 'sb@sb.sb',
+          },
+          options: { condition: { _id: { $exists: false } } }, // an insertion
+        },
+      ] as TransactionWriteRequest[];
+
+      await transactionWrite(context, request);
+      await transactionWrite(context, request);
+    });
+
+    test('writing different transaction with same `ClientRequestToken` to ddb', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const ClientRequestToken = objectHash(new Date(), {
+        algorithm: 'md5',
+        encoding: 'base64',
+      });
+
+      const request1 = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-pat',
+            lastName: 'Star',
+            firstName: 'Patrick',
+            email: 'ps@sb.sb',
+          },
+          options: { condition: { _id: { $exists: false } } }, // an insertion
+        },
+      ] as TransactionWriteRequest[];
+
+      await transactionWrite(context, request1, { ClientRequestToken });
+
+      const request2 = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-bob',
+            lastName: 'Bob',
+            firstName: 'Sponge',
+            email: 'sb@sb.sb',
+          },
+          options: { condition: { _id: { $exists: false } } }, // an insertion
+        },
+      ] as TransactionWriteRequest[];
+
+      expect(
+        transactionWrite(context, request2, { ClientRequestToken })
+      ).rejects.toThrowError(IdempotentParameterMismatchException);
     });
   });
 });
