@@ -112,167 +112,183 @@ const LocalDDBTestKit = {
 
 describe('transactions', () => {
   let localDDBClient: DynamoDBClient;
+  const hasLocalDBEndpoint = !!process.env.LOCAL_DYNAMODB_ENDPOINT;
 
   // create a client with DDB local
   beforeAll(async () => {
     debug.enable(DebugTestsNamespace);
-    localDDBClient = LocalDDBTestKit.connect() as unknown as DynamoDBClient;
+    if (hasLocalDBEndpoint) {
+      localDDBClient = LocalDDBTestKit.connect() as unknown as DynamoDBClient;
+    }
   });
 
   // create tables
   beforeAll(async () => {
-    await LocalDDBTestKit.createTables(localDDBClient, TableDefinitions);
+    if (hasLocalDBEndpoint) {
+      await LocalDDBTestKit.createTables(localDDBClient, TableDefinitions);
+    }
   });
 
   // Delete tables
   afterAll(async () => {
-    await LocalDDBTestKit.deleteTables(localDDBClient, [
-      TableDefinitions[0].TableName,
-    ]);
+    if (hasLocalDBEndpoint) {
+      await LocalDDBTestKit.deleteTables(localDDBClient, [
+        TableDefinitions[0].TableName,
+      ]);
+    }
     debug.disable();
   });
 
-  test.each([
-    { _id: 'test-id', name: 'Moriarty', email: 'moriarty@jim.com' },
-    {
-      _id: 'test-sh',
-      name: 'Sherlock',
-      email: 'sh@sh.com',
-    },
-  ])('Insert items to the collection using replace', async (value) => {
-    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
-      collection,
-    ]);
+  const describeIfCondition = hasLocalDBEndpoint ? describe : describe.skip;
 
-    const result = await replace(context, collection.name, value, {
-      condition: { _id: { $exists: false } }, // condition to check user doesn't exists
+  describeIfCondition('write transactions', () => {
+    test.each([
+      { _id: 'test-id', name: 'Moriarty', email: 'moriarty@jim.com' },
+      {
+        _id: 'test-sh',
+        name: 'Sherlock',
+        email: 'sh@sh.com',
+      },
+    ])('Insert items to the collection using replace', async (value) => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const result = await replace(context, collection.name, value, {
+        condition: { _id: { $exists: false } }, // condition to check user doesn't exists
+      });
+      expect(result).toHaveProperty('_id');
     });
-    expect(result).toHaveProperty('_id');
-  });
 
-  test('fetch items using transaction', async () => {
-    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
-      collection,
-    ]);
+    test('fetch items using transaction', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
 
-    const items: TransactFindByIdDescriptor[] = [
-      {
-        id: 'test-sh',
-        collection: collection.name,
-      },
-      {
-        id: 'test-id',
-        collection: collection.name,
-      },
-    ];
-    const result = await transactFindByIds(context, items);
+      const items: TransactFindByIdDescriptor[] = [
+        {
+          id: 'test-sh',
+          collection: collection.name,
+        },
+        {
+          id: 'test-id',
+          collection: collection.name,
+        },
+      ];
+      const result = await transactFindByIds(context, items);
 
-    debugDynamoTests(
-      'fetched items using transactFindByIds',
-      JSON.stringify(result)
-    );
+      debugDynamoTests(
+        'fetched items using transactFindByIds',
+        JSON.stringify(result)
+      );
 
-    expect(result).toEqual([
-      { name: 'Sherlock', email: 'sh@sh.com', _id: 'test-sh' },
-      { name: 'Moriarty', email: 'moriarty@jim.com', _id: 'test-id' },
-    ]);
-  });
+      expect(result).toEqual([
+        { name: 'Sherlock', email: 'sh@sh.com', _id: 'test-sh' },
+        { name: 'Moriarty', email: 'moriarty@jim.com', _id: 'test-id' },
+      ]);
+    });
 
-  test('write a transaction to ddb consisting multiple ops for same item', async () => {
-    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
-      collection,
-    ]);
+    test('write a transaction to ddb consisting multiple ops for same item', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
 
-    const request = [
-      {
-        collectionName: collection.name,
-        value: {
-          _id: 'test-sh',
+      const request = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-sh',
+            lastName: 'Holmes',
+            firstName: 'Sherlock',
+            email: 'sh@sh.sh',
+          }, // an update to existing user
+        },
+        {
+          collectionName: collection.name,
+          id: 'test-sh',
+        }, // a deletion
+      ] as TransactionWriteRequest[];
+
+      expect(transactionWrite(context, request)).rejects.toThrowError(
+        TransactionValidationException
+      );
+    });
+
+    test('write a transaction to ddb consisting multiple ops', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const request = [
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-jw',
+            lastName: 'Watson',
+            firstName: 'John',
+            email: 'jw@sh.sh',
+          },
+          options: { condition: { _id: { $exists: false } } }, // an insertion
+        },
+        {
+          collectionName: collection.name,
+          value: {
+            _id: 'test-sh',
+            lastName: 'Holmes',
+            firstName: 'Sherlock',
+            email: 'sh@sh.sh',
+          }, // an update to existing user
+        },
+        {
+          collectionName: collection.name,
+          id: 'test-id',
+        }, // a deletion
+      ] as TransactionWriteRequest[];
+
+      await transactionWrite(context, request);
+    });
+
+    test('fetch inserted, updated(replaced) or deleted items using transaction', async () => {
+      const context = createContext(
+        localDDBClient as unknown as DynamoDBClient,
+        [collection]
+      );
+
+      const items: TransactFindByIdDescriptor[] = [
+        {
+          id: 'test-sh',
+          collection: collection.name,
+        },
+        {
+          id: 'test-jw',
+          collection: collection.name,
+        },
+        {
+          id: 'test-id',
+          collection: collection.name,
+        },
+      ];
+
+      const result = await transactFindByIds(context, items);
+
+      expect(result).toEqual([
+        {
           lastName: 'Holmes',
           firstName: 'Sherlock',
+          _id: 'test-sh',
           email: 'sh@sh.sh',
-        }, // an update to existing user
-      },
-      {
-        collectionName: collection.name,
-        id: 'test-sh',
-      }, // a deletion
-    ] as TransactionWriteRequest[];
-
-    expect(transactionWrite(context, request)).rejects.toThrowError(
-      TransactionValidationException
-    );
-  });
-
-  test('write a transaction to ddb consisting multiple ops', async () => {
-    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
-      collection,
-    ]);
-
-    const request = [
-      {
-        collectionName: collection.name,
-        value: {
-          _id: 'test-jw',
+        },
+        {
           lastName: 'Watson',
           firstName: 'John',
+          _id: 'test-jw',
           email: 'jw@sh.sh',
         },
-        options: { condition: { _id: { $exists: false } } }, // an insertion
-      },
-      {
-        collectionName: collection.name,
-        value: {
-          _id: 'test-sh',
-          lastName: 'Holmes',
-          firstName: 'Sherlock',
-          email: 'sh@sh.sh',
-        }, // an update to existing user
-      },
-      {
-        collectionName: collection.name,
-        id: 'test-id',
-      }, // a deletion
-    ] as TransactionWriteRequest[];
-
-    await transactionWrite(context, request);
-  });
-
-  test('fetch inserted, updated(replaced) or deleted items using transaction', async () => {
-    const context = createContext(localDDBClient as unknown as DynamoDBClient, [
-      collection,
-    ]);
-
-    const items: TransactFindByIdDescriptor[] = [
-      {
-        id: 'test-sh',
-        collection: collection.name,
-      },
-      {
-        id: 'test-jw',
-        collection: collection.name,
-      },
-      {
-        id: 'test-id',
-        collection: collection.name,
-      },
-    ];
-
-    const result = await transactFindByIds(context, items);
-
-    expect(result).toEqual([
-      {
-        lastName: 'Holmes',
-        firstName: 'Sherlock',
-        _id: 'test-sh',
-        email: 'sh@sh.sh',
-      },
-      {
-        lastName: 'Watson',
-        firstName: 'John',
-        _id: 'test-jw',
-        email: 'jw@sh.sh',
-      },
-    ]);
+      ]);
+    });
   });
 });
