@@ -1,10 +1,10 @@
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import debug from 'debug';
+import objectHash from 'object-hash';
 import {
-  CreateTableCommand,
-  CreateTableInput,
-  DeleteTableCommand,
-  DynamoDBClient,
-  ListTablesCommand,
-} from '@aws-sdk/client-dynamodb';
+  IdempotentParameterMismatchException,
+  TransactionValidationException,
+} from '../base/exceptions';
 import { CollectionLayout } from '../base/layout';
 import { createContext } from '../context';
 import { replace } from './replace';
@@ -13,13 +13,8 @@ import {
   transactFindByIds,
 } from './transact_find_by_ids';
 import { TransactionWriteRequest, transactionWrite } from './transact_write';
-import debug from 'debug';
-import { DebugTestsNamespace, debugDynamoTests } from '../debug';
-import {
-  IdempotentParameterMismatchException,
-  TransactionValidationException,
-} from '../base/exceptions';
-import objectHash from 'object-hash';
+import LocalDDBTestKit from '../../testutil/local_dynamo_db';
+import { DebugTestsNamespace } from '../../testutil/debug_tests';
 
 const TableDefinitions = [
   {
@@ -45,101 +40,38 @@ const collection = {
   layout,
 };
 
-const showTimeTaken = (startTime: number) =>
-  `[${new Date().getTime() - startTime}ms]`;
-
-const LocalDDBTestKit = {
-  connect: (): DynamoDBClient | null => {
-    const startBy = new Date().getTime();
-    try {
-      const localDDBClient = new DynamoDBClient({
-        endpoint: 'http://localhost:8000',
-        region: 'local',
-      });
-      debugDynamoTests(`${showTimeTaken(startBy)} Connected to Local DDB`, '');
-      return localDDBClient;
-    } catch (error) {
-      debugDynamoTests('Error connecting to local DDB', error);
-      return null;
-    }
-  },
-  createTables: async (
-    client: DynamoDBClient,
-    tableDefinitions: CreateTableInput[] = []
-  ) => {
-    const startBy = new Date().getTime();
-    try {
-      await Promise.all(
-        tableDefinitions?.map((tableDefinition) => {
-          const createTableCmd = new CreateTableCommand(tableDefinition);
-          return client.send(createTableCmd);
-        })
-      );
-
-      debugDynamoTests(
-        `${showTimeTaken(startBy)} tables created in local DDB`,
-        ''
-      );
-    } catch (error) {
-      debugDynamoTests('Error creating tables in local DDB', error);
-    }
-  },
-  deleteTables: async (client: DynamoDBClient, tableNames: string[] = []) => {
-    const startBy = new Date().getTime();
-    try {
-      await Promise.all(
-        tableNames?.map((tableName) => {
-          return client.send(
-            new DeleteTableCommand({
-              TableName: tableName,
-            })
-          );
-        })
-      );
-
-      debugDynamoTests(
-        `${showTimeTaken(startBy)} tables deleted in local DDB`,
-        ''
-      );
-    } catch (error) {
-      debugDynamoTests('Error deleting tables in local DDB', error);
-    }
-  },
-  listTables: async (client: DynamoDBClient) => {
-    try {
-      await client.send(new ListTablesCommand({}));
-    } catch (error) {
-      debugDynamoTests('Error listing tables in local DDB', error);
-    }
-  },
-};
-
 describe('transactions', () => {
   let localDDBClient: DynamoDBClient;
   const hasLocalDBEndpoint = !!process.env.LOCAL_DYNAMODB_ENDPOINT;
 
-  // create a client with DDB local
+  /**
+   * create a client with Local DDB, if Local-DDB-Endpoint is provided
+   */
   beforeAll(async () => {
+    // Enable Debug mode while running test based on namespace
     debug.enable(DebugTestsNamespace);
+
     if (hasLocalDBEndpoint) {
       localDDBClient = LocalDDBTestKit.connect() as unknown as DynamoDBClient;
     }
   });
 
-  // create tables
+  /* create tables */
   beforeAll(async () => {
     if (hasLocalDBEndpoint) {
       await LocalDDBTestKit.createTables(localDDBClient, TableDefinitions);
     }
   });
 
-  // Delete tables
+  /*  Delete tables */
   afterAll(async () => {
     if (hasLocalDBEndpoint) {
       await LocalDDBTestKit.deleteTables(localDDBClient, [
         TableDefinitions[0].TableName,
       ]);
     }
+
+    // Disable Debug mode after running all tests
     debug.disable();
   });
 
@@ -196,6 +128,7 @@ describe('transactions', () => {
       );
 
       const request = [
+        // Insert Item
         {
           collectionName: collection.name,
           value: {
@@ -204,8 +137,10 @@ describe('transactions', () => {
             firstName: 'John',
             email: 'jw@sh.sh',
           },
-          options: { condition: { _id: { $exists: false } } }, // an insertion
+          // condition checks for existence to insert an item with singularity
+          options: { condition: { _id: { $exists: false } } },
         },
+        // Update Item
         {
           collectionName: collection.name,
           value: {
@@ -213,17 +148,19 @@ describe('transactions', () => {
             lastName: 'Holmes',
             firstName: 'Sherlock',
             email: 'sh@sh.sh',
-          }, // an update to existing user
+          },
         },
+        // Delete Item
         {
           collectionName: collection.name,
           id: 'test-id',
-        }, // a deletion
+        },
       ] as TransactionWriteRequest[];
 
       /*
+       * Note:
        * passing custom token as running tests again and again with same payload results
-       * in same token and hence assertion fails
+       * in same token, hence assertion fails
        */
       const ClientRequestToken = objectHash(new Date().getTime(), {
         algorithm: 'md5',
@@ -240,14 +177,17 @@ describe('transactions', () => {
       );
 
       const items: TransactFindByIdDescriptor[] = [
+        // record was Updated with last test run
         {
           id: 'test-sh',
           collection: collection.name,
         },
+        // record was Inserted with last test run
         {
           id: 'test-jw',
           collection: collection.name,
         },
+        // record was Deleted with last test run
         {
           id: 'test-id',
           collection: collection.name,
@@ -272,25 +212,27 @@ describe('transactions', () => {
       ]);
     });
 
-    test('write a transaction to ddb consisting multiple ops for same item', async () => {
+    test('TransactionValidationException while write a transaction to ddb consisting multiple ops for same item', async () => {
       const context = createContext(
         localDDBClient as unknown as DynamoDBClient,
         [collection]
       );
 
       const request = [
+        // update a existing user
         {
           collectionName: collection.name,
           value: {
             _id: 'test-id-1',
             firstName: 'Neo',
             email: 'neo@matrix.com',
-          }, // an update to existing user
+          },
         },
+        // Deleting same user as above updated user
         {
           collectionName: collection.name,
           id: 'test-id-1',
-        }, // a deletion
+        },
       ] as TransactionWriteRequest[];
 
       expect(transactionWrite(context, request)).rejects.toThrowError(
@@ -303,6 +245,13 @@ describe('transactions', () => {
         localDDBClient as unknown as DynamoDBClient,
         [collection]
       );
+
+      /**
+       * Note:
+       * We can either create token ourselves
+       *  or
+       * it's generated implicitly based on request payload
+       */
 
       const request = [
         {
@@ -321,7 +270,7 @@ describe('transactions', () => {
       await transactionWrite(context, request);
     });
 
-    test('writing different transaction with same `ClientRequestToken` to ddb', async () => {
+    test('IdempotentParameterMismatchException while writing different transaction with same `ClientRequestToken` to ddb', async () => {
       const context = createContext(
         localDDBClient as unknown as DynamoDBClient,
         [collection]

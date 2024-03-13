@@ -10,6 +10,6 @@ const logger = debug(DebugTestsNamespace);
  *
  * Helper for logging dynamo requests
  */
-export const debugDynamoTests = (message: string, data: unknown): void => {
+export const debugTests = (message: string, data: unknown): void => {
   logger('%s: %O', message, data);
 };
