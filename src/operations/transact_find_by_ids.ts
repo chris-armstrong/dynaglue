@@ -13,6 +13,7 @@ import {
 } from '../base/util';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
+import { ChildCollection } from '../base/collection';
 
 /**
  * The collection and ID of a root or child
@@ -54,7 +55,10 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
           Key: {
             [primaryKey.partitionKey]: convertToAttr(
               assemblePrimaryKeyValue(
-                collection,
+                rootId
+                  ? (collectionDefinition as ChildCollection)
+                      .parentCollectionName
+                  : collectionDefinition.name,
                 rootId ? rootId : id,
                 indexKeySeparator
               ),

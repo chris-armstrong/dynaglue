@@ -3,6 +3,7 @@ import {
   Put,
   ReturnConsumedCapacity,
   ReturnItemCollectionMetrics,
+  TransactionCanceledException as DDBTransactionCanceledException,
   TransactWriteItem,
   TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb';
@@ -19,6 +20,7 @@ import debugDynamo from '../debug/debugDynamo';
 import { createDeleteByIdRequest } from './delete_by_id';
 import { createReplaceByIdRequest } from './replace';
 import objectHash from 'object-hash';
+import { createDeleteChildByIdRequest } from './delete_child_by_id';
 
 /**
  * @param collectionName the collection to update
@@ -44,9 +46,24 @@ export type TransactionDeleteRequest = {
   options?: { condition?: CompositeCondition };
 };
 
+/**
+ * @param collectionName the collection to update
+ * @param id the document to delete
+ * @param rootObjectId parent object id
+ * @param options options to apply
+ * @param options.condition an optional conditional expression that must be satisfied for the update to proceed
+ */
+export type TransactionDeleteChildRequest = {
+  collectionName: string;
+  id: string;
+  rootObjectId: string;
+  options?: { condition?: CompositeCondition };
+};
+
 export type TransactionWriteRequest =
   | TransactionReplaceRequest
-  | TransactionDeleteRequest;
+  | TransactionDeleteRequest
+  | TransactionDeleteChildRequest;
 
 const isTransactionReplaceRequest = (
   transactionWriteRequest: TransactionWriteRequest
@@ -54,9 +71,19 @@ const isTransactionReplaceRequest = (
   'value' in transactionWriteRequest && !!transactionWriteRequest.value;
 
 const isTransactionDeleteRequest = (
-  transactionWriteRequest: TransactionDeleteRequest
+  transactionWriteRequest: TransactionWriteRequest
 ): transactionWriteRequest is TransactionDeleteRequest =>
-  'id' in transactionWriteRequest && !!transactionWriteRequest.id;
+  'id' in transactionWriteRequest &&
+  !('rootObjectId' in transactionWriteRequest) &&
+  !!transactionWriteRequest.id;
+
+const isTransactionDeleteChildRequest = (
+  transactionWriteRequest: TransactionWriteRequest
+): transactionWriteRequest is TransactionDeleteChildRequest =>
+  'id' in transactionWriteRequest &&
+  !!transactionWriteRequest.id &&
+  'rootObjectId' in transactionWriteRequest &&
+  !!transactionWriteRequest.rootObjectId;
 
 /**
  * This operation writes to DynamoDB in a transaction.
@@ -87,6 +114,7 @@ export const transactionWrite = async (
       'No more than 25 requests can be specified to transactionWrite'
     );
   }
+
   const transactWriteItem: TransactWriteItem[] = transactionWriteRequests.map(
     (request) => {
       /** Checks and create a REPLACE request for a requested item */
@@ -115,6 +143,21 @@ export const transactionWrite = async (
 
         return { Delete: deleteItem } as { Delete: Delete };
       }
+
+      /** Checks and create a DELETE Child request for a requested item */
+      if (isTransactionDeleteChildRequest(request)) {
+        const { collectionName, id, rootObjectId, options } = request;
+
+        const deleteItem = createDeleteChildByIdRequest(
+          context,
+          collectionName,
+          id,
+          rootObjectId,
+          options
+        );
+
+        return { Delete: deleteItem } as { Delete: Delete };
+      }
     }
   ) as unknown as TransactWriteItem[];
 
@@ -134,6 +177,8 @@ export const transactionWrite = async (
 
     await context.ddb.send(command);
   } catch (error) {
+    console.error('Error writing transaction to dynamo db : ', error);
+
     if ((error as Error).name === 'ValidationException') {
       throw new TransactionValidationException(
         'Multiple operations are included for same item id'
@@ -141,7 +186,8 @@ export const transactionWrite = async (
     }
     if ((error as Error).name === 'TransactionCanceledException') {
       throw new TransactionCanceledException(
-        'The entire transaction request was canceled'
+        'The entire transaction request was canceled',
+        (error as DDBTransactionCanceledException).CancellationReasons
       );
     }
     if ((error as Error).name === 'TransactionConflictException') {

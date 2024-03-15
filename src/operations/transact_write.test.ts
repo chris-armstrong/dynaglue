@@ -6,7 +6,7 @@ import {
   TransactionValidationException,
 } from '../base/exceptions';
 import { CollectionLayout } from '../base/layout';
-import { createContext } from '../context';
+import { Context, createContext } from '../context';
 import { replace } from './replace';
 import {
   TransactFindByIdDescriptor,
@@ -15,6 +15,7 @@ import {
 import { TransactionWriteRequest, transactionWrite } from './transact_write';
 import LocalDDBTestKit from '../../testutil/local_dynamo_db';
 import { DebugTestsNamespace } from '../../testutil/debug_tests';
+import { Collection } from '../base/collection';
 
 const TableDefinitions = [
   {
@@ -35,9 +36,18 @@ const layout: CollectionLayout = {
   tableName: 'User',
   primaryKey: { partitionKey: 'pk', sortKey: 'sk' },
 };
-const collection = {
+
+const collection: Collection = {
   name: 'users',
   layout,
+};
+
+const childCollection: Collection = {
+  name: 'users-meta',
+  type: 'child',
+  layout,
+  foreignKeyPath: ['userId'],
+  parentCollectionName: 'users',
 };
 
 describe('transactions', () => {
@@ -78,6 +88,17 @@ describe('transactions', () => {
   const describeIfCondition = hasLocalDBEndpoint ? describe : describe.skip;
 
   describeIfCondition('write transactions', () => {
+    let context: Context;
+
+    // initialize the context
+    beforeAll(() => {
+      context = createContext(localDDBClient as unknown as DynamoDBClient, [
+        collection,
+        childCollection,
+      ]);
+    });
+
+    // Insert Root Documents
     test.each([
       { _id: 'test-id', name: 'Moriarty', email: 'moriarty@jim.com' },
       {
@@ -86,23 +107,32 @@ describe('transactions', () => {
         email: 'sh@sh.com',
       },
     ])('Insert items to the collection using replace', async (value) => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       const result = await replace(context, collection.name, value, {
         condition: { _id: { $exists: false } }, // condition to check user doesn't exists
       });
       expect(result).toHaveProperty('_id');
     });
 
-    test('fetch items using transaction', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
+    // Insert child Documents
+    test.each([
+      {
+        userId: 'test-sh',
+        _id: 'test-sh-meta',
+        status: 'detective',
+      },
+      {
+        userId: 'test-id',
+        _id: 'test-id-meta',
+        status: 'hostile',
+      },
+    ])('Insert items to the child collection using replace', async (value) => {
+      const result = await replace(context, childCollection.name, value, {
+        condition: { _id: { $exists: false } }, // condition to check user doesn't exists
+      });
+      expect(result).toHaveProperty('_id');
+    });
 
+    test('fetch items using transaction', async () => {
       const items: TransactFindByIdDescriptor[] = [
         {
           id: 'test-sh',
@@ -112,21 +142,23 @@ describe('transactions', () => {
           id: 'test-id',
           collection: collection.name,
         },
+        {
+          id: 'test-id-meta',
+          rootId: 'test-id',
+          collection: childCollection.name,
+        },
       ];
+
       const result = await transactFindByIds(context, items);
 
       expect(result).toEqual([
         { name: 'Sherlock', email: 'sh@sh.com', _id: 'test-sh' },
         { name: 'Moriarty', email: 'moriarty@jim.com', _id: 'test-id' },
+        { status: 'hostile', _id: 'test-id-meta', userId: 'test-id' },
       ]);
     });
 
     test('write a transaction to ddb consisting multiple ops', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       const request = [
         // Insert Item
         {
@@ -155,6 +187,12 @@ describe('transactions', () => {
           collectionName: collection.name,
           id: 'test-id',
         },
+        // Delete Child Item
+        {
+          collectionName: childCollection.name,
+          id: 'test-id-meta',
+          rootObjectId: 'test-id',
+        },
       ] as TransactionWriteRequest[];
 
       /*
@@ -171,11 +209,6 @@ describe('transactions', () => {
     });
 
     test('fetch inserted, updated(replaced) or deleted items using transaction', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       const items: TransactFindByIdDescriptor[] = [
         // record was Updated with last test run
         {
@@ -191,6 +224,18 @@ describe('transactions', () => {
         {
           id: 'test-id',
           collection: collection.name,
+        },
+        // child record was Deleted with last test run
+        {
+          id: 'test-id-meta',
+          rootId: 'test-id',
+          collection: childCollection.name,
+        },
+        // child record un-deleted
+        {
+          id: 'test-sh-meta',
+          rootId: 'test-sh',
+          collection: childCollection.name,
         },
       ];
 
@@ -209,15 +254,15 @@ describe('transactions', () => {
           _id: 'test-jw',
           email: 'jw@sh.sh',
         },
+        {
+          _id: 'test-sh-meta',
+          userId: 'test-sh',
+          status: 'detective',
+        },
       ]);
     });
 
     test('TransactionValidationException while write a transaction to ddb consisting multiple ops for same item', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       const request = [
         // update a existing user
         {
@@ -241,11 +286,6 @@ describe('transactions', () => {
     });
 
     test('writing same transaction twice with same `ClientRequestToken` to ddb', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       /**
        * Note:
        * We can either create token ourselves
@@ -271,11 +311,6 @@ describe('transactions', () => {
     });
 
     test('IdempotentParameterMismatchException while writing different transaction with same `ClientRequestToken` to ddb', async () => {
-      const context = createContext(
-        localDDBClient as unknown as DynamoDBClient,
-        [collection]
-      );
-
       const ClientRequestToken = objectHash(new Date(), {
         algorithm: 'md5',
         encoding: 'base64',
