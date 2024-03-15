@@ -1,5 +1,6 @@
 import { VError, Options as VErrorOptions } from 'verror';
 import { ParseElement } from './conditions_types';
+import { CancellationReason } from '@aws-sdk/client-dynamodb';
 
 /**
  * Thrown when insert() is called with a specified _id
@@ -251,7 +252,7 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
  * more items in the TransactGetItems request
  */
 export class TransactionCanceledException extends VError {
-  constructor(message: string, info?: Record<string, unknown>) {
+  constructor(message: string, info?: CancellationReason[]) {
     super({ name: 'transaction_cancelled', info }, message);
   }
 }
