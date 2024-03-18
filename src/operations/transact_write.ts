@@ -6,6 +6,7 @@ import {
   TransactionCanceledException as DDBTransactionCanceledException,
   TransactWriteItem,
   TransactWriteItemsCommand,
+  TransactWriteItemsCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 import { CompositeCondition } from '../base/conditions';
 import {
@@ -104,7 +105,7 @@ export const transactionWrite = async (
     ReturnItemCollectionMetrics?: ReturnItemCollectionMetrics | string;
     ClientRequestToken?: string;
   } = {}
-): Promise<void> => {
+): Promise<TransactWriteItemsCommandOutput> => {
   if (!transactionWriteRequests || transactionWriteRequests.length === 0) {
     throw new InvalidFindDescriptorException(
       'At least one request should be provided'
@@ -175,7 +176,7 @@ export const transactionWrite = async (
 
     const command = new TransactWriteItemsCommand(request);
 
-    await context.ddb.send(command);
+    return await context.ddb.send(command);
   } catch (error) {
     console.error('Error writing transaction to dynamo db : ', error);
 
