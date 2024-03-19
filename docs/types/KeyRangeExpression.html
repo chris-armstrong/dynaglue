@@ -16,6 +16,10 @@
 <li><a href="KeyRangeExpression.html">KeyRangeExpression</a></li></ul>
 <h1>Type alias KeyRangeExpression</h1></div>
 <div class="tsd-signature"><span class="tsd-kind-type-alias">Key<wbr/>Range<wbr/>Expression</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">op</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;gte&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;gt&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;lte&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;lt&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;begins_with&quot;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">max</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">min</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">op</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;between&quot;</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p>The range expression to use on the sort key (<code>_id</code>) when
+querying for child collection objects with
+<a href="../functions/findChildren.html" class="tsd-kind-function">findChildren</a>.</p>
+</div>
 <div class="tsd-type-declaration">
 <h4>Type declaration</h4>
 <ul class="tsd-parameters">
@@ -31,9 +35,10 @@
 <li class="tsd-parameter">
 <h5><span class="tsd-kind-property">min</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5></li>
 <li class="tsd-parameter">
-<h5><span class="tsd-kind-property">op</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;between&quot;</span></h5></li></ul></div><aside class="tsd-sources">
+<h5><span class="tsd-kind-property">op</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;between&quot;</span></h5></li></ul></div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/f45cb47/src/operations/find_children.ts#L30">src/operations/find_children.ts:30</a></li></ul></aside></div>
+<li>Defined in <a href="https://github.com/chris-armstrong/dynaglue/blob/d6102ee/src/operations/find_children.ts#L35">src/operations/find_children.ts:35</a></li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

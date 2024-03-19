@@ -6,8 +6,12 @@ import {
 } from '../../testutil/dynamo_mock';
 import { createContext } from '../context';
 import { insert } from './insert';
-import { ConflictException } from '../base/exceptions';
+import {
+  ConflictException,
+  InvalidIndexedFieldValueException,
+} from '../base/exceptions';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { ChildCollection, RootCollection } from '../base/collection';
 
 jest.mock('../base/new_id', () => ({
   __esModule: true,
@@ -19,12 +23,30 @@ describe('insert', () => {
     tableName: 'my-objects',
     primaryKey: { partitionKey: 'pkey', sortKey: 'skey' },
   };
-  const collection = {
+  const collection: RootCollection = {
     name: 'users',
     layout,
   };
 
-  const childCollection = {
+  const collectionWithRequiredPaths: RootCollection = {
+    name: 'users',
+    layout: {
+      ...layout,
+      findKeys: [
+        { indexName: 'index1', partitionKey: 'gpk1', sortKey: 'gsk1' },
+      ],
+    },
+    accessPatterns: [
+      {
+        indexName: 'index1',
+        partitionKeys: [['email']],
+        sortKeys: [['location']],
+        requiredPaths: [['email'], ['location']],
+      },
+    ],
+  };
+
+  const childCollection: ChildCollection = {
     name: 'addresses',
     type: 'child',
     layout,
@@ -52,13 +74,85 @@ describe('insert', () => {
     );
   });
 
+  test('should insert a root item with required paths', async () => {
+    const ddb = createDynamoMock('putItem', {});
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+
+    const value = {
+      name: 'name',
+      email: 'test@example.com',
+      location: 'Wonderland',
+    };
+    const result = await insert(context, 'users', value);
+    expect(result).toHaveProperty('_id');
+
+    const request = ddb.send.mock.calls[0][0].input;
+    expect(request).toEqual({
+      TableName: 'my-objects',
+      Item: {
+        pkey: { S: 'users|-|test-id' },
+        skey: { S: 'users|-|test-id' },
+        value: {
+          M: {
+            name: { S: 'name' },
+            email: { S: 'test@example.com' },
+            location: { S: 'Wonderland' },
+            _id: { S: 'test-id' },
+          },
+        },
+        type: { S: 'users' },
+        gpk1: { S: 'users|-|test@example.com' },
+        gsk1: { S: 'users|-|Wonderland' },
+      },
+      ReturnValues: 'NONE',
+      ConditionExpression: 'attribute_not_exists(#idAttribute)',
+      ExpressionAttributeNames: { '#idAttribute': 'users|-|test-id' },
+    });
+  });
+
+  test('should throw if required path is missing (pk)', async () => {
+    const ddb = createDynamoMock('putItem', {});
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+
+    const value = {
+      // email is required
+      name: 'name',
+      location: 'Wonderland',
+    };
+    await expect(() => insert(context, 'users', value)).rejects.toThrow(
+      InvalidIndexedFieldValueException
+    );
+  });
+
+  test('should throw if required path is missing (sk)', async () => {
+    const ddb = createDynamoMock('putItem', {});
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collectionWithRequiredPaths,
+    ]);
+
+    const value = {
+      // location is required
+      name: 'name',
+      email: 'test@example.com',
+    };
+    await expect(() => insert(context, 'users', value)).rejects.toThrow(
+      InvalidIndexedFieldValueException
+    );
+  });
+
   test('should work with custom separators', async () => {
     const ddb = createDynamoMock('putItem', {});
     const rootCollection = {
       ...collection,
       layout: { ...layout, indexKeySeparator: '#' },
     };
-    const context = createContext(ddb as unknown as DynamoDBClient, [rootCollection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      rootCollection,
+    ]);
 
     const value = { name: 'Chris', email: 'chris@example.com' };
     const result = await insert(context, 'users', value);
@@ -109,7 +203,9 @@ describe('insert', () => {
         'The conditional check failed'
       )
     );
-    const context = createContext(ddb as unknown as DynamoDBClient, [collection]);
+    const context = createContext(ddb as unknown as DynamoDBClient, [
+      collection,
+    ]);
 
     const value = { _id: 'test-id', name: 'Chris', email: 'chris@example.com' };
     expect(insert(context, 'users', value)).rejects.toThrowError(

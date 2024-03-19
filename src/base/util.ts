@@ -20,6 +20,7 @@ import {
   ChildCollectionDefinition,
   RootCollectionDefinition,
 } from './collection_definition';
+import { isEqual } from 'lodash';
 
 /**
  * @internal
@@ -72,10 +73,12 @@ export const assembleIndexedValue = (
   return `${collectionName}${separator}${values
     .map((x, index) => {
       if (typeof x === 'string') return x;
-      if (typeof x === 'undefined') return '';
+      if (typeof x === 'undefined' || x === null) return '';
       const keyPath = valuePaths[index];
       throw new IndexAccessPatternTypeException(
-        `Could not assemble access pattern components on ${keyType} key with key path ${describeKeyPath(keyPath)} of collection ${collectionName} as some input values were not strings`
+        `Could not assemble access pattern components on ${keyType} key with key path ${describeKeyPath(
+          keyPath
+        )} of collection ${collectionName} as some input values were not strings`
       );
     })
     .join(separator)}`;
@@ -164,7 +167,8 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
   separator: string,
   valuePaths: KeyPath[],
   options: AccessPatternOptions,
-  value: DocumentType
+  value: DocumentType,
+  requiredPaths?: KeyPath[]
 ): string | number | undefined => {
   if (type === 'ttl') {
     return extractTransformedTTLValue(value, valuePaths[0]);
@@ -182,6 +186,14 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
         { keyPath: valuePath, collection: collectionName }
       );
     }
+    const isRequired = requiredPaths?.find((r) => isEqual(r, valuePath));
+    // by this line it can only be undefined or string
+    if (isRequired && typeof extractedValue === 'undefined') {
+      throw new InvalidIndexedFieldValueException(
+        'Required indexed value was not provided',
+        { collection: collectionName, keyPath: valuePath }
+      );
+    }
     const transformedValue =
       options.stringNormalizer && extractedValue
         ? options.stringNormalizer(valuePath, extractedValue)
@@ -189,7 +201,13 @@ export const constructKeyValue = <DocumentType extends DocumentWithId>(
     return transformedValue;
   });
 
-  return assembleIndexedValue(type, collectionName, valuePaths, values, separator);
+  return assembleIndexedValue(
+    type,
+    collectionName,
+    valuePaths,
+    values,
+    separator
+  );
 };
 
 /**
@@ -213,14 +231,15 @@ export const toWrapped = <DocumentType extends DocumentWithId>(
   }
 
   const extractedKeys = collection.wrapperExtractKeys
-    .map(({ type, key, valuePaths, options }) => {
+    .map(({ type, key, valuePaths, options, requiredPaths }) => {
       const keyValue = constructKeyValue(
         type,
         collection.name,
         collection.layout.indexKeySeparator ?? SEPARATOR,
         valuePaths,
         options,
-        updatedValue
+        updatedValue,
+        requiredPaths
       );
       if (typeof keyValue !== undefined) {
         return { [key]: keyValue };

@@ -11,6 +11,7 @@ export type ExtractKey = {
   key: string;
   valuePaths: KeyPath[];
   options: AccessPatternOptions;
+  requiredPaths?: KeyPath[];
 };
 
 /**

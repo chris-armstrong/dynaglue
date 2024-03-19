@@ -1,5 +1,5 @@
 import { startDb, stopDb, createTables } from 'jest-dynalite';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 
 import type { ChildCollection, RootCollection } from '../base/collection';
 import { CollectionLayout } from '../base/layout';
@@ -10,6 +10,8 @@ import { find } from '../operations/find';
 import { findChildren } from './find_children';
 import { findByIdWithChildren } from './find_by_id_with_children';
 import newId from '../base/new_id';
+import { convertToAttr } from '@aws-sdk/util-dynamodb';
+import { InvalidIndexedFieldValueException } from '../base/exceptions';
 
 describe('E2E tests', () => {
   beforeAll(startDb, 10000);
@@ -65,6 +67,19 @@ describe('E2E tests', () => {
     ],
   };
 
+  const compositeIndexesCollectionDefinition: RootCollection = {
+    name: 'test',
+    layout,
+    accessPatterns: [
+      {
+        indexName: 'gsi1',
+        partitionKeys: [['department'], ['profile', 'email']],
+        sortKeys: [['country'], ['state'], ['town']],
+        requiredPaths: [['department'], ['country'], ['state']],
+      },
+    ],
+  };
+
   const directReportsDefinition: ChildCollection = {
     type: 'child',
     name: 'direct-report',
@@ -104,6 +119,271 @@ describe('E2E tests', () => {
       'profile.email': 'test@example.com',
     });
     expect(findByEmailResults2.items?.[0]).toBeUndefined();
+  });
+
+  it.each([null, ''])(
+    'should allow update if index parts are falsy',
+    async (falsy) => {
+      const dynamodb = createDynamoDB();
+      const staffOriginal = {
+        name: 'test',
+        profile: { email: 'test@EXAMPLE.COM', departmentNumber: '1' },
+      };
+      const context = createContext(dynamodb, [staffDefinition]);
+      const inserted = await insert(context, 'staff', staffOriginal);
+
+      await updateById(context, 'staff', inserted._id, {
+        $setValues: {
+          name: 'other name',
+          profile: {
+            email: falsy,
+          },
+        },
+      });
+
+      const pk = `staff|-|${inserted._id}`;
+      const rawItem = await dynamodb.send(
+        new GetItemCommand({
+          TableName: 'general',
+          Key: { pk: { S: pk }, sk: { S: pk } },
+        })
+      );
+      expect(rawItem.Item).toEqual({
+        pk: { S: pk },
+        sk: { S: pk },
+        value: {
+          M: {
+            _id: { S: inserted._id },
+            name: { S: 'other name' },
+            profile: { M: { email: convertToAttr(falsy) } },
+          },
+        },
+        type: { S: 'staff' },
+        gpk1: { S: 'staff|-|other name' },
+        gsk1: { S: 'staff' },
+        gpk2: { S: 'staff|-|' }, // ends with separator because null is treated as empty value
+        gsk2: { S: 'staff|-|' }, // ends with separator because null is treated as empty value
+        gpk3: { S: 'staff' },
+        gsk3: { S: 'staff|-|other name' },
+        gpk4: { S: 'staff' },
+        // gsk4 is missing because it's sparse (no value provided)
+      });
+    }
+  );
+
+  it('should remove property on update if it is undefined', async () => {
+    const dynamodb = createDynamoDB();
+    const staffOriginal = {
+      name: 'test',
+      profile: { email: 'test@EXAMPLE.COM', departmentNumber: '1' },
+    };
+    const context = createContext(dynamodb, [staffDefinition]);
+    const inserted = await insert(context, 'staff', staffOriginal);
+
+    await updateById(context, 'staff', inserted._id, {
+      $setValues: {
+        name: 'other name',
+        profile: {
+          email: undefined,
+        },
+      },
+    });
+
+    const pk = `staff|-|${inserted._id}`;
+    const rawItem = await dynamodb.send(
+      new GetItemCommand({
+        TableName: 'general',
+        Key: { pk: { S: pk }, sk: { S: pk } },
+      })
+    );
+    expect(rawItem.Item).toEqual({
+      pk: { S: pk },
+      sk: { S: pk },
+      value: {
+        M: {
+          _id: { S: inserted._id },
+          name: { S: 'other name' },
+          profile: { M: {} },
+        },
+      },
+      type: { S: 'staff' },
+      gpk1: { S: 'staff|-|other name' },
+      gsk1: { S: 'staff' },
+      gpk2: { S: 'staff' },
+      // gsk2 is missing because it's sparse (no value provided)
+      gpk3: { S: 'staff' },
+      gsk3: { S: 'staff|-|other name' },
+      gpk4: { S: 'staff' },
+      // gsk4 is missing because it's sparse (no value provided)
+    });
+  });
+
+  it('should fail update if touches only part of index (pk)', async () => {
+    const dynamodb = createDynamoDB();
+    const original = {
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+      town: 'Sydney',
+    };
+    const context = createContext(dynamodb, [
+      compositeIndexesCollectionDefinition,
+    ]);
+    const inserted = await insert(context, 'test', original);
+
+    await expect(() =>
+      updateById(context, 'test', inserted._id, {
+        $setValues: {
+          profile: {
+            email: 'new-email@email.com',
+          },
+        },
+      })
+    ).rejects.toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it('should fail update if touches only part of index (sk)', async () => {
+    const dynamodb = createDynamoDB();
+    const original = {
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+      town: 'Sydney',
+    };
+    const context = createContext(dynamodb, [
+      compositeIndexesCollectionDefinition,
+    ]);
+    const inserted = await insert(context, 'test', original);
+
+    await expect(() =>
+      updateById(context, 'test', inserted._id, {
+        $setValues: {
+          country: 'NZ',
+        },
+      })
+    ).rejects.toThrow(InvalidIndexedFieldValueException);
+  });
+
+  it.each([null, ''])(
+    'should allow update if index parts are falsy',
+    async (falsy) => {
+      const dynamodb = createDynamoDB();
+      const original = {
+        name: 'new name',
+        profile: {
+          email: 'email@email.com',
+        },
+        department: 'department 2',
+        country: 'AU',
+        state: 'NSW',
+        town: 'Sydney',
+      };
+      const context = createContext(dynamodb, [
+        compositeIndexesCollectionDefinition,
+      ]);
+      const inserted = await insert(context, 'test', original);
+
+      await updateById(context, 'test', inserted._id, {
+        $setValues: {
+          profile: {
+            email: falsy,
+          },
+          department: 'department 2',
+          country: 'AU',
+          state: 'NSW',
+          town: falsy,
+        },
+      });
+
+      const pk = `test|-|${inserted._id}`;
+      const rawItem = await dynamodb.send(
+        new GetItemCommand({
+          TableName: 'general',
+          Key: { pk: { S: pk }, sk: { S: pk } },
+        })
+      );
+      expect(rawItem.Item).toEqual({
+        pk: { S: pk },
+        sk: { S: pk },
+        value: {
+          M: {
+            name: { S: 'new name' },
+            profile: { M: { email: convertToAttr(falsy) } },
+            department: { S: 'department 2' },
+            country: { S: 'AU' },
+            state: { S: 'NSW' },
+            town: convertToAttr(falsy),
+            _id: { S: inserted._id },
+          },
+        },
+        type: { S: 'test' },
+        gpk1: { S: 'test|-|department 2|-|' },
+        gsk1: { S: 'test|-|AU|-|NSW|-|' },
+      });
+    }
+  );
+
+  it('should allow update if index parts are undefined', async () => {
+    const dynamodb = createDynamoDB();
+    const original = {
+      name: 'new name',
+      profile: {
+        email: 'email@email.com',
+      },
+      department: 'department 2',
+      country: 'AU',
+      state: 'NSW',
+      town: 'Sydney',
+    };
+    const context = createContext(dynamodb, [
+      compositeIndexesCollectionDefinition,
+    ]);
+    const inserted = await insert(context, 'test', original);
+
+    await updateById(context, 'test', inserted._id, {
+      $setValues: {
+        profile: {
+          email: undefined,
+        },
+        department: 'department 2',
+        country: 'AU',
+        state: 'NSW',
+        town: undefined,
+      },
+    });
+
+    const pk = `test|-|${inserted._id}`;
+    const rawItem = await dynamodb.send(
+      new GetItemCommand({
+        TableName: 'general',
+        Key: { pk: { S: pk }, sk: { S: pk } },
+      })
+    );
+    expect(rawItem.Item).toEqual({
+      pk: { S: pk },
+      sk: { S: pk },
+      value: {
+        M: {
+          name: { S: 'new name' },
+          profile: { M: {} },
+          department: { S: 'department 2' },
+          country: { S: 'AU' },
+          state: { S: 'NSW' },
+          _id: { S: inserted._id },
+        },
+      },
+      type: { S: 'test' },
+      gpk1: { S: 'test|-|department 2|-|' },
+      gsk1: { S: 'test|-|AU|-|NSW|-|' },
+    });
   });
 
   it('should allow search on a duplicated index key path', async () => {

@@ -15,12 +15,14 @@ export const withTypeCreateExtractKey =
   (
     key: string,
     valuePaths: KeyPath[],
-    options?: AccessPatternOptions
+    options?: AccessPatternOptions,
+    requiredPaths?: KeyPath[]
   ): ExtractKey => ({
     type,
     key,
     valuePaths,
     options: options || {},
+    requiredPaths,
   });
 
 /** @internal */
@@ -61,7 +63,8 @@ export function buildAndValidateAccessPatterns(
       createPartitionExtractKey(
         layout.partitionKey,
         accessPattern.partitionKeys,
-        accessPattern.options
+        accessPattern.options,
+        accessPattern.requiredPaths
       )
     );
 
@@ -77,7 +80,8 @@ export function buildAndValidateAccessPatterns(
         createSortExtractKey(
           layout.sortKey,
           accessPattern.sortKeys,
-          accessPattern.options
+          accessPattern.options,
+          accessPattern.requiredPaths
         )
       );
     } else if (!accessPattern.sortKeys && layout.sortKey) {
