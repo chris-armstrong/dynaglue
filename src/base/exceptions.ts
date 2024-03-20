@@ -1,6 +1,5 @@
 import { VError, Options as VErrorOptions } from 'verror';
 import { ParseElement } from './conditions_types';
-import { CancellationReason } from '@aws-sdk/client-dynamodb';
 
 /**
  * Thrown when insert() is called with a specified _id
@@ -181,6 +180,20 @@ export class InvalidUpdateValueException extends VError {
 }
 
 /**
+ * Throw when validations fails for arguments passed for any operation
+ */
+export class InvalidArgumentException extends VError {
+  constructor(message: string) {
+    super(
+      {
+        name: 'invalid_arguments',
+      },
+      message
+    );
+  }
+}
+
+/**
  * Throw when the find descriptor for a transactFindByIds or
  * batchFindByIds is invalid.
  */
@@ -252,7 +265,7 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
  * more items in the TransactGetItems request
  */
 export class TransactionCanceledException extends VError {
-  constructor(message: string, info?: CancellationReason[]) {
+  constructor(message: string, info?: Record<string, unknown>) {
     super({ name: 'transaction_cancelled', info }, message);
   }
 }
@@ -274,15 +287,14 @@ export class IndexAccessPatternTypeException extends VError {
  * a different payload but with an idempotent token that was already used.
  */
 export class IdempotentParameterMismatchException extends VError {
-  constructor(message: string) {
-    super({ name: 'idempotent_parameter_mismatch' }, message);
+  constructor(message: string, info?: Record<string, unknown>) {
+    super({ name: 'idempotent_parameter_mismatch', info }, message);
   }
 }
 
 /**
  * Transaction request cannot include multiple operations on one item
  */
-
 export class TransactionValidationException extends VError {
   constructor(message: string) {
     super({ name: 'transaction_validation' }, message);
@@ -292,7 +304,7 @@ export class TransactionValidationException extends VError {
  * The transaction with the given request token is already in progress
  */
 export class TransactionInProgressException extends VError {
-  constructor(message: string) {
-    super({ name: 'transaction_in_progress' }, message);
+  constructor(message: string, info?: Record<string, unknown>) {
+    super({ name: 'transaction_in_progress', info }, message);
   }
 }

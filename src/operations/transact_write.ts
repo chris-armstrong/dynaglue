@@ -1,53 +1,68 @@
 import {
-  Delete,
-  Put,
+  TransactionCanceledException as DDBTransactionCanceledException,
+  TransactionConflictException as DDBTransactionConflictException,
+  IdempotentParameterMismatchException as DDBIdempotentParameterMismatchException,
+  TransactionInProgressException as DDBTransactionInProgressException,
   ReturnConsumedCapacity,
   ReturnItemCollectionMetrics,
-  TransactionCanceledException as DDBTransactionCanceledException,
   TransactWriteItem,
   TransactWriteItemsCommand,
   TransactWriteItemsCommandOutput,
 } from '@aws-sdk/client-dynamodb';
+import { isEmpty } from 'lodash';
 import { CompositeCondition } from '../base/conditions';
 import {
   IdempotentParameterMismatchException,
+  InvalidArgumentException,
   InvalidFindDescriptorException,
   TransactionCanceledException,
   TransactionConflictException,
+  TransactionInProgressException,
   TransactionValidationException,
 } from '../base/exceptions';
 import { Context } from '../context';
 import debugDynamo from '../debug/debugDynamo';
 import { createDeleteByIdRequest } from './delete_by_id';
 import { createReplaceByIdRequest } from './replace';
-import objectHash from 'object-hash';
+import { coerceError } from '../base/coerce_error';
 import { createDeleteChildByIdRequest } from './delete_child_by_id';
 
 /**
+ * A replace request, it helps dynaglue to identify action as Put,
+ * required to add to the list of actions in a transaction
+ *
  * @param collectionName the collection to update
  * @param value the document to insert or replace
  * @param options options to apply
  * @param options.condition an optional conditional expression that must be satisfied for the update to proceed
  */
 export type TransactionReplaceRequest = {
+  type: 'replace';
   collectionName: string;
   value: Record<string, unknown>;
   options?: { condition?: CompositeCondition };
 };
 
 /**
+ * A delete request, it helps dynaglue to identify action as Delete,
+ * required to add to the list of actions in a transaction
+ *
  * @param collectionName the collection to update
  * @param id the document to delete
  * @param options options to apply
  * @param options.condition an optional conditional expression that must be satisfied for the update to proceed
  */
 export type TransactionDeleteRequest = {
+  type: 'delete';
   collectionName: string;
   id: string;
   options?: { condition?: CompositeCondition };
 };
 
 /**
+ * A delete request for child, it helps dynaglue to identify action as Delete but for a child collection,
+ * required to add to the list of actions in a transaction
+ *
  * @param collectionName the collection to update
  * @param id the document to delete
  * @param rootObjectId parent object id
@@ -55,36 +70,50 @@ export type TransactionDeleteRequest = {
  * @param options.condition an optional conditional expression that must be satisfied for the update to proceed
  */
 export type TransactionDeleteChildRequest = {
+  type: 'delete-child';
   collectionName: string;
   id: string;
   rootObjectId: string;
   options?: { condition?: CompositeCondition };
 };
 
+/**
+ * TransactionWrite can be combination of Replace (Insert or Replace), Delete or Delete a child operation
+ */
 export type TransactionWriteRequest =
   | TransactionReplaceRequest
   | TransactionDeleteRequest
   | TransactionDeleteChildRequest;
 
+/**
+ * check to confirmation request is for Replace operation
+ * @param transactionWriteRequest
+ * @returns
+ */
 const isTransactionReplaceRequest = (
   transactionWriteRequest: TransactionWriteRequest
 ): transactionWriteRequest is TransactionReplaceRequest =>
-  'value' in transactionWriteRequest && !!transactionWriteRequest.value;
+  transactionWriteRequest.type === 'replace';
 
+/**
+ * check to confirmation request is for Delete operation
+ * @param transactionWriteRequest
+ * @returns
+ */
 const isTransactionDeleteRequest = (
   transactionWriteRequest: TransactionWriteRequest
 ): transactionWriteRequest is TransactionDeleteRequest =>
-  'id' in transactionWriteRequest &&
-  !('rootObjectId' in transactionWriteRequest) &&
-  !!transactionWriteRequest.id;
+  transactionWriteRequest.type === 'delete';
 
+/**
+ * check to confirmation request is for child Delete operation
+ * @param transactionWriteRequest
+ * @returns
+ */
 const isTransactionDeleteChildRequest = (
   transactionWriteRequest: TransactionWriteRequest
 ): transactionWriteRequest is TransactionDeleteChildRequest =>
-  'id' in transactionWriteRequest &&
-  !!transactionWriteRequest.id &&
-  'rootObjectId' in transactionWriteRequest &&
-  !!transactionWriteRequest.rootObjectId;
+  transactionWriteRequest.type === 'delete-child';
 
 /**
  * This operation writes to DynamoDB in a transaction.
@@ -106,68 +135,65 @@ export const transactionWrite = async (
     ClientRequestToken?: string;
   } = {}
 ): Promise<TransactWriteItemsCommandOutput> => {
-  if (!transactionWriteRequests || transactionWriteRequests.length === 0) {
-    throw new InvalidFindDescriptorException(
+  if (isEmpty(transactionWriteRequests)) {
+    throw new InvalidArgumentException(
       'At least one request should be provided'
     );
-  } else if (transactionWriteRequests.length > 25) {
+  } else if (transactionWriteRequests.length > 100) {
     throw new InvalidFindDescriptorException(
-      'No more than 25 requests can be specified to transactionWrite'
+      'No more than 100 requests can be specified to transactionWrite'
     );
   }
 
-  const transactWriteItem: TransactWriteItem[] = transactionWriteRequests.map(
-    (request) => {
-      /** Checks and create a REPLACE request for a requested item */
-      if (isTransactionReplaceRequest(request)) {
-        const { collectionName, value, options } = request;
-        const { request: putItemInput } = createReplaceByIdRequest(
-          context,
-          collectionName,
-          value,
-          options
-        );
+  const transactWriteItem: TransactWriteItem[] =
+    transactionWriteRequests.reduce(
+      (result: TransactWriteItem[], request: TransactionWriteRequest) => {
+        /** Checks and create a REPLACE request for a requested item */
+        if (isTransactionReplaceRequest(request)) {
+          const { collectionName, value, options } = request;
+          const { request: putItemInput } = createReplaceByIdRequest(
+            context,
+            collectionName,
+            value,
+            options
+          );
 
-        return { Put: putItemInput } as { Put: Put };
-      }
+          result.push({ Put: putItemInput });
+        }
 
-      /** Checks and create a DELETE request for a requested item */
-      if (isTransactionDeleteRequest(request)) {
-        const { collectionName, id, options } = request;
+        /** Checks and create a DELETE request for a requested item */
+        if (isTransactionDeleteRequest(request)) {
+          const { collectionName, id, options } = request;
 
-        const deleteItem = createDeleteByIdRequest(
-          context,
-          collectionName,
-          id,
-          options
-        );
+          const deleteItem = createDeleteByIdRequest(
+            context,
+            collectionName,
+            id,
+            options
+          );
 
-        return { Delete: deleteItem } as { Delete: Delete };
-      }
+          result.push({ Delete: deleteItem });
+        }
 
-      /** Checks and create a DELETE Child request for a requested item */
-      if (isTransactionDeleteChildRequest(request)) {
-        const { collectionName, id, rootObjectId, options } = request;
+        /** Checks and create a DELETE Child request for a requested item */
+        if (isTransactionDeleteChildRequest(request)) {
+          const { collectionName, id, rootObjectId, options } = request;
 
-        const deleteItem = createDeleteChildByIdRequest(
-          context,
-          collectionName,
-          id,
-          rootObjectId,
-          options
-        );
+          const deleteItem = createDeleteChildByIdRequest(
+            context,
+            collectionName,
+            id,
+            rootObjectId,
+            options
+          );
 
-        return { Delete: deleteItem } as { Delete: Delete };
-      }
-    }
-  ) as unknown as TransactWriteItem[];
+          result.push({ Delete: deleteItem });
+        }
 
-  if (!options.ClientRequestToken) {
-    options.ClientRequestToken = objectHash(transactWriteItem, {
-      algorithm: 'md5',
-      encoding: 'base64',
-    });
-  }
+        return result;
+      },
+      []
+    );
 
   try {
     const request = { TransactItems: transactWriteItem, ...options };
@@ -180,25 +206,48 @@ export const transactionWrite = async (
   } catch (error) {
     console.error('Error writing transaction to dynamo db : ', error);
 
-    if ((error as Error).name === 'ValidationException') {
+    if (coerceError(error).name === 'ValidationException') {
       throw new TransactionValidationException(
         'Multiple operations are included for same item id'
       );
     }
-    if ((error as Error).name === 'TransactionCanceledException') {
+    if (
+      (error as DDBTransactionCanceledException).name ===
+      'TransactionCanceledException'
+    ) {
       throw new TransactionCanceledException(
         'The entire transaction request was canceled',
-        (error as DDBTransactionCanceledException).CancellationReasons
+        {
+          cancellationReasons: (error as DDBTransactionCanceledException)
+            .CancellationReasons,
+        }
       );
     }
-    if ((error as Error).name === 'TransactionConflictException') {
+
+    if (
+      (error as DDBTransactionConflictException).name ===
+      'TransactionConflictException'
+    ) {
       throw new TransactionConflictException(
         'Another transaction or request is in progress for one of the requested item'
       );
     }
-    if ((error as Error).name === 'IdempotentParameterMismatchException') {
+    if (
+      (error as DDBIdempotentParameterMismatchException).name ===
+      'IdempotentParameterMismatchException'
+    ) {
       throw new IdempotentParameterMismatchException(
-        'Another transaction or request with same client token'
+        'Another transaction or request with same client token',
+        { clientRequestToken: options.ClientRequestToken }
+      );
+    }
+    if (
+      (error as DDBTransactionInProgressException).name ===
+      'TransactionInProgressException'
+    ) {
+      throw new TransactionInProgressException(
+        'Transaction is in progress with same client token',
+        { clientRequestToken: options.ClientRequestToken }
       );
     }
     throw error;
