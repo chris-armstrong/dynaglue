@@ -11,3 +11,4 @@ export { updateChildById } from './update_child_by_id';
 export { findByIdWithChildren } from './find_by_id_with_children';
 export { batchFindByIds } from './batch_find_by_ids';
 export { batchReplaceDelete } from './batch_replace_delete';
+export { transactionWrite } from './transact_write';

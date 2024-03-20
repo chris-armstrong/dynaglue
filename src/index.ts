@@ -14,6 +14,7 @@ export {
   findByIdWithChildren,
   batchFindByIds,
   batchReplaceDelete,
+  transactionWrite,
 } from './operations';
 export type { Context };
 export { createContext };
@@ -107,4 +108,10 @@ export type {
   BatchReplaceDeleteDescriptor,
   BatchReplaceDeleteResponse,
 } from './operations/batch_replace_delete';
+export type {
+  TransactionDeleteRequest,
+  TransactionDeleteChildRequest,
+  TransactionReplaceRequest,
+  TransactionWriteRequest,
+} from './operations/transact_write';
 export type { ParseElement } from './base/conditions_types';

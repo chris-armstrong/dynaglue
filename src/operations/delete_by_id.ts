@@ -32,6 +32,45 @@ export async function deleteById<DocumentType extends DocumentWithId>(
   id: string,
   options: { condition?: CompositeCondition } = {}
 ): Promise<DocumentType | undefined> {
+  const request: DeleteItemInput = createDeleteByIdRequest(
+    context,
+    collectionName,
+    id,
+    options
+  );
+
+  debugDynamo('DeleteItem', request);
+
+  const command = new DeleteItemCommand(request);
+  const result = await context.ddb.send(command);
+
+  if (result.Attributes) {
+    const wrapped = unmarshall(result.Attributes);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
+  }
+
+  return undefined;
+}
+
+/**
+ * Create a delete request using its `_id` field
+ *
+ * @category Mutation
+ *
+ * @param context the context object
+ * @param collectionName the name of the collection
+ * @param id the object to remove
+ * @param options options to apply
+ * @param options.condition an optional conditional expression that must be satifisfied for the update to proceed
+ * @returns the delete request as @see {DeleteItemInput}
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
+ */
+export const createDeleteByIdRequest = (
+  context: Context,
+  collectionName: string,
+  id: string,
+  options: { condition?: CompositeCondition } = {}
+): DeleteItemInput => {
   const collection = getRootCollection(context, collectionName);
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
@@ -65,12 +104,6 @@ export async function deleteById<DocumentType extends DocumentWithId>(
     ExpressionAttributeNames: nameMapper.get(),
     ExpressionAttributeValues: valueMapper.get(),
   };
-  debugDynamo('DeleteItem', request);
-  const command = new DeleteItemCommand(request);
-  const result = await context.ddb.send(command);
-  if (result.Attributes) {
-    const wrapped = unmarshall(result.Attributes);
-    return unwrap(wrapped as WrappedDocument<DocumentType>);
-  }
-  return undefined;
-}
+
+  return request;
+};

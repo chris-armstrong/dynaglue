@@ -34,9 +34,51 @@ export async function deleteChildById<DocumentType extends DocumentWithId>(
   rootObjectId: string,
   options: { condition?: CompositeCondition } = {}
 ): Promise<DocumentType | undefined> {
+  const request: DeleteItemInput = createDeleteChildByIdRequest(
+    context,
+    collectionName,
+    id,
+    rootObjectId,
+    options
+  );
+
+  debugDynamo('DeleteItem', request);
+
+  const command = new DeleteItemCommand(request);
+  const result = await context.ddb.send(command);
+  if (result.Attributes) {
+    const wrapped = unmarshall(result.Attributes);
+    return unwrap(wrapped as WrappedDocument<DocumentType>);
+  }
+  return undefined;
+}
+
+/**
+ * Create a delete child request using its `_id` field and its parents `_id`
+ *
+ * @category Mutation
+ *
+ * @param context the context object
+ * @param collectionName the name of the collection
+ * @param id the child object to remove
+ * @param rootObjectId the parent object id
+ * @param options options to apply
+ * @param options.condition a condition expression blocking the delete operation
+ * @returns the deleted request as @see {DeleteItemInput}
+ * @throws {CollectionNotFoundException} when the collection is not found in the context
+ */
+export const createDeleteChildByIdRequest = (
+  context: Context,
+  collectionName: string,
+  id: string,
+  rootObjectId: string,
+  options: { condition?: CompositeCondition } = {}
+): DeleteItemInput => {
   const collection = getChildCollection(context, collectionName);
+
   const nameMapper = createNameMapper();
   const valueMapper = createValueMapper();
+
   let conditionExpression;
   if (options.condition) {
     conditionExpression = parseCompositeCondition(options.condition, {
@@ -67,12 +109,6 @@ export async function deleteChildById<DocumentType extends DocumentWithId>(
     ExpressionAttributeNames: nameMapper.get(),
     ExpressionAttributeValues: valueMapper.get(),
   };
-  debugDynamo('DeleteItem', request);
-  const command = new DeleteItemCommand(request);
-  const result = await context.ddb.send(command);
-  if (result.Attributes) {
-    const wrapped = unmarshall(result.Attributes);
-    return unwrap(wrapped as WrappedDocument<DocumentType>);
-  }
-  return undefined;
-}
+
+  return request;
+};
