@@ -162,6 +162,7 @@ describe('transactions', () => {
       const request = [
         // Insert Item
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-jw',
@@ -174,6 +175,7 @@ describe('transactions', () => {
         },
         // Update Item
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-sh',
@@ -184,22 +186,19 @@ describe('transactions', () => {
         },
         // Delete Item
         {
+          type: 'delete',
           collectionName: collection.name,
           id: 'test-id',
         },
         // Delete Child Item
         {
+          type: 'delete-child',
           collectionName: childCollection.name,
           id: 'test-id-meta',
           rootObjectId: 'test-id',
         },
       ] as TransactionWriteRequest[];
 
-      /*
-       * Note:
-       * passing custom token as running tests again and again with same payload results
-       * in same token, hence assertion fails
-       */
       const ClientRequestToken = objectHash(new Date().getTime(), {
         algorithm: 'md5',
         encoding: 'base64',
@@ -266,6 +265,7 @@ describe('transactions', () => {
       const request = [
         // update a existing user
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-id-1',
@@ -275,6 +275,7 @@ describe('transactions', () => {
         },
         // Deleting same user as above updated user
         {
+          type: 'delete',
           collectionName: collection.name,
           id: 'test-id-1',
         },
@@ -286,15 +287,9 @@ describe('transactions', () => {
     });
 
     test('writing same transaction twice with same `ClientRequestToken` to ddb', async () => {
-      /**
-       * Note:
-       * We can either create token ourselves
-       *  or
-       * it's generated implicitly based on request payload
-       */
-
       const request = [
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-bob',
@@ -306,8 +301,13 @@ describe('transactions', () => {
         },
       ] as TransactionWriteRequest[];
 
-      await transactionWrite(context, request);
-      await transactionWrite(context, request);
+      const ClientRequestToken = objectHash(new Date().getTime(), {
+        algorithm: 'md5',
+        encoding: 'base64',
+      });
+
+      await transactionWrite(context, request, { ClientRequestToken });
+      await transactionWrite(context, request, { ClientRequestToken });
     });
 
     test('IdempotentParameterMismatchException while writing different transaction with same `ClientRequestToken` to ddb', async () => {
@@ -318,6 +318,7 @@ describe('transactions', () => {
 
       const request1 = [
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-pat',
@@ -333,6 +334,7 @@ describe('transactions', () => {
 
       const request2 = [
         {
+          type: 'replace',
           collectionName: collection.name,
           value: {
             _id: 'test-bob',
