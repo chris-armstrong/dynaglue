@@ -57,7 +57,7 @@
     "verror": "^1.10.0"
   },
   "repository": {
-    "url": "https://github.com/chris-armstrong/dynaglue.git"
+    "url": "git+https://github.com/chris-armstrong/dynaglue.git"
   },
   "prettier": {
     "trailingComma": "es5",
