@@ -1,8 +1,5 @@
 import {
   TransactionCanceledException as DDBTransactionCanceledException,
-  TransactionConflictException as DDBTransactionConflictException,
-  IdempotentParameterMismatchException as DDBIdempotentParameterMismatchException,
-  TransactionInProgressException as DDBTransactionInProgressException,
   ReturnConsumedCapacity,
   ReturnItemCollectionMetrics,
   TransactWriteItem,
@@ -10,6 +7,7 @@ import {
   TransactWriteItemsCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 import { isEmpty } from 'lodash';
+import createDebug from 'debug';
 import { CompositeCondition } from '../base/conditions';
 import {
   IdempotentParameterMismatchException,
@@ -26,6 +24,8 @@ import { createDeleteByIdRequest } from './delete_by_id';
 import { createReplaceByIdRequest } from './replace';
 import { coerceError } from '../base/coerce_error';
 import { createDeleteChildByIdRequest } from './delete_child_by_id';
+
+const debug = createDebug('dynaglue:transact:write');
 
 /**
  * A replace request, it helps dynaglue to identify action as Put,
@@ -130,8 +130,8 @@ export const transactionWrite = async (
   context: Context,
   transactionWriteRequests: TransactionWriteRequest[],
   options: {
-    ReturnConsumedCapacity?: ReturnConsumedCapacity | string;
-    ReturnItemCollectionMetrics?: ReturnItemCollectionMetrics | string;
+    ReturnConsumedCapacity?: ReturnConsumedCapacity;
+    ReturnItemCollectionMetrics?: ReturnItemCollectionMetrics;
     ClientRequestToken?: string;
   } = {}
 ): Promise<TransactWriteItemsCommandOutput> => {
@@ -198,21 +198,22 @@ export const transactionWrite = async (
   try {
     const request = { TransactItems: transactWriteItem, ...options };
 
-    debugDynamo('transactWriteItems', JSON.stringify(request));
+    debugDynamo('TransactWriteItems', JSON.stringify(request));
 
     const command = new TransactWriteItemsCommand(request);
 
     return await context.ddb.send(command);
   } catch (error) {
-    console.error('Error writing transaction to dynamo db : ', error);
+    const errObject = coerceError(error);
+    debug('transact_write: error', error);
 
-    if (coerceError(error).name === 'ValidationException') {
+    if (errObject.name === 'ValidationException') {
       throw new TransactionValidationException(
         'Multiple operations are included for same item id'
       );
     }
     if (
-      (error as DDBTransactionCanceledException).name ===
+      (errObject).name ===
       'TransactionCanceledException'
     ) {
       throw new TransactionCanceledException(
@@ -225,7 +226,7 @@ export const transactionWrite = async (
     }
 
     if (
-      (error as DDBTransactionConflictException).name ===
+      (errObject).name ===
       'TransactionConflictException'
     ) {
       throw new TransactionConflictException(
@@ -233,7 +234,7 @@ export const transactionWrite = async (
       );
     }
     if (
-      (error as DDBIdempotentParameterMismatchException).name ===
+      (errObject).name ===
       'IdempotentParameterMismatchException'
     ) {
       throw new IdempotentParameterMismatchException(
@@ -242,7 +243,7 @@ export const transactionWrite = async (
       );
     }
     if (
-      (error as DDBTransactionInProgressException).name ===
+      (errObject).name ===
       'TransactionInProgressException'
     ) {
       throw new TransactionInProgressException(

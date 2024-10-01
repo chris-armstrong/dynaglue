@@ -57,7 +57,7 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
               assemblePrimaryKeyValue(
                 rootId
                   ? (collectionDefinition as ChildCollection)
-                      .parentCollectionName
+                    .parentCollectionName
                   : collectionDefinition.name,
                 rootId ? rootId : id,
                 indexKeySeparator
@@ -75,7 +75,7 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
   );
 
   const request = { TransactItems: transactGetItems };
-  debugDynamo('transactGetItems', request);
+  debugDynamo('TransactGetItems', request);
   const command = new TransactGetItemsCommand(request);
   const { Responses = [] } = await ctx.ddb.send(command);
 

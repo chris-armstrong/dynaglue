@@ -166,14 +166,14 @@ export const batchReplaceDelete = async (
       items.push(request);
       return riMap;
     },
-    {} as { [key: string]: WriteRequest [] },
+    {} as { [key: string]: WriteRequest[] },
   );
 
   const request: BatchWriteItemInput = {
     RequestItems: requestItems,
   };
 
-  debugDynamo('batchWriteItem', request);
+  debugDynamo('BatchWriteItem', request);
   const command = new BatchWriteItemCommand(request);
   const { UnprocessedItems = {} } = await ctx.ddb.send(command);
 
