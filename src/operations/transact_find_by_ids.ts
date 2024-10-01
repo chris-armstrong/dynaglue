@@ -1,4 +1,7 @@
-import { TransactGetItem, TransactGetItemsCommand } from '@aws-sdk/client-dynamodb';
+import {
+  TransactGetItem,
+  TransactGetItemsCommand,
+} from '@aws-sdk/client-dynamodb';
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Context } from '../context';
 import { InvalidFindDescriptorException } from '../base/exceptions';
@@ -10,6 +13,7 @@ import {
 } from '../base/util';
 import { DocumentWithId, WrappedDocument } from '../base/common';
 import debugDynamo from '../debug/debugDynamo';
+import { ChildCollection } from '../base/collection';
 
 /**
  * The collection and ID of a root or child
@@ -51,7 +55,10 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
           Key: {
             [primaryKey.partitionKey]: convertToAttr(
               assemblePrimaryKeyValue(
-                collection,
+                rootId
+                  ? (collectionDefinition as ChildCollection)
+                    .parentCollectionName
+                  : collectionDefinition.name,
                 rootId ? rootId : id,
                 indexKeySeparator
               ),
@@ -68,18 +75,17 @@ export const transactFindByIds = async <DocumentType extends DocumentWithId>(
   );
 
   const request = { TransactItems: transactGetItems };
-  debugDynamo('transactGetItems', request);
+  debugDynamo('TransactGetItems', request);
   const command = new TransactGetItemsCommand(request);
   const { Responses = [] } = await ctx.ddb.send(command);
 
-  const returnedItems = new Array(items.length);
+  const returnedItems = [];
   for (const response of Responses) {
-    let item = null;
     if (response.Item) {
       const unmarshalled = unmarshall(response.Item);
-      item = unwrap(unmarshalled as WrappedDocument<DocumentType>);
+      const item = unwrap(unmarshalled as WrappedDocument<DocumentType>);
+      returnedItems.push(item);
     }
-    returnedItems.push(item);
   }
   return returnedItems;
 };

@@ -139,7 +139,7 @@ export const batchFindByIds = async (
   }, {} as { [collection: string]: KeysAndAttributes });
 
   const request = { RequestItems: requestItems };
-  debugDynamo('batchGetItem', request);
+  debugDynamo('BatchGetItem', request);
   const command = new BatchGetItemCommand(request);
   const { Responses = {}, UnprocessedKeys = {} } = await ctx.ddb.send(command);
 

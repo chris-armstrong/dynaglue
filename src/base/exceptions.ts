@@ -12,6 +12,16 @@ export class ConflictException extends VError {
 }
 
 /**
+ * Thrown when a replace or delete request(s) are rejected as part of transaction
+ * that already exists
+ */
+export class TransactionConflictException extends VError {
+  constructor(message: string) {
+    super({ name: 'transaction_conflict.error' }, message);
+  }
+}
+
+/**
  * Thrown when an `_id` value is specified that is not
  * valid (_id values must be a string).
  */
@@ -118,7 +128,10 @@ export class InvalidIndexedFieldValueException extends VError {
 export class InvalidQueryException extends VError {
   constructor(
     message: string,
-    { collection, query }: { collection: string; query: Record<string, unknown> }
+    {
+      collection,
+      query,
+    }: { collection: string; query: Record<string, unknown> }
   ) {
     super(
       {
@@ -160,6 +173,20 @@ export class InvalidUpdateValueException extends VError {
         info: {
           path,
         },
+      },
+      message
+    );
+  }
+}
+
+/**
+ * Throw when validations fails for arguments passed for any operation
+ */
+export class InvalidArgumentException extends VError {
+  constructor(message: string) {
+    super(
+      {
+        name: 'invalid_arguments',
       },
       message
     );
@@ -232,6 +259,17 @@ export class InvalidBatchReplaceDeleteDescriptorException extends VError {
   }
 }
 
+/**
+ * When a TransactGetItems request conflicts with an
+ * ongoing TransactWriteItems operation on one or
+ * more items in the TransactGetItems request
+ */
+export class TransactionCanceledException extends VError {
+  constructor(message: string, info?: Record<string, unknown>) {
+    super({ name: 'transaction_cancelled', info }, message);
+  }
+}
+
 export class InvalidRangeOperatorException extends VError {
   constructor(message: string, operator: string) {
     super({ name: 'invalid_range_operator', info: { operator } }, message);
@@ -240,6 +278,33 @@ export class InvalidRangeOperatorException extends VError {
 
 export class IndexAccessPatternTypeException extends VError {
   constructor(message: string) {
-    super({ name: 'index_access_pattern_type'}, message);
+    super({ name: 'index_access_pattern_type' }, message);
+  }
+}
+
+/**
+ * DynamoDB rejected the request because you retried a request with
+ * a different payload but with an idempotent token that was already used.
+ */
+export class IdempotentParameterMismatchException extends VError {
+  constructor(message: string, info?: Record<string, unknown>) {
+    super({ name: 'idempotent_parameter_mismatch', info }, message);
+  }
+}
+
+/**
+ * Transaction request cannot include multiple operations on one item
+ */
+export class TransactionValidationException extends VError {
+  constructor(message: string) {
+    super({ name: 'transaction_validation' }, message);
+  }
+}
+/**
+ * The transaction with the given request token is already in progress
+ */
+export class TransactionInProgressException extends VError {
+  constructor(message: string, info?: Record<string, unknown>) {
+    super({ name: 'transaction_in_progress', info }, message);
   }
 }
